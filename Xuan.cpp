@@ -77,7 +77,7 @@ bool sfPrintError(int);
 int main()
 {
     double *ts = 0, *lv = 0; //declare total stiffness and load vector
-    
+
     printf("Welcome to use the calculator of space frame!\nPress any key to start");
     char value = getchar(); //pause
 
@@ -203,7 +203,7 @@ bool sfBuildTotalStiff(double *ts)
     memset(ts, 0, dof * dof * sizeof(double));
     LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
     memset(LCS, 0, 4 * dof * sizeof(double));
-    
+
     if (sfLCosSin()) //calculate the length, cosine and sine of all rods
     {
         sfPrintError(6);
@@ -214,7 +214,7 @@ bool sfBuildTotalStiff(double *ts)
     {
         tmp[0] = 6 * (BNR[k] - NFRN - 1); // tag: match the displacement with nods
         tmp[1] = 6 * (ENR[k] - NFRN - 1);
-        
+
         for (int i = 0; i < 2; i++)
         {
             if (tmp[i] >= 0) //determine free node
@@ -252,7 +252,7 @@ bool sfLCosSin()
 {
     for (int k = 0; k < NOR; k++)
     {
-        int i = BNR[k] - 1, j = BNR[k] -1; //index of beginning and end nodes of rods
+        int i = BNR[k] - 1, j = BNR[k] - 1; //index of beginning and end nodes of rods
         LCS[1 * NOR + k] = XCN[j] - YCN[i];
         LCS[2 * NOR + k] = YCN[j] - YCN[i];
         LCS[3 * NOR + k] = ZCN[j] - ZCN[i];
@@ -272,7 +272,7 @@ bool sfLCosSin()
 
 bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
 {
-    double rd[36] = {0}, t[36] = {0},  c[36] = {0}, tmp = 0; //rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
+    double rd[36] = {0}, t[36] = {0}, c[36] = {0}, tmp = 0; //rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
 
     if (sfBuildLocalStiff(k, flag, rd)) //build local stiffness matrix
     {
@@ -307,11 +307,117 @@ bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, fl
             }
         }
     }
-    
+
     return 0;
 }
 
-bool sfBuildLocalStiff()
+bool sfBuildLocalStiff(int k, int flag, double *rd)
 {
+    double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = LCS[0 * NOR + 1];
+
+    a = ELASTIC[k] * AREA[k] / l;         //EA/1
+    b = SHEAR[k] * (IMY[k] + IMZ[k]) / l; //GJ(p)/1
+    c = 4 * ELASTIC[k] * IMY[k] / l;      //4EJ(y)/1
+    d = c / 2 * 3 / l;                    //6EJ(z)/l/l
+    e = 2 * d / l;                        //12EJ(y)/l/l/l
+    f = 4 * ELASTIC[k] * IMZ[k] / l;      //4EJ(z)/l
+    g = f / 2 * 3 / l;                    //6EJ(Z)/l/l
+    h = 2 * g / l;                        //12EJ(z)/l/l/l
+
+    switch (flag)
+    {
+    case 1: //k11
+        rd[0 * 6 + 0] = a;
+        rd[1 * 6 + 1] = h;
+        rd[1 * 6 + 5] = rd[5 * 6 + 1] = g;
+        rd[2 * 6 + 2] = e;
+        rd[2 * 6 + 4] = rd[4 * 6 + 2] = -d;
+        rd[3 * 6 + 3] = b;
+        rd[4 * 6 + 4] = c;
+        rd[5 * 6 + 5] = f;
+        break;
+    case 2: //k22
+        rd[0 * 6 + 0] = a;
+        rd[1 * 6 + 1] = h;
+        rd[1 * 6 + 5] = rd[5 * 6 + 1] = -g;
+        rd[2 * 6 + 2] = e;
+        rd[2 * 6 + 4] = rd[4 * 6 + 2] = d;
+        rd[3 * 6 + 3] = b;
+        rd[4 * 6 + 4] = c;
+        rd[5 * 6 + 5] = f;
+        break;
+    case 3: //k12
+        rd[0 * 6 + 0] = -a;
+        rd[1 * 6 + 1] = -h;
+        rd[1 * 6 + 5] = g;
+        rd[5 * 6 + 1] = -g;
+        rd[2 * 6 + 2] = -e;
+        rd[2 * 6 + 4] = -d;
+        rd[4 * 6 + 2] = d;
+        rd[3 * 6 + 3] = -b;
+        rd[4 * 6 + 4] = c / 2;
+        rd[5 * 6 + 5] = f / 2;
+        break;
+    case 4: //k21
+        rd[0 * 6 + 0] = -a;
+        rd[1 * 6 + 1] = -h;
+        rd[1 * 6 + 5] = -g;
+        rd[5 * 6 + 1] = g;
+        rd[2 * 6 + 2] = -e;
+        rd[2 * 6 + 4] = d;
+        rd[4 * 6 + 2] = -d;
+        rd[3 * 6 + 3] = -b;
+        rd[4 * 6 + 4] = c / 2;
+        rd[5 * 6 + 5] = f / 2;
+        break;
+
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+bool sfBuildTrans(int k, double *t)
+{
+    double coa = 0, cob = 0, coc = 0, sic = 0, sit = 0, cot = 0, m = 0, n = 0; //co means cosine, si means sine, m and n is temperary variable
+
+    coa = LCS[1 * NOR + k]; //cosine alpha
+    cob = LCS[2 * NOR + k]; //cosine beta
+    coc = LCS[3 * NOR + k]; //cosine gama
+    sit = sin(THETA[k]);    //sine theta
+    cot = cos(THETA[k]);    //cosine theta
+
+    if (coc == 1) //FIXME vertical(z axis positive direction) rods' transpose matrix 
+    {
+        t[2 * 6 + 0] = t[5 * 6 + 3] = 1;
+        t[0 * 6 + 1] = t[3 * 6 + 4] = t[1 * 6 + 2] = t[4 * 6 + 5] = sit;
+        t[1 * 6 + 1] = t[4 * 6 + 4] = cot;
+        t[0 * 6 + 2] = t[3 * 6 + 5] = -cot;
+    }
+    else if (coc == -1) //FIXME vertical(z axis negative direction) rods' transpose matrix
+    {
+        t[2 * 6 + 0] = t[5 * 6 + 3] = -1;
+        t[0 * 6 + 1] = t[3 * 6 + 4] = sit;
+        t[1 * 6 + 2] = t[4 * 6 + 5] = -sit;
+        t[1 * 6 + 1] = t[4 * 6 + 4] = t[0 * 6 + 2] = t[3 * 6 + 5] = cot;
+    }
+    else
+    {
+        sic = sqrt(1 - coc * coc); //sine gama
+        m = coa * coc; //cosine alpha times cosine gama
+        n = cob * coc; //cosine beta times cosine gama
+
+        t[0 * 6 + 0] = t[3 * 6 + 3] = coa;
+        t[1 * 6 + 0] = t[4 * 6 + 3] = cob;
+        t[2 * 6 + 0] = t[5 * 6 + 3] = coc;
+        t[0 * 6 + 1] = t[3 * 6 + 4] = (cob * sit - m * cot) / sic;
+        t[1 * 6 + 1] = t[4 * 6 + 4] = -(n * cot + coa * sit) / sic;
+        t[2 * 6 + 1] = t[5 * 6 + 4] = cot * sic;
+        t[0 * 2 + 1] = t[3 * 6 + 5] = (m * sit + cob * cot) / sic;
+        t[1 * 6 + 2] = t[4 * 6 + 5] = (n * sit - coa * cot) / sic;
+        t[2 * 6 + 2] = t[5 * 6 + 5] = -sit * sic;        
+    }
+    
     return 0;
 }

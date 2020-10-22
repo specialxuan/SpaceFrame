@@ -52,7 +52,7 @@ bool sfBuildUnitStiff(int, int, double *);
 //build local stiffness matrix
 bool sfBuildLocalStiff(int, int, double *);
 //build transpose matrix
-bool sfBuildTrans(int, double *, double *);
+bool sfBuildTrans(int, double *);
 //build load vector
 bool sfBuildLoadVector(double *);
 //calculate reaction force
@@ -270,11 +270,48 @@ bool sfLCosSin()
     return 0;
 }
 
-bool sfBuildUnitStiff(int k, int flag, double *us) // k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
+bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
 {
-    double rd[36] = {0}, t[36] = {0},  c[36] = {0}; //rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
+    double rd[36] = {0}, t[36] = {0},  c[36] = {0}, tmp = 0; //rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
+
+    if (sfBuildLocalStiff(k, flag, rd)) //build local stiffness matrix
+    {
+        sfPrintError(10);
+        return 1;
+    }
+    if (sfBuildTrans(k, t)) //build transpose matrix
+    {
+        sfPrintError(11);
+        return 1;
+    }
+
+    for (int i = 0; i < 6; i++) //transpose matrix times local stiffness matrix, store the result in c
+    {
+        for (int m = 0; m < 6; m++)
+        {
+            tmp = t[i * 6 + m];
+            for (int j = 0; j < 6; j++)
+            {
+                c[i * 6 + j] += tmp * rd[m * 6 + j];
+            }
+        }
+    }
+
+    for (int i = 0; i < 6; i++) //c times the transposition of transpose matrix, store the result in unit stiff
+    {
+        for (int j = 0; j < 6; j++)
+        {
+            for (int m = 0; m < 6; m++)
+            {
+                us[i * 6 + j] += c[i * 6 + m] * t[j * 6 + m];
+            }
+        }
+    }
     
+    return 0;
+}
 
-
+bool sfBuildLocalStiff()
+{
     return 0;
 }

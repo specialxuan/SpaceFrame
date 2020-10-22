@@ -388,7 +388,7 @@ bool sfBuildTrans(int k, double *t)
     sit = sin(THETA[k]);    //sine theta
     cot = cos(THETA[k]);    //cosine theta
 
-    if (coc == 1) //FIXME vertical(z axis positive direction) rods' transpose matrix 
+    if (coc == 1) //FIXME vertical(z axis positive direction) rods' transpose matrix
     {
         t[2 * 6 + 0] = t[5 * 6 + 3] = 1;
         t[0 * 6 + 1] = t[3 * 6 + 4] = t[1 * 6 + 2] = t[4 * 6 + 5] = sit;
@@ -405,8 +405,8 @@ bool sfBuildTrans(int k, double *t)
     else
     {
         sic = sqrt(1 - coc * coc); //sine gama
-        m = coa * coc; //cosine alpha times cosine gama
-        n = cob * coc; //cosine beta times cosine gama
+        m = coa * coc;             //cosine alpha times cosine gama
+        n = cob * coc;             //cosine beta times cosine gama
 
         t[0 * 6 + 0] = t[3 * 6 + 3] = coa;
         t[1 * 6 + 0] = t[4 * 6 + 3] = cob;
@@ -416,8 +416,8 @@ bool sfBuildTrans(int k, double *t)
         t[2 * 6 + 1] = t[5 * 6 + 4] = cot * sic;
         t[0 * 2 + 1] = t[3 * 6 + 5] = (m * sit + cob * cot) / sic;
         t[1 * 6 + 2] = t[4 * 6 + 5] = (n * sit - coa * cot) / sic;
-        t[2 * 6 + 2] = t[5 * 6 + 5] = -sit * sic;        
+        t[2 * 6 + 2] = t[5 * 6 + 5] = -sit * sic;
     }
-    
+
     return 0;
 }

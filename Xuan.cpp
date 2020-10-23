@@ -177,19 +177,104 @@ bool sfInput()
     KOL = (int *)malloc(NOL * sizeof(int));
     memset(KOL, 0, NOL * sizeof(int));
     VOL = (double *)malloc(NOL * sizeof(double));
-    memset(NRL, 0, NOL * sizeof(double));
+    memset(VOL, 0, NOL * sizeof(double));
     DLB = (double *)malloc(NOL * sizeof(double));
     memset(DLB, 0, NOL * sizeof(double));
     NRS = (int *)malloc(NOS * sizeof(int));
     memset(NRS, 0, NOS * sizeof(int));
     DSB = (double *)malloc(NOS * sizeof(double));
-    memset(NRL, 0, NOS * sizeof(double));
+    memset(DSB, 0, NOS * sizeof(double));
     DON = (double *)malloc(3 * NFRN * sizeof(double));
     memset(DON, 0, 3 * NFRN * sizeof(double));
     IFS = (double *)malloc(3 * NOS * sizeof(double));
     memset(IFS, 0, 3 * NOS * sizeof(double));
     RFE = (double *)malloc(6 * NOR * sizeof(double));
-    memset(NRL, 0, 6 * NOR * sizeof(double));
+    memset(RFE, 0, 6 * NOR * sizeof(double));
+
+    XCN[0] = 0;
+    XCN[1] = 3;
+    XCN[2] = 0;
+    XCN[3] = 0;
+    
+    YCN[0] = 0;
+    YCN[1] = 9;
+    YCN[2] = 0;
+    YCN[3] = 6;
+
+    ZCN[0] = 0;
+    ZCN[1] = 0;
+    ZCN[2] = 3;
+    ZCN[3] = 3;
+
+    BNR[0] = 3;
+    BNR[1] = 1;
+    BNR[2] = 2;
+
+    ENR[0] = 4;
+    ENR[1] = 3;
+    ENR[2] = 4;
+
+    ELASTIC[0] = 210000000;
+    ELASTIC[1] = 210000000;
+    ELASTIC[2] = 210000000;
+
+    SHEAR[0] = 80769000;
+    SHEAR[1] = 80769000;
+    SHEAR[2] = 8079000;
+
+    AREA[0] = 0.007854;
+    AREA[1] = 0.007854;
+    AREA[2] = 0.007854;
+
+    IMY[0] = 0.0000049807;
+    IMY[1] = 0.0000049807;
+    IMY[2] = 0.0000049807;
+
+    IMZ[0] = 0.0000049087;
+    IMZ[1] = 0.0000049087;
+    IMZ[2] = 0.0000049087;
+
+    THETA[0] = 0;
+    THETA[1] = 0;
+    THETA[2] = 0;
+
+    NRS[0] = 1;
+    NRS[1] = 2;
+    NRS[2] = 3;
+
+    DSB[0] = 3;
+    DSB[1] = 1.5;
+    DSB[2] = 2.598;
+
+    NRL[0] = 1;
+    NRL[1] = 1;
+    NRL[2] = 1;
+    NRL[3] = 1;
+    NRL[4] = 2;
+
+    PLI[0] = 0;
+    PLI[1] = 1;
+    PLI[2] = 0;
+    PLI[3] = 1;
+    PLI[4] = 0;
+
+    KOL[0] = 2;
+    KOL[1] = 1;
+    KOL[2] = 1;
+    KOL[3] = 6;
+    KOL[4] = 1;
+
+    VOL[0] = -0.8;
+    VOL[1] = 4;
+    VOL[2] = -1;
+    VOL[3] = -3;
+    VOL[4] = 2;
+
+    DLB[0] = 3;
+    DLB[1] = 3;
+    DLB[2] = 6;
+    DLB[3] = 6;
+    DLB[3] = 3;
 
     return 0;
 }
@@ -420,4 +505,215 @@ bool sfBuildTrans(int k, double *t)
     }
 
     return 0;
+}
+
+bool sfBuildLoadVector(double *lv)
+{
+    int rod = 0, dof = 6 * NFRN, tmp[2] = {0};   //rod is the number of rods, dof is the degree of freedom
+    double rf[12] = {0}, t[36] = {0};            //rf is the reaction force matrix, t is the transpose matrix, tmp is a temperary vector for i0j0
+    lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
+    memset(lv, 0, dof * sizeof(double));
+
+    for (int i = 0; i < NOL; i++)
+    {
+        rod = NRL[i] - 1; //the number of rods with load
+        memset(rf, 0, 12 * sizeof(double)); //zero clearing
+        
+        if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //FIXME: calculate reaction force
+        {
+            sfPrintError(12);
+            return 1;
+        }
+        for (int j = 0; j < 6; j++) //add reaction force to RFE
+        {
+            RFE[6 * rod + j] += rf[1 * 6 + j];
+        }
+        if (sfBuildTrans(rod, t)) //build transpose matrix
+        {
+            sfPrintError(11);
+            return 1;
+        }
+
+        tmp[0] = 6 * (BNR[rod] - NFRN - 1); // tag: match the displacement with nods
+        tmp[1] = 6 * (ENR[rod] - NFRN - 1);
+
+        for (int j = 0; j < 2; j++) //add reaction force to load vector
+        {
+            if (tmp[j] >= 0) //determine free node
+                for (int m = 0; m < 6; m++)
+                    for (int n = 0; n < 6; n++)
+                        lv[tmp[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
+        }
+    }
+
+    return 0;
+}
+
+
+bool sfReactionForce(int i, double *rfb, double *rfe)
+{
+    double ra = 0, rb = 0, a = 0, b = 0, q = VOL[i], xq = DLB[i]; //ra, rb, a and b are middle variable
+    int rod = NRL[i] - 1, pm = PLI[i], t = 0; //rod is the number of rods
+    if (pm == 0) //load is in XY plane
+    {
+        t = -1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
+    }
+    else if (pm == 1) //load is in XZ plane
+    {
+        t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
+    }
+    ra = DLB[i] / LCS[0 * NOR + rod]; //x(q) / L
+    rb = 1 - ra; //1 - x(q) / L
+    switch (KOL[i])
+    {
+    case 1:
+        a = rb * rb;
+        rfb[pm + 1] = -q * rb * (1 + ra - 2 * ra * ra);
+        rfe[pm + 1] = -q - rfb[pm + 1];
+        rfb[5 - pm] = t * q * rb * ra * (LCS[0 * NOR + rod] - xq);
+        rfe[5 - pm] = -t * q * ra * rb * xq;
+        break;
+    case 2:
+        a = q * xq;
+        b = a * xq / 12;
+        rfb[pm + 1] = -a * (1 + 0.5 * ra * ra * ra - ra * ra);
+        rfe[pm + 1] = -a - rfb[pm + 1];
+        rfb[5 - pm] = t * b * (6 - 8 * ra + 3 * ra * ra);
+        rfe[5 - pm] = -t * b * (4 * ra - 3 * ra * ra);
+        break;
+    case 3:
+        rfb[3 * pm] = -q * rb;
+        rfe[3 * pm] = -q * ra;
+        break;
+    case 4:
+        a = q * xq;
+        rfe[3 * pm] = -a * ra / 2;
+        rfb[3 * pm] = -a * rfe[3 * pm];
+        break;
+    case 5:
+        a = q * xq / 2;
+        b = -0.4 * ra *ra;
+        rfb[pm + 1] = -2 * a * (0.5 - 0.75 * ra * ra + 0.4 * ra * ra * ra);
+        rfe[pm + 1] = -a - rfb[pm +1];
+        rfb[5 - pm] = t * a * (2 / 3 + b - ra);
+        rfe[5 - pm] = -t * a * (0.5 * ra + b);
+        break;
+    case 6:
+        rfb[2 - pm] = t * 6 * q * rb * ra / LCS[0 * NOR + rod];
+        rfe[2 - pm] = -rfb[2 - pm];
+        rfb[pm + 4] = t * q * rb * (-1 + 3 * ra);
+        rfe[pm + 4] = t * q * ra * (2 - 3 * ra);
+        break;
+    case 7:
+        rfb[0] = q * xq * ELASTIC[rod] * AREA[rod];
+        rfe[5 - pm] = -rfb[0];
+        break;
+    case 8:
+        if (pm == 0)
+        {
+            a = IMZ[rod];
+        }
+        else if (pm == 1)
+        {
+            a = IMY[rod];
+        }
+        rfb[5 - pm] = t * q * 2 * ELASTIC[rod] * a * xq;
+        rfe[5 - pm] = -rfb[5 - pm];
+        break;
+    default:
+        break;
+    }
+    
+
+    return 0;
+}
+
+bool sfCholesky(double *A, double *b, double *x, int n)
+{
+	if (A == NULL)
+	{
+		sfPrintError(13);
+		return 1;
+	}
+	else if (b == NULL)
+	{
+		sfPrintError(13);
+		return 1;
+	}
+	else if (x == NULL)
+	{
+		sfPrintError(13);
+		return 1;
+	}
+	else if (n == 0)
+	{
+		sfPrintError(13);
+		return 1;
+	}
+
+	double sum = 0, *L = 0, *D = 0, *y = 0;
+
+	L = (double *)malloc(n * n * sizeof(double));
+	if (L != NULL)
+		memset(L, 0, n * n * sizeof(double));
+	for (int i = 0; i < n; i++)
+	{
+		L[i * n + i] = 1;
+	}
+	D = (double *)malloc(n * sizeof(double));
+	memset(D, 0, n * sizeof(double));
+	y = (double *)malloc(n * sizeof(double));
+	if (y != NULL)
+		memset(y, 0, n * sizeof(double));
+
+	// factorize matrix A
+	D[0] = A[0 * n + 0];
+	for (int i = 1; i < n; i++)
+	{
+		for (int j = 0; j < i; j++)
+		{
+			sum = 0;
+			for (int k = 0; k < j; k++)
+			{
+				sum = sum + L[i * n + k] * D[k] * L[j * n + k];
+			}
+			L[i * n + j] = (A[i * n + j] - sum) / D[j];
+		}
+		sum = 0;
+		for (int k = 0; k < i; k++)
+		{
+			sum = sum + L[i * n + k] * L[i * n + k] * D[k];
+		}
+		D[i] = A[i * n + i] - sum;
+	}
+
+	// solve y by Ly=b
+	y[0] = b[0];
+	for (int i = 1; i < n; i++)
+	{
+		sum = 0;
+		for (int j = 0; j < i; j++)
+		{
+			sum = sum + L[i * n + j] * y[j];
+		}
+		y[i] = b[i] - sum;
+	}
+
+	// solve x by DL(t)=y
+	x[n - 1] = y[n - 1] / D[n - 1];
+	for (int i = n - 2; i >= 0; i--)
+	{
+		sum = 0;
+		for (int j = i + 1; j < n; j++)
+		{
+			sum = sum + L[j * n + i] * x[j];
+		}
+		x[i] = y[i] / D[i] - sum;
+	}
+
+	free(L);
+	free(D);
+	free(y);
+
+	return 0;
 }

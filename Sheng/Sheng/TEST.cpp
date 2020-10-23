@@ -63,13 +63,16 @@ void PHPrint();
 //内存释放
 void PHFree();
 //杆件自重函数
-void PHselfweight();
+void PHselfweight(int*,char***);
 //压杆稳定性校核
 void PHstability();
 
-int main()
+int main_1(int argc, char *argv[])
 {
 	time_t start, end;
+
+	int* p_argc = &argc;
+	char*** p_argv = &argv;
 
 
 	//printf("%d\n", omp_get_num_procs());
@@ -87,7 +90,7 @@ int main()
 	//scanf("%c", &c);
 	//if (c == 'Y' || c == 'y')
 	//{
-	//	PHselfweight();//执行自重函数
+		PHselfweight(p_argc, p_argv);//执行自重函数
 	//}
 
 	pp = PHBuildLoadVector();//组集载荷向量并将其指针赋给pp
@@ -96,6 +99,8 @@ int main()
 	PHPrint();//结构参数以及计算结果的输出	
 	end = clock();
 	printf("time=%f\n", ((double)end - start) / CLK_TCK);
+
+	return 0;
 }
 
 void PHRead()
@@ -234,11 +239,15 @@ int* PHI0J0(int k)
 	ij[1] = 2 * (br - NFIN - 1);//将末端节点在总刚度阵中对应的位置编号存放在ij数组中
 	return ij;//返回ij数组指针
 }
-void PHselfweight()//自重函数
+void PHselfweight(int* p1, char*** p2)//自重函数
 {
 	int bl, br, k, * p;
 	double w = 0, g = 9.81;
-	for (k = 0; k < NOR; k++)
+	int id, bp;
+	MPI_Init(p1, p2);
+	MPI_Comm_rank(MPI_COMM_WORLD, &id);
+	MPI_Comm_size(MPI_COMM_WORLD, &bp);
+	for (k = id; k < NOR; k+=bp)
 	{
 		bl = BNR[k];//bl存放杆件的始端节点号
 		br = ENR[k];//br存放杆件的末端节点号

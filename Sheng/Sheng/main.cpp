@@ -8,7 +8,7 @@
 #include <omp.h>
 #include <time.h>
 void add(int*, char***);
-int main(int argc, char* argv[])
+int main1(int argc, char* argv[])
 {
 	time_t start, end;
 	int* p_argc = &argc;

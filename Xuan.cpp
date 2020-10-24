@@ -70,7 +70,7 @@ bool sfPrintLine();
 //print"****************************************"
 bool sfPrintLine2();
 //output data
-bool sfOutut();
+bool sfOutput();
 //print error
 bool sfPrintError(int);
 
@@ -131,7 +131,7 @@ int main()
 
             return 1;
         }
-    sfOutut(); //output data.
+    sfOutput(); //output data.
 
     printf("Press any key to exit\n");
     value = getchar(); //pause
@@ -195,7 +195,7 @@ bool sfInput()
     XCN[1] = 3;
     XCN[2] = 0;
     XCN[3] = 0;
-    
+
     YCN[0] = 0;
     YCN[1] = 9;
     YCN[2] = 0;
@@ -279,10 +279,10 @@ bool sfInput()
     return 0;
 }
 
-bool sfBuildTotalStiff(double *ts)
+bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
 {
-    double us[36] = {0};              //unit stiffness matrix
-    int tmp[2] = {0}, dof = 6 * NFRN; //tmp is a temperary vector for i0j0, dof is the degree of freedom of nods
+    double us[36] = {0};            //unit stiffness matrix
+    int p[2] = {0}, dof = 6 * NFRN; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
 
     ts = (double *)malloc(dof * dof * sizeof(double)); //allocate memory for total stiffness matrix
     memset(ts, 0, dof * dof * sizeof(double));
@@ -297,35 +297,35 @@ bool sfBuildTotalStiff(double *ts)
 
     for (int k = 0; k < NOR; k++)
     {
-        tmp[0] = 6 * (BNR[k] - NFRN - 1); // tag: match the displacement with nods
-        tmp[1] = 6 * (ENR[k] - NFRN - 1);
+        p[0] = 6 * (BNR[k] - NFRN - 1); // tag: match the displacement with nods
+        p[1] = 6 * (ENR[k] - NFRN - 1);
 
         for (int i = 0; i < 2; i++)
         {
-            if (tmp[i] >= 0) //determine free node
+            if (p[i] >= 0) //determine free node
             {
                 if (sfBuildUnitStiff(k, i + 1, us)) //build unit stiffness matrix
                 {
-                    sfPrintError(8);
+                    sfPrintError(7);
                     return 1;
                 }
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n < 6; n++)
-                        ts[(tmp[i] + m) * dof + (tmp[i] + n)] += us[m * 6 + n]; //superpose
+                        ts[(p[i] + m) * dof + (p[i] + n)] += us[m * 6 + n]; //superpose
             }
         }
-        if (tmp[0] >= 0 && tmp[1] >= 0)
+        if (p[0] >= 0 && p[1] >= 0)
         {
             for (int i = 0; i < 2; i++)
             {
                 if (sfBuildUnitStiff(k, i + 3, us)) //build unit stiffness matrix
                 {
-                    sfPrintError(8);
+                    sfPrintError(7);
                     return 1;
                 }
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n < 6; n++)
-                        ts[(tmp[i] + m) * dof + (tmp[1 - i] + n)] += us[m * 6 + n]; //superpose
+                        ts[(p[i] + m) * dof + (p[1 - i] + n)] += us[m * 6 + n]; //superpose
             }
         }
     }
@@ -344,7 +344,7 @@ bool sfLCosSin()
         LCS[0 * NOR + k] = sqrt(LCS[1 * NOR + k] * LCS[1 * NOR + k] + LCS[2 * NOR + k] * LCS[2 * NOR + k] + LCS[3 * NOR + k] * LCS[3 * NOR + k]);
         if (LCS[0 * NOR + k] < EPS) //if the length of rod is too small, then return error
         {
-            sfPrintError(9);
+            sfPrintError(8);
             return 1;
         }
         LCS[1 * NOR + k] = LCS[1 * NOR + k] / LCS[0 * NOR + k];
@@ -361,12 +361,12 @@ bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, fl
 
     if (sfBuildLocalStiff(k, flag, rd)) //build local stiffness matrix
     {
-        sfPrintError(10);
+        sfPrintError(9);
         return 1;
     }
     if (sfBuildTrans(k, t)) //build transpose matrix
     {
-        sfPrintError(11);
+        sfPrintError(10);
         return 1;
     }
 
@@ -396,7 +396,7 @@ bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, fl
     return 0;
 }
 
-bool sfBuildLocalStiff(int k, int flag, double *rd)
+bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, flag is the number of matrix
 {
     double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = LCS[0 * NOR + 1];
 
@@ -463,7 +463,7 @@ bool sfBuildLocalStiff(int k, int flag, double *rd)
     return 0;
 }
 
-bool sfBuildTrans(int k, double *t)
+bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose matrix
 {
     double coa = 0, cob = 0, coc = 0, sic = 0, sit = 0, cot = 0, m = 0, n = 0; //co means cosine, si means sine, m and n is temperary variable
 
@@ -507,21 +507,21 @@ bool sfBuildTrans(int k, double *t)
     return 0;
 }
 
-bool sfBuildLoadVector(double *lv)
+bool sfBuildLoadVector(double *lv) //lv is the load vector
 {
-    int rod = 0, dof = 6 * NFRN, tmp[2] = {0};   //rod is the number of rods, dof is the degree of freedom
-    double rf[12] = {0}, t[36] = {0};            //rf is the reaction force matrix, t is the transpose matrix, tmp is a temperary vector for i0j0
+    int rod = 0, dof = 6 * NFRN, p[2] = {0};     //rod is the number of rods, dof is the degree of freedom
+    double rf[12] = {0}, t[36] = {0};            //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
     lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
     memset(lv, 0, dof * sizeof(double));
 
     for (int i = 0; i < NOL; i++)
     {
-        rod = NRL[i] - 1; //the number of rods with load
+        rod = NRL[i] - 1;                   //the number of rods with load
         memset(rf, 0, 12 * sizeof(double)); //zero clearing
-        
+
         if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //FIXME: calculate reaction force
         {
-            sfPrintError(12);
+            sfPrintError(11);
             return 1;
         }
         for (int j = 0; j < 6; j++) //add reaction force to RFE
@@ -530,31 +530,30 @@ bool sfBuildLoadVector(double *lv)
         }
         if (sfBuildTrans(rod, t)) //build transpose matrix
         {
-            sfPrintError(11);
+            sfPrintError(10);
             return 1;
         }
 
-        tmp[0] = 6 * (BNR[rod] - NFRN - 1); // tag: match the displacement with nods
-        tmp[1] = 6 * (ENR[rod] - NFRN - 1);
+        p[0] = 6 * (BNR[rod] - NFRN - 1); // tag: match the displacement with nods
+        p[1] = 6 * (ENR[rod] - NFRN - 1);
 
         for (int j = 0; j < 2; j++) //add reaction force to load vector
         {
-            if (tmp[j] >= 0) //determine free node
+            if (p[j] >= 0) //determine free node
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n < 6; n++)
-                        lv[tmp[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
+                        lv[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
         }
     }
 
     return 0;
 }
 
-
-bool sfReactionForce(int i, double *rfb, double *rfe)
+bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load, rfb and rfe is the reaction force at begining and end of rods
 {
     double ra = 0, rb = 0, a = 0, b = 0, q = VOL[i], xq = DLB[i]; //ra, rb, a and b are middle variable
-    int rod = NRL[i] - 1, pm = PLI[i], t = 0; //rod is the number of rods
-    if (pm == 0) //load is in XY plane
+    int rod = NRL[i] - 1, pm = PLI[i], t = 0;                     //rod is the number of rods
+    if (pm == 0)                                                  //load is in XY plane
     {
         t = -1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
     }
@@ -563,7 +562,7 @@ bool sfReactionForce(int i, double *rfb, double *rfe)
         t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
     }
     ra = DLB[i] / LCS[0 * NOR + rod]; //x(q) / L
-    rb = 1 - ra; //1 - x(q) / L
+    rb = 1 - ra;                      //1 - x(q) / L
     switch (KOL[i])
     {
     case 1: //vertical concentrating load
@@ -592,9 +591,9 @@ bool sfReactionForce(int i, double *rfb, double *rfe)
         break;
     case 5: //vertical triangle distributed load
         a = q * xq / 2;
-        b = -0.4 * ra *ra;
+        b = -0.4 * ra * ra;
         rfb[pm + 1] = -2 * a * (0.5 - 0.75 * ra * ra + 0.4 * ra * ra * ra);
-        rfe[pm + 1] = -a - rfb[pm +1];
+        rfe[pm + 1] = -a - rfb[pm + 1];
         rfb[5 - pm] = t * a * (2 / 3 + b - ra);
         rfe[5 - pm] = -t * a * (0.5 * ra + b);
         break;
@@ -609,7 +608,7 @@ bool sfReactionForce(int i, double *rfb, double *rfe)
         rfe[5 - pm] = -rfb[0];
         break;
     case 8: //different temperature rise
-    
+
         if (pm == 0)
         {
             a = IMZ[rod];
@@ -624,105 +623,104 @@ bool sfReactionForce(int i, double *rfb, double *rfe)
     default:
         break;
     }
-    
 
     return 0;
 }
 
-bool sfCholesky(double *A, double *b, double *x, int n)
+bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
 {
-	if (A == NULL)
-	{
-		sfPrintError(13);
-		return 1;
-	}
-	else if (b == NULL)
-	{
-		sfPrintError(13);
-		return 1;
-	}
-	else if (x == NULL)
-	{
-		sfPrintError(13);
-		return 1;
-	}
-	else if (n == 0)
-	{
-		sfPrintError(13);
-		return 1;
-	}
+    if (A == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (b == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (x == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (n == 0)
+    {
+        sfPrintError(12);
+        return 1;
+    }
 
-	double sum = 0, *L = 0, *D = 0, *y = 0;
+    double sum = 0, *L = 0, *D = 0, *y = 0;
 
-	L = (double *)malloc(n * n * sizeof(double));
-	if (L != NULL)
-		memset(L, 0, n * n * sizeof(double));
-	for (int i = 0; i < n; i++)
-	{
-		L[i * n + i] = 1;
-	}
-	D = (double *)malloc(n * sizeof(double));
-	memset(D, 0, n * sizeof(double));
-	y = (double *)malloc(n * sizeof(double));
-	if (y != NULL)
-		memset(y, 0, n * sizeof(double));
+    L = (double *)malloc(n * n * sizeof(double));
+    if (L != NULL)
+        memset(L, 0, n * n * sizeof(double));
+    for (int i = 0; i < n; i++)
+    {
+        L[i * n + i] = 1;
+    }
+    D = (double *)malloc(n * sizeof(double));
+    memset(D, 0, n * sizeof(double));
+    y = (double *)malloc(n * sizeof(double));
+    if (y != NULL)
+        memset(y, 0, n * sizeof(double));
 
-	// factorize matrix A
-	D[0] = A[0 * n + 0];
-	for (int i = 1; i < n; i++)
-	{
-		for (int j = 0; j < i; j++)
-		{
-			sum = 0;
-			for (int k = 0; k < j; k++)
-			{
-				sum = sum + L[i * n + k] * D[k] * L[j * n + k];
-			}
-			L[i * n + j] = (A[i * n + j] - sum) / D[j];
-		}
-		sum = 0;
-		for (int k = 0; k < i; k++)
-		{
-			sum = sum + L[i * n + k] * L[i * n + k] * D[k];
-		}
-		D[i] = A[i * n + i] - sum;
-	}
+    // factorize matrix A
+    D[0] = A[0 * n + 0];
+    for (int i = 1; i < n; i++)
+    {
+        for (int j = 0; j < i; j++)
+        {
+            sum = 0;
+            for (int k = 0; k < j; k++)
+            {
+                sum = sum + L[i * n + k] * D[k] * L[j * n + k];
+            }
+            L[i * n + j] = (A[i * n + j] - sum) / D[j];
+        }
+        sum = 0;
+        for (int k = 0; k < i; k++)
+        {
+            sum = sum + L[i * n + k] * L[i * n + k] * D[k];
+        }
+        D[i] = A[i * n + i] - sum;
+    }
 
-	// solve y by Ly=b
-	y[0] = b[0];
-	for (int i = 1; i < n; i++)
-	{
-		sum = 0;
-		for (int j = 0; j < i; j++)
-		{
-			sum = sum + L[i * n + j] * y[j];
-		}
-		y[i] = b[i] - sum;
-	}
+    // solve y by Ly=b
+    y[0] = b[0];
+    for (int i = 1; i < n; i++)
+    {
+        sum = 0;
+        for (int j = 0; j < i; j++)
+        {
+            sum = sum + L[i * n + j] * y[j];
+        }
+        y[i] = b[i] - sum;
+    }
 
-	// solve x by DL(t)=y
-	x[n - 1] = y[n - 1] / D[n - 1];
-	for (int i = n - 2; i >= 0; i--)
-	{
-		sum = 0;
-		for (int j = i + 1; j < n; j++)
-		{
-			sum = sum + L[j * n + i] * x[j];
-		}
-		x[i] = y[i] / D[i] - sum;
-	}
+    // solve x by DL(t)=y
+    x[n - 1] = y[n - 1] / D[n - 1];
+    for (int i = n - 2; i >= 0; i--)
+    {
+        sum = 0;
+        for (int j = i + 1; j < n; j++)
+        {
+            sum = sum + L[j * n + i] * x[j];
+        }
+        x[i] = y[i] / D[i] - sum;
+    }
 
-	free(L);
-	free(D);
-	free(y);
+    free(L);
+    free(D);
+    free(y);
 
-	return 0;
+    return 0;
 }
 
-bool sfInternalForce(int m, int k, double xp)
+bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
 {
     int n = 6 * (k - 1); //n is the matching place of rods
-    double tf[6] = {0}; //tf is temperary variable
+    double tf[6] = {0};  //tf is temperary variable
 
     IFS[m] = -RFE[n]; //calculate internal force cause by reaction force at the end of rods
     IFS[m + 1] = -RFE[n + 1];
@@ -730,7 +728,7 @@ bool sfInternalForce(int m, int k, double xp)
     IFS[m + 3] = RFE[n + 3];
     IFS[m + 4] = -RFE[n + 4] + RFE[n + 2] * (LCS[0 * NOR + k - 1] - xp);
     IFS[m + 5] = RFE[n + 5] + RFE[n + 1] * (LCS[0 * NOR + k - 1] - xp);
-    
+
     for (int i = 0; i < NOL; i++) //for every rods
     {
         if (NRL[i] == k) //if load is on rod k
@@ -738,14 +736,14 @@ bool sfInternalForce(int m, int k, double xp)
             memset(tf, 0, 6 * sizeof(double)); //zero clear tf
             if (sfCtlInternalForce(i, xp, tf)) // calculate internal force of cantilever beam
             {
-                sfPrintError(14);
+                sfPrintError(13);
                 return 1;
             }
         }
     }
     if (sfDisplacementForce(k, tf)) //calculate end force
     {
-        sfPrintError(15);
+        sfPrintError(14);
         return 1;
     }
 
@@ -755,6 +753,180 @@ bool sfInternalForce(int m, int k, double xp)
     IFS[m + 3] -= tf[3];
     IFS[m + 4] += -tf[4] + tf[2] * xp;
     IFS[m + 5] += tf[5] + tf[1] * xp;
-    
+
+    return 0;
+}
+
+bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load, xp is the distance between the section and the begining of rod, tf is internal force
+{
+    double xq = DLB[i], t = xq - xp, r = xp / xq, q = VOL[i]; //t and r are temperary variables
+    int e = PLI[i];
+    switch (KOL[i]) //calculate section force according to kind of loads
+    {
+    case 1:
+        if (xp < xq)
+        {
+            tf[e + 1] = -q;
+            tf[5 - e] = q * t;
+        }
+        break;
+    case 2:
+        if (xp < xq)
+        {
+            tf[e + 1] = -q * t;
+            tf[5 - e] = 0.5 * q * t * t;
+        }
+        break;
+    case 3:
+        if (xp < xq)
+        {
+            tf[3 * e] = q;
+        }
+        break;
+    case 4:
+        if (xp < xq)
+        {
+            tf[3 * e] = q * t;
+        }
+        break;
+    case 5:
+        if (xp < xq)
+        {
+            tf[e + 1] = -q * (1 + r) * t / 2;
+            tf[5 - e] = q * t * t * (2 + r) / 6;
+        }
+        break;
+    case 6:
+        if (xp < xq)
+        {
+            tf[e + 4] = (2 * e - 1) * q;
+        }
+        break;
+    case 7: //temperature change don't generate internal force on cantilever beam
+        break;
+    case 8:
+        break;
+
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, tref is the end force of rods
+{
+    int p[2] = {0};                                  //p is a temperary vector for i0j0
+    double rd[36] = {0}, rdb[36] = {0}, t[36] = {0}; //rd
+
+    memset(tref, 0, 6 * sizeof(double));
+
+    if (sfBuildTrans(k - 1, t)) //calculate transpose matrix
+    {
+        sfPrintError(10);
+        return 1;
+    }
+
+    p[0] = 6 * (BNR[k - 1] - NFRN - 1); // tag: match the displacement with nods
+    p[1] = 6 * (ENR[k - 1] - NFRN - 1);
+
+    for (int i = 0; i < 2; i++)
+    {
+        if (p[i] >= 0) //determine free node
+        {
+            if (sfBuildLocalStiff(k - 1, 2 * i + 1, rd)) //build unit stiffness matrix
+            {
+                sfPrintError(9);
+                return 1;
+            }
+            for (int j = 0; j < 6; j++) //rd times transposition of transpose matrix
+                for (int m = 0; m < 6; m++)
+                    for (int n = 0; n < 6; n++)
+                        rdb[j * 6 + m] += rd[j * 6 + n] * t[m * 6 + n];
+            for (int j = 0; j < 6; j++) //rdb times DON
+                for (int m = 0; m < 6; m++)
+                    tref[j] += rdb[j * 6 + m] * DON[p[i] * 6 + m];
+        }
+        else //fixed node
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                tref[j] += 0;
+            }
+        }
+    }
+
+    return 0;
+}
+
+bool sfPrintLine()
+{
+    printf("--------------------------------------------------------------------------\n");
+    return 0;
+}
+
+bool sfPrintLine2()
+{
+    printf("**************************************************************************\n");
+    return 0;
+}
+
+bool sfOutput()
+{
+    return 0;
+}
+
+bool sfPrintError(int error)
+{
+    printf("ERROR:\t");
+    switch (error)
+    {
+    case 1:
+        printf("Data input failed!\n");
+        break;
+    case 2:
+        printf("Building total stiffness matrix failed!\n");
+        break;
+    case 3:
+        printf("Building load vector failed!\n");
+        break;
+    case 4:
+        printf("Solving equation failed!\n");
+        break;
+    case 5:
+        printf("Calculating internal force failed!\n");
+        break;
+    case 6:
+        printf("Calculating length, cosine and sine failed!\n");
+        break;
+    case 7:
+        printf("Building unit stiffness matrix failed!\n");
+        break;
+    case 8:
+        printf("The length of a rod is too small!\n");
+        break;
+    case 9:
+        printf("Building local stiffness matrix filed!\n");
+        break;
+    case 10:
+        printf("Building transpose matrix failed!\n");
+        break;
+    case 11:
+        printf("Calculating reaction force failed!\n");
+        break;
+    case 12:
+        printf("There is something wrong in the equation!\n");
+        break;
+    case 13:
+        printf("calculating internal force of cantilever beam failed!\n");
+        break;
+    case 14:
+        printf("Calculating end force failed!\n");
+        break;
+    default:
+        break;
+    }
+    printf("There is at least one error in your file, please check it and try it one more time.\n");
+
     return 0;
 }

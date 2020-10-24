@@ -92,6 +92,13 @@ int main()
     }
     else
         printf("Data input succeeded!\n");
+
+    int dof = 6 * NFRN;
+    ts = (double *)malloc(dof * dof * sizeof(double)); //allocate memory for total stiffness matrix
+    memset(ts, 0, dof * dof * sizeof(double));
+    lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
+    memset(lv, 0, dof * sizeof(double));
+
     if (sfBuildTotalStiff(ts)) //build total stiffness matrix
     {
         sfPrintError(2);
@@ -102,6 +109,18 @@ int main()
     }
     else
         printf("Building total stiffness matrix succeeded!\n");
+
+    // sfPrintLine2();
+    // for (int i = 0; i < dof; i++)
+    // {
+    //     for (int j = 0; j < dof; j++)
+    //     {
+    //         printf("%20.7f,", ts[i * dof + j]);
+    //     }
+    //     printf("; ");
+    // }
+    // sfPrintLine2();
+
     if (sfBuildLoadVector(lv)) //build load stiffness vector
     {
         sfPrintError(3);
@@ -112,6 +131,15 @@ int main()
     }
     else
         printf("Building load vector succeeded!\n");
+
+    // sfPrintLine2();
+    // for (int i = 0; i < dof; i++)
+    // {
+    //     printf("%20.7f,", lv[i]);
+    //     printf(" ");
+    // }
+    // sfPrintLine2();
+
     if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
     {
         sfPrintError(4);
@@ -122,15 +150,27 @@ int main()
     }
     else
         printf("Solving equation succeeded!\n");
-    for (int i = 0; i < NOS; i++)
-        if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
-        {
-            sfPrintError(5);
-            printf("\nPress any key to exit\n");
-            value = getchar();
 
-            return 1;
-        }
+    // sfPrintLine2();
+    // for (int i = 0; i < NFRN; i++)
+    // {
+    //     for (int j = 0; j < 6; j++)
+    //     {
+    //         printf("%15.7f", DON[i * NFRN + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
+
+    // for (int i = 0; i < NOS; i++)
+    //     if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
+    //     {
+    //         sfPrintError(5);
+    //         printf("\nPress any key to exit\n");
+    //         value = getchar();
+
+    //         return 1;
+    //     }
     sfOutput(); //output data.
 
     printf("Press any key to exit\n");
@@ -184,8 +224,8 @@ bool sfInput()
     memset(NRS, 0, NOS * sizeof(int));
     DSB = (double *)malloc(NOS * sizeof(double));
     memset(DSB, 0, NOS * sizeof(double));
-    DON = (double *)malloc(3 * NFRN * sizeof(double));
-    memset(DON, 0, 3 * NFRN * sizeof(double));
+    DON = (double *)malloc(6 * NFRN * sizeof(double));
+    memset(DON, 0, 6 * NFRN * sizeof(double));
     IFS = (double *)malloc(3 * NOS * sizeof(double));
     memset(IFS, 0, 3 * NOS * sizeof(double));
     RFE = (double *)malloc(6 * NOR * sizeof(double));
@@ -220,7 +260,7 @@ bool sfInput()
 
     SHEAR[0] = 80769000;
     SHEAR[1] = 80769000;
-    SHEAR[2] = 8079000;
+    SHEAR[2] = 80769000;
 
     AREA[0] = 0.007854;
     AREA[1] = 0.007854;
@@ -274,7 +314,7 @@ bool sfInput()
     DLB[1] = 3;
     DLB[2] = 6;
     DLB[3] = 6;
-    DLB[3] = 3;
+    DLB[4] = 3;
 
     return 0;
 }
@@ -284,10 +324,9 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
     double us[36] = {0};            //unit stiffness matrix
     int p[2] = {0}, dof = 6 * NFRN; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
 
-    ts = (double *)malloc(dof * dof * sizeof(double)); //allocate memory for total stiffness matrix
-    memset(ts, 0, dof * dof * sizeof(double));
+    
     LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
-    memset(LCS, 0, 4 * dof * sizeof(double));
+    memset(LCS, 0, 4 * NOR * sizeof(double));
 
     if (sfLCosSin()) //calculate the length, cosine and sine of all rods
     {
@@ -297,8 +336,8 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
 
     for (int k = 0; k < NOR; k++)
     {
-        p[0] = 6 * (BNR[k] - NFRN - 1); // tag: match the displacement with nods
-        p[1] = 6 * (ENR[k] - NFRN - 1);
+        p[0] = 6 * (BNR[k] - NFIN - 1); // tag: match the displacement with nods
+        p[1] = 6 * (ENR[k] - NFIN - 1);
 
         for (int i = 0; i < 2; i++)
         {
@@ -323,12 +362,42 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
                     sfPrintError(7);
                     return 1;
                 }
+
+                // sfPrintLine2();
+                // for (int i = 0; i < 6; i++)
+                // {
+                //     for (int j = 0; j < 6; j++)
+                //     {
+                //         printf("%15.2f", us[i * 6 + j]);
+                //     }
+                //     printf("\n");
+                // }
+                // sfPrintLine2();
+        
                 for (int m = 0; m < 6; m++)
+                {
                     for (int n = 0; n < 6; n++)
+                    {
                         ts[(p[i] + m) * dof + (p[1 - i] + n)] += us[m * 6 + n]; //superpose
+                        printf("%15.2f", ts[(p[i] + m) * dof + (p[1 - i] + n)]);
+                    }
+                    printf("\n");
+                }
+
             }
         }
     }
+
+    // sfPrintLine2();
+    // for (int i = 0; i < dof; i++)
+    // {
+    //     for (int j = 0; j < dof; j++)
+    //     {
+    //         printf("%15.2f", ts[i * dof + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
 
     return 0;
 }
@@ -337,11 +406,17 @@ bool sfLCosSin()
 {
     for (int k = 0; k < NOR; k++)
     {
-        int i = BNR[k] - 1, j = BNR[k] - 1; //index of beginning and end nodes of rods
-        LCS[1 * NOR + k] = XCN[j] - YCN[i];
+        int i = BNR[k] - 1, j = ENR[k] - 1; //index of beginning and end nodes of rods
+        LCS[1 * NOR + k] = XCN[j] - XCN[i];
         LCS[2 * NOR + k] = YCN[j] - YCN[i];
         LCS[3 * NOR + k] = ZCN[j] - ZCN[i];
         LCS[0 * NOR + k] = sqrt(LCS[1 * NOR + k] * LCS[1 * NOR + k] + LCS[2 * NOR + k] * LCS[2 * NOR + k] + LCS[3 * NOR + k] * LCS[3 * NOR + k]);
+        // sfPrintLine2();
+        // printf("%d\t%f\n", k + 1, LCS[0 * NOR + k]);
+        // printf("%d\t%f\n", k + 1, LCS[1 * NOR + k]);
+        // printf("%d\t%f\n", k + 1, LCS[2 * NOR + k]);
+        // printf("%d\t%f\n", k + 1, LCS[3 * NOR + k]);
+        // sfPrintLine2();
         if (LCS[0 * NOR + k] < EPS) //if the length of rod is too small, then return error
         {
             sfPrintError(8);
@@ -358,6 +433,7 @@ bool sfLCosSin()
 bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
 {
     double rd[36] = {0}, t[36] = {0}, c[36] = {0}, tmp = 0; //rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
+    memset(us, 0, 36 * sizeof(double));
 
     if (sfBuildLocalStiff(k, flag, rd)) //build local stiffness matrix
     {
@@ -393,12 +469,23 @@ bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, fl
         }
     }
 
+    // sfPrintLine2();
+    // for (int i = 0; i < 6; i++)
+    // {
+    //     for (int j = 0; j < 6; j++)
+    //     {
+    //         printf("%15.2f", us[i * 6 + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
+
     return 0;
 }
 
 bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, flag is the number of matrix
 {
-    double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = LCS[0 * NOR + 1];
+    double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = LCS[0 * NOR + k];
 
     a = ELASTIC[k] * AREA[k] / l;         //EA/1
     b = SHEAR[k] * (IMY[k] + IMZ[k]) / l; //GJ(p)/1
@@ -460,6 +547,17 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
         break;
     }
 
+    sfPrintLine2();
+    for (int i = 0; i < 6; i++)
+    {
+        for (int j = 0; j < 6; j++)
+        {
+            printf("%15.2f", rd[i * 6 + j]);
+        }
+        printf("\n");
+    }
+    sfPrintLine2();
+
     return 0;
 }
 
@@ -467,20 +565,22 @@ bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose ma
 {
     double coa = 0, cob = 0, coc = 0, sic = 0, sit = 0, cot = 0, m = 0, n = 0; //co means cosine, si means sine, m and n is temperary variable
 
+    memset(t, 0, 36 * sizeof(double));
+
     coa = LCS[1 * NOR + k]; //cosine alpha
     cob = LCS[2 * NOR + k]; //cosine beta
     coc = LCS[3 * NOR + k]; //cosine gama
     sit = sin(THETA[k]);    //sine theta
     cot = cos(THETA[k]);    //cosine theta
 
-    if (coc == 1) //FIXME vertical(z axis positive direction) rods' transpose matrix
+    if (fabs(coc - 1) < EPS) //vertical(z axis positive direction) rods' transpose matrix
     {
         t[2 * 6 + 0] = t[5 * 6 + 3] = 1;
         t[0 * 6 + 1] = t[3 * 6 + 4] = t[1 * 6 + 2] = t[4 * 6 + 5] = sit;
         t[1 * 6 + 1] = t[4 * 6 + 4] = cot;
         t[0 * 6 + 2] = t[3 * 6 + 5] = -cot;
     }
-    else if (coc == -1) //FIXME vertical(z axis negative direction) rods' transpose matrix
+    else if (fabs(coc + 1) < EPS) //vertical(z axis negative direction) rods' transpose matrix
     {
         t[2 * 6 + 0] = t[5 * 6 + 3] = -1;
         t[0 * 6 + 1] = t[3 * 6 + 4] = sit;
@@ -509,17 +609,15 @@ bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose ma
 
 bool sfBuildLoadVector(double *lv) //lv is the load vector
 {
-    int rod = 0, dof = 6 * NFRN, p[2] = {0};     //rod is the number of rods, dof is the degree of freedom
+    int rod = 0, p[2] = {0};     //rod is the number of rods, dof is the degree of freedom
     double rf[12] = {0}, t[36] = {0};            //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
-    lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
-    memset(lv, 0, dof * sizeof(double));
 
     for (int i = 0; i < NOL; i++)
     {
         rod = NRL[i] - 1;                   //the number of rods with load
         memset(rf, 0, 12 * sizeof(double)); //zero clearing
 
-        if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //FIXME: calculate reaction force
+        if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //calculate reaction force
         {
             sfPrintError(11);
             return 1;
@@ -534,8 +632,8 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
             return 1;
         }
 
-        p[0] = 6 * (BNR[rod] - NFRN - 1); // tag: match the displacement with nods
-        p[1] = 6 * (ENR[rod] - NFRN - 1);
+        p[0] = 6 * (BNR[rod] - NFIN - 1); // tag: match the displacement with nods
+        p[1] = 6 * (ENR[rod] - NFIN - 1);
 
         for (int j = 0; j < 2; j++) //add reaction force to load vector
         {
@@ -553,7 +651,8 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
 {
     double ra = 0, rb = 0, a = 0, b = 0, q = VOL[i], xq = DLB[i]; //ra, rb, a and b are middle variable
     int rod = NRL[i] - 1, pm = PLI[i], t = 0;                     //rod is the number of rods
-    if (pm == 0)                                                  //load is in XY plane
+    
+    if (pm == 0) //load is in XY plane
     {
         t = -1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
     }
@@ -587,7 +686,7 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
     case 4: //axial uniform load
         a = q * xq;
         rfe[3 * pm] = -a * ra / 2;
-        rfb[3 * pm] = -a * rfe[3 * pm];
+        rfb[3 * pm] = -a - rfe[3 * pm];
         break;
     case 5: //vertical triangle distributed load
         a = q * xq / 2;
@@ -608,7 +707,6 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
         rfe[5 - pm] = -rfb[0];
         break;
     case 8: //different temperature rise
-
         if (pm == 0)
         {
             a = IMZ[rod];
@@ -827,8 +925,8 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
         return 1;
     }
 
-    p[0] = 6 * (BNR[k - 1] - NFRN - 1); // tag: match the displacement with nods
-    p[1] = 6 * (ENR[k - 1] - NFRN - 1);
+    p[0] = 6 * (BNR[k - 1] - NFIN - 1); // tag: match the displacement with nods
+    p[1] = 6 * (ENR[k - 1] - NFIN - 1);
 
     for (int i = 0; i < 2; i++)
     {

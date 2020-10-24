@@ -61,10 +61,10 @@ bool sfReactionForce(int, double *, double *);
 bool sfCholesky(double *, double *, double *, int);
 //calculate internal force of rods
 bool sfInternalForce(int, int, double);
-//calculate internal force of simply supported beam
-bool sfSSInternalForce(int, double, double *);
+//calculate internal force of cantilever beam
+bool sfCtlInternalForce(int, double, double *);
 //calculate internal force of displacement
-bool sfDisplacementForce(int, double);
+bool sfDisplacementForce(int, double *);
 //print"----------------------------------------"
 bool sfPrintLine();
 //print"****************************************"
@@ -566,14 +566,14 @@ bool sfReactionForce(int i, double *rfb, double *rfe)
     rb = 1 - ra; //1 - x(q) / L
     switch (KOL[i])
     {
-    case 1:
+    case 1: //vertical concentrating load
         a = rb * rb;
         rfb[pm + 1] = -q * rb * (1 + ra - 2 * ra * ra);
         rfe[pm + 1] = -q - rfb[pm + 1];
         rfb[5 - pm] = t * q * rb * ra * (LCS[0 * NOR + rod] - xq);
         rfe[5 - pm] = -t * q * ra * rb * xq;
         break;
-    case 2:
+    case 2: //vertical uniform load
         a = q * xq;
         b = a * xq / 12;
         rfb[pm + 1] = -a * (1 + 0.5 * ra * ra * ra - ra * ra);
@@ -581,16 +581,16 @@ bool sfReactionForce(int i, double *rfb, double *rfe)
         rfb[5 - pm] = t * b * (6 - 8 * ra + 3 * ra * ra);
         rfe[5 - pm] = -t * b * (4 * ra - 3 * ra * ra);
         break;
-    case 3:
+    case 3: //axial concentrating force when PLI == 0, torque when PLI ==1
         rfb[3 * pm] = -q * rb;
         rfe[3 * pm] = -q * ra;
         break;
-    case 4:
+    case 4: //axial uniform load
         a = q * xq;
         rfe[3 * pm] = -a * ra / 2;
         rfb[3 * pm] = -a * rfe[3 * pm];
         break;
-    case 5:
+    case 5: //vertical triangle distributed load
         a = q * xq / 2;
         b = -0.4 * ra *ra;
         rfb[pm + 1] = -2 * a * (0.5 - 0.75 * ra * ra + 0.4 * ra * ra * ra);
@@ -598,17 +598,18 @@ bool sfReactionForce(int i, double *rfb, double *rfe)
         rfb[5 - pm] = t * a * (2 / 3 + b - ra);
         rfe[5 - pm] = -t * a * (0.5 * ra + b);
         break;
-    case 6:
+    case 6: //concentrating bending moment
         rfb[2 - pm] = t * 6 * q * rb * ra / LCS[0 * NOR + rod];
         rfe[2 - pm] = -rfb[2 - pm];
         rfb[pm + 4] = t * q * rb * (-1 + 3 * ra);
         rfe[pm + 4] = t * q * ra * (2 - 3 * ra);
         break;
-    case 7:
+    case 7: //unifrom temperature rise
         rfb[0] = q * xq * ELASTIC[rod] * AREA[rod];
         rfe[5 - pm] = -rfb[0];
         break;
-    case 8:
+    case 8: //different temperature rise
+    
         if (pm == 0)
         {
             a = IMZ[rod];
@@ -716,4 +717,44 @@ bool sfCholesky(double *A, double *b, double *x, int n)
 	free(y);
 
 	return 0;
+}
+
+bool sfInternalForce(int m, int k, double xp)
+{
+    int n = 6 * (k - 1); //n is the matching place of rods
+    double tf[6] = {0}; //tf is temperary variable
+
+    IFS[m] = -RFE[n]; //calculate internal force cause by reaction force at the end of rods
+    IFS[m + 1] = -RFE[n + 1];
+    IFS[m + 2] = -RFE[n + 2];
+    IFS[m + 3] = RFE[n + 3];
+    IFS[m + 4] = -RFE[n + 4] + RFE[n + 2] * (LCS[0 * NOR + k - 1] - xp);
+    IFS[m + 5] = RFE[n + 5] + RFE[n + 1] * (LCS[0 * NOR + k - 1] - xp);
+    
+    for (int i = 0; i < NOL; i++) //for every rods
+    {
+        if (NRL[i] == k) //if load is on rod k
+        {
+            memset(tf, 0, 6 * sizeof(double)); //zero clear tf
+            if (sfCtlInternalForce(i, xp, tf)) // calculate internal force of cantilever beam
+            {
+                sfPrintError(14);
+                return 1;
+            }
+        }
+    }
+    if (sfDisplacementForce(k, tf)) //calculate end force
+    {
+        sfPrintError(15);
+        return 1;
+    }
+
+    IFS[m] -= -tf[0]; //calculate section force cause by end force
+    IFS[m + 1] += -tf[1];
+    IFS[m + 2] += -tf[2];
+    IFS[m + 3] -= tf[3];
+    IFS[m + 4] += -tf[4] + tf[2] * xp;
+    IFS[m + 5] += tf[5] + tf[1] * xp;
+    
+    return 0;
 }

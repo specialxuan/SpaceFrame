@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define EPS 1e-7
+#define EPS 1e-15
 
 int TNN;  //total number of nodes
 int NFIN; //number of fixed nodes
@@ -151,16 +151,13 @@ int main()
     else
         printf("Solving equation succeeded!\n");
 
-    // sfPrintLine2();
-    // for (int i = 0; i < NFRN; i++)
-    // {
-    //     for (int j = 0; j < 6; j++)
-    //     {
-    //         printf("%15.7f", DON[i * NFRN + j]);
-    //     }
-    //     printf("\n");
-    // }
-    // sfPrintLine2();
+    sfPrintLine2();
+    for (int i = 0; i < 6 * NFRN; i++)
+    {
+        printf("%15.7f", DON[i]);
+        printf("\n");
+    }
+    sfPrintLine2();
 
     // for (int i = 0; i < NOS; i++)
     //     if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
@@ -266,9 +263,9 @@ bool sfInput()
     AREA[1] = 0.007854;
     AREA[2] = 0.007854;
 
-    IMY[0] = 0.0000049807;
-    IMY[1] = 0.0000049807;
-    IMY[2] = 0.0000049807;
+    IMY[0] = 0.0000049087;
+    IMY[1] = 0.0000049087;
+    IMY[2] = 0.0000049087;
 
     IMZ[0] = 0.0000049087;
     IMZ[1] = 0.0000049087;
@@ -379,9 +376,9 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
                     for (int n = 0; n < 6; n++)
                     {
                         ts[(p[i] + m) * dof + (p[1 - i] + n)] += us[m * 6 + n]; //superpose
-                        printf("%15.2f", ts[(p[i] + m) * dof + (p[1 - i] + n)]);
+                        // printf("%15.2f", ts[(p[i] + m) * dof + (p[1 - i] + n)]);
                     }
-                    printf("\n");
+                    // printf("\n");
                 }
 
             }
@@ -547,16 +544,16 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
         break;
     }
 
-    sfPrintLine2();
-    for (int i = 0; i < 6; i++)
-    {
-        for (int j = 0; j < 6; j++)
-        {
-            printf("%15.2f", rd[i * 6 + j]);
-        }
-        printf("\n");
-    }
-    sfPrintLine2();
+    // sfPrintLine();
+    // for (int i = 0; i < 6; i++)
+    // {
+    //     for (int j = 0; j < 6; j++)
+    //     {
+    //         printf("%15.2f", rd[i * 6 + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
 
     return 0;
 }
@@ -599,10 +596,23 @@ bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose ma
         t[0 * 6 + 1] = t[3 * 6 + 4] = (cob * sit - m * cot) / sic;
         t[1 * 6 + 1] = t[4 * 6 + 4] = -(n * cot + coa * sit) / sic;
         t[2 * 6 + 1] = t[5 * 6 + 4] = cot * sic;
-        t[0 * 2 + 1] = t[3 * 6 + 5] = (m * sit + cob * cot) / sic;
+        t[0 * 2 + 2] = t[3 * 6 + 5] = (m * sit + cob * cot) / sic;
         t[1 * 6 + 2] = t[4 * 6 + 5] = (n * sit - coa * cot) / sic;
         t[2 * 6 + 2] = t[5 * 6 + 5] = -sit * sic;
     }
+
+    sfPrintLine2();
+    printf("number of rod = %d\n", k + 1);
+    sfPrintLine2();
+    for (int i = 0; i < 6; i++)
+    {
+        for (int j = 0; j < 6; j++)
+        {
+            printf("%15.2f", t[i * 6 + j]);
+        }
+        printf("\n");
+    }
+    sfPrintLine2();
 
     return 0;
 }

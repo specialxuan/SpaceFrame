@@ -159,16 +159,23 @@ int main()
     }
     sfPrintLine2();
 
-    // for (int i = 0; i < NOS; i++)
-    //     if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
-    //     {
-    //         sfPrintError(5);
-    //         printf("\nPress any key to exit\n");
-    //         value = getchar();
+    for (int i = 0; i < NOS; i++)
+        if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
+        {
+            sfPrintError(5);
+            printf("\nPress any key to exit\n");
+            value = getchar();
 
-    //         return 1;
-    //     }
+            return 1;
+        }
     sfOutput(); //output data.
+
+    sfPrintLine2();
+    for (int i = 0; i < NOS;i++)
+    {
+        printf("\t%f\n", IFS[6*i]);
+    }
+    sfPrintLine2();
 
     printf("Press any key to exit\n");
     value = getchar(); //pause
@@ -714,7 +721,7 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
         break;
     case 7: //unifrom temperature rise
         rfb[0] = q * xq * ELASTIC[rod] * AREA[rod];
-        rfe[5 - pm] = -rfb[0];
+        rfe[0] = -rfb[0];
         break;
     case 8: //different temperature rise
         if (pm == 0)
@@ -830,7 +837,7 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
     int n = 6 * (k - 1); //n is the matching place of rods
     double tf[6] = {0};  //tf is temperary variable
 
-    IFS[m] = -RFE[n]; //calculate internal force cause by reaction force at the end of rods
+    IFS[m] = RFE[n]; //calculate internal force cause by reaction force at the end of rods
     IFS[m + 1] = -RFE[n + 1];
     IFS[m + 2] = -RFE[n + 2];
     IFS[m + 3] = RFE[n + 3];
@@ -855,12 +862,12 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
         return 1;
     }
 
-    IFS[m] -= -tf[0]; //calculate section force cause by end force
-    IFS[m + 1] += -tf[1];
-    IFS[m + 2] += -tf[2];
+    IFS[m] -= tf[0]; //calculate section force cause by end force
+    IFS[m + 1] += tf[1];
+    IFS[m + 2] += tf[2];
     IFS[m + 3] -= tf[3];
-    IFS[m + 4] += -tf[4] + tf[2] * xp;
-    IFS[m + 5] += tf[5] + tf[1] * xp;
+    IFS[m + 4] += tf[4] + tf[2] * xp;
+    IFS[m + 5] += -tf[5] + tf[1] * xp;
 
     return 0;
 }

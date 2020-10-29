@@ -64,22 +64,13 @@ int main()
 {
 	double* kk = 0, * pp = 0;
 	clock_t start1 = 0, end1 = 0;
-
-    int coreNum = omp_get_num_procs();//获得处理器个数
-    printf("%d\n", coreNum);
-
-#pragma omp parallel
-    {
-        printf("Hello OpenMP!ThreadID=%d\n",omp_get_thread_num());
-    }
+	DWORD start,end;
 
     printf("Welcome to use the calculator of plane truss!\nPress any key to start");
 	char value = getchar();
     start1 = clock();
-    DWORD start,end;  
     start= GetTickCount();  
-
-	PTPrintLine(); //"---------------------------------"
+    PTPrintLine(); //"---------------------------------"
 	if (PTRead())
 	{
 		PTPrintError(1);
@@ -143,9 +134,6 @@ int main()
 
 	printf("Press any key to exit\n");
 	value = getchar();
-
-
-
 
 	return 0;
 }
@@ -324,7 +312,7 @@ double* PTBuildTotalStiff()
 	LCS = (double*)malloc(3 * NOR * sizeof(double));
 	if (LCS != NULL)
 		memset(LCS, 0, 3 * NOR * sizeof(double));
-
+    
 	for (int num = 0; num < NOR; num++)
 	{
 		if (PTLCosSin(num))
@@ -342,6 +330,7 @@ double* PTBuildTotalStiff()
 			PTPrintError(8);
 			return 0;
 		}
+		
 		for (int i = 0; i < 2; i++)
 		{
 			if (p[i] >= 0)
@@ -356,7 +345,7 @@ double* PTBuildTotalStiff()
 		}
 		if (p[0] >= 0 && p[1] >= 0)
 		{
-        
+           
 			for (int i = 0; i < 2; i++)
 			{
 				for (int m = 0; m < 2; m++)
@@ -416,7 +405,7 @@ bool PTselfweight()
 	double w = 0;
 	int bl = 0, br = 0;
 
-    #pragma omp parallel for
+    
 	for (int k = 0; k < NOR; k++)
 	{
 		bl = BNR[k];
@@ -541,7 +530,7 @@ bool PTRodForce()
 {
 	int i = 0, j = 0, * p = 0;
 	double d1[2] = { 0 }, d2[2] = { 0 }, rd = 0;
-
+    #pragma omp parallel for
 	for (int k = 0; k < NOR; k++)
 	{
 		p = PTI0J0(k);

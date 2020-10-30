@@ -1,9 +1,9 @@
+#include <ctype.h>
+#include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <ctype.h>
 #include <string.h>
-#include <stdbool.h>
 
 #define EPS 1e-15
 
@@ -57,8 +57,10 @@ bool sfBuildTrans(int, double *);
 bool sfBuildLoadVector(double *);
 //calculate reaction force
 bool sfReactionForce(int, double *, double *);
-//solve equation of matrix
+//solve equation of matrix by cholesky
 bool sfCholesky(double *, double *, double *, int);
+//solve equation of matrix by conjugate gradient
+bool solve_conjugate_gradient(double *A, double *b, double *x, int N);
 //calculate internal force of rods
 bool sfInternalForce(int, int, double);
 //calculate internal force of cantilever beam
@@ -140,7 +142,18 @@ int main()
     // }
     // sfPrintLine2();
 
-    if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    // if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    // {
+    //     sfPrintError(4);
+    //     printf("\nPress any key to exit\n");
+    //     value = getchar();
+
+    //     return 1;
+    // }
+    // else
+    //     printf("Solving equation succeeded!\n");
+
+    if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
     {
         sfPrintError(4);
         printf("\nPress any key to exit\n");
@@ -171,9 +184,9 @@ int main()
     sfOutput(); //output data.
 
     sfPrintLine2();
-    for (int i = 0; i < NOS;i++)
+    for (int i = 0; i < 6 * NOS; i++)
     {
-        printf("\t%f\n", IFS[6*i]);
+        printf("\t%f\n", IFS[i]);
     }
     sfPrintLine2();
 
@@ -286,7 +299,7 @@ bool sfInput()
     NRS[1] = 2;
     NRS[2] = 3;
 
-    DSB[0] = 3;
+    DSB[0] = 3.0;
     DSB[1] = 1.5;
     DSB[2] = 2.598;
 
@@ -309,16 +322,16 @@ bool sfInput()
     KOL[4] = 1;
 
     VOL[0] = -0.8;
-    VOL[1] = 4;
-    VOL[2] = -1;
-    VOL[3] = -3;
-    VOL[4] = 2;
+    VOL[1] = 4.0;
+    VOL[2] = -1.0;
+    VOL[3] = -3.0;
+    VOL[4] = 2.0;
 
-    DLB[0] = 3;
-    DLB[1] = 3;
-    DLB[2] = 6;
-    DLB[3] = 6;
-    DLB[4] = 3;
+    DLB[0] = 3.0;
+    DLB[1] = 3.0;
+    DLB[2] = 6.0;
+    DLB[3] = 6.0;
+    DLB[4] = 3.0;
 
     return 0;
 }
@@ -328,7 +341,6 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
     double us[36] = {0};            //unit stiffness matrix
     int p[2] = {0}, dof = 6 * NFRN; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
 
-    
     LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
     memset(LCS, 0, 4 * NOR * sizeof(double));
 
@@ -377,7 +389,7 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
                 //     printf("\n");
                 // }
                 // sfPrintLine2();
-        
+
                 for (int m = 0; m < 6; m++)
                 {
                     for (int n = 0; n < 6; n++)
@@ -387,7 +399,6 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
                     }
                     // printf("\n");
                 }
-
             }
         }
     }
@@ -608,26 +619,26 @@ bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose ma
         t[2 * 6 + 2] = t[5 * 6 + 5] = -sit * sic;
     }
 
-    sfPrintLine2();
-    printf("number of rod = %d\n", k + 1);
-    sfPrintLine2();
-    for (int i = 0; i < 6; i++)
-    {
-        for (int j = 0; j < 6; j++)
-        {
-            printf("%15.2f", t[i * 6 + j]);
-        }
-        printf("\n");
-    }
-    sfPrintLine2();
+    // sfPrintLine2();
+    // printf("number of rod = %d\n", k + 1);
+    // sfPrintLine2();
+    // for (int i = 0; i < 6; i++)
+    // {
+    //     for (int j = 0; j < 6; j++)
+    //     {
+    //         printf("%15.2f", t[i * 6 + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
 
     return 0;
 }
 
 bool sfBuildLoadVector(double *lv) //lv is the load vector
 {
-    int rod = 0, p[2] = {0};     //rod is the number of rods, dof is the degree of freedom
-    double rf[12] = {0}, t[36] = {0};            //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
+    int rod = 0, p[2] = {0};          //rod is the number of rods, dof is the degree of freedom
+    double rf[12] = {0}, t[36] = {0}; //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
 
     for (int i = 0; i < NOL; i++)
     {
@@ -668,7 +679,7 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
 {
     double ra = 0, rb = 0, a = 0, b = 0, q = VOL[i], xq = DLB[i]; //ra, rb, a and b are middle variable
     int rod = NRL[i] - 1, pm = PLI[i], t = 0;                     //rod is the number of rods
-    
+
     if (pm == 0) //load is in XY plane
     {
         t = -1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
@@ -832,6 +843,76 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
     return 0;
 }
 
+bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
+{
+    double *r, *p, *a, *z;
+    double gamma, gamma_new, alpha, beta;
+
+    r = (double *)malloc(N * sizeof(double));
+    p = (double *)malloc(N * sizeof(double));
+    z = (double *)malloc(N * sizeof(double));
+
+    // x = [0 ... 0]
+    // r = b - A * x
+    // p = r
+    // gamma = r' * r
+    gamma = 0.0;
+    for (int i = 0; i < N; ++i)
+    {
+        x[i] = 0.0;
+        r[i] = b[i];
+        p[i] = r[i];
+        gamma += r[i] * r[i];
+    }
+
+    for (int n = 0; 1; ++n)
+    {
+        // z = A * p
+        for (int i = 0; i < N; ++i)
+        {
+            a = A + (i * N);
+            z[i] = 0.0;
+            for (int j = 0; j < N; ++j)
+                z[i] += a[j] * p[j];
+        }
+
+        // alpha = gamma / (p' * z)
+        alpha = 0.0;
+        for (int i = 0; i < N; ++i)
+            alpha += p[i] * z[i];
+        alpha = gamma / alpha;
+
+        // x = x + alpha * p
+        // r = r - alpha * z
+        // gamma_new = r' * r
+        gamma_new = 0.0;
+        for (int i = 0; i < N; ++i)
+        {
+            x[i] += alpha * p[i];
+            r[i] -= alpha * z[i];
+            gamma_new += r[i] * r[i];
+        }
+
+        if (sqrt(gamma_new) < EPS)
+            break;
+
+        beta = gamma_new / gamma;
+
+        // p = r + (gamma_new / gamma) * p;
+        for (int i = 0; i < N; ++i)
+            p[i] = r[i] + beta * p[i];
+
+        // gamma = gamma_new
+        gamma = gamma_new;
+    }
+
+    free(r);
+    free(p);
+    free(z);
+
+    return 0;
+}
+
 bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
 {
     int n = 6 * (k - 1); //n is the matching place of rods
@@ -844,6 +925,11 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
     IFS[m + 4] = -RFE[n + 4] + RFE[n + 2] * (LCS[0 * NOR + k - 1] - xp);
     IFS[m + 5] = RFE[n + 5] + RFE[n + 1] * (LCS[0 * NOR + k - 1] - xp);
 
+    // for (int i = 0; i < 6; i++)
+    // {
+    //     printf("%f\n", IFS[m + 1]);
+    // }
+
     for (int i = 0; i < NOL; i++) //for every rods
     {
         if (NRL[i] == k) //if load is on rod k
@@ -853,6 +939,10 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
             {
                 sfPrintError(13);
                 return 1;
+            }
+            for (int j = 0; j < 6; j++) //add internal force of cantilever into IFR
+            {
+                IFS[m + j] += tf[j];
             }
         }
     }
@@ -954,13 +1044,16 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
                 sfPrintError(9);
                 return 1;
             }
+
+            memset(rdb, 0, 36 * sizeof(double)); //zero clean rdb
+
             for (int j = 0; j < 6; j++) //rd times transposition of transpose matrix
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n < 6; n++)
                         rdb[j * 6 + m] += rd[j * 6 + n] * t[m * 6 + n];
             for (int j = 0; j < 6; j++) //rdb times DON
                 for (int m = 0; m < 6; m++)
-                    tref[j] += rdb[j * 6 + m] * DON[p[i] * 6 + m];
+                    tref[j] += rdb[j * 6 + m] * DON[p[i] + m];
         }
         else //fixed node
         {
@@ -970,6 +1063,14 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
             }
         }
     }
+
+    sfPrintLine2();
+    for (int i = 0; i < 6; i++)
+    {
+        printf("%f\t", tref[i]);
+        printf("\n");
+    }
+    sfPrintLine2();
 
     return 0;
 }

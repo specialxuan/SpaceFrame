@@ -47,7 +47,5 @@ planetruss.exe
 test.exe
 Xuan.exe
 .vscode/snippets.code-snippets
-1.csv
 KG not vbm.exe
-2.csv
-KG not vbm.cpp
+.gitignore

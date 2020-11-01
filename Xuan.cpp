@@ -41,15 +41,16 @@ double *DON; //the displacement of nodes
 double *IFS; //the internal force in the section
 double *RFE; //the reaction force of the end node
 
-int *iv;      //the location of diagonal element
-int nsi;      //upper limit
-int maxibdw;  //half bandwidth
-int *peribdw; //bandwidth per line
+int *IV;      //the location of diagonal element
+int NSI;      //upper limit
+int MAXIBDW;  //half bandwidth
+
+double *TS;
 
 //read data from .csv
 bool sfInput();
 //build total stiffness matrix
-bool sfBuildTotalStiff(double *);
+bool sfBuildTotalStiff();
 //calculate the length sine and cosine of rods
 bool sfLCosSin();
 //build unit stiffness matrix
@@ -84,7 +85,7 @@ bool dovidw();
 
 int main()
 {
-    double *ts = 0, *lv = 0; //declare total stiffness and load vector
+    double *lv = 0; //declare total stiffness and load vector
 
     printf("Welcome to use the calculator of space frame!\nPress any key to start");
     char value = getchar(); //pause
@@ -107,7 +108,7 @@ int main()
     lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
     memset(lv, 0, dof * sizeof(double));
 
-    if (sfBuildTotalStiff(ts)) //build total stiffness matrix
+    if (sfBuildTotalStiff()) //build total stiffness matrix
     {
         sfPrintError(2);
         printf("\nPress any key to exit\n");
@@ -117,6 +118,35 @@ int main()
     }
     else
         printf("Building total stiffness matrix succeeded!\n");
+    // for (int mm = 0; mm < 6 * NFRN; mm++)
+    // {
+    //     for (int nn = 0; nn < 6 * NFRN; nn++)
+    //     {
+    //         if (mm == nn)
+    //         {
+    //             printf("%.1f,", TS[IV[mm] - 1]);
+    //         }
+    //         else if (nn > mm)
+    //         {
+    //             if ((IV[nn] - nn + mm) > IV[nn - 1])
+    //             {
+    //                 printf("%.2f,", TS[IV[nn] - nn + mm - 1]);
+    //             }
+    //             else
+    //             {
+    //                 printf("%d,", 0);
+    //             }
+    //         }
+    //         else if (mm > nn)
+    //         {
+    //             if ((IV[mm] - mm + nn) > IV[mm - 1])
+    //                 printf("%.1f,", TS[IV[mm] - mm + nn - 1]);
+    //             else
+    //                 printf("%d,", 0);
+    //         }
+    //     }
+    //     printf("\n");
+    // }
 
     if (sfBuildLoadVector(lv)) //build load stiffness vector
     {
@@ -129,11 +159,11 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    printf("nsi\t%d\n", nsi);
-    printf("maxibdw\t%d\n", maxibdw);
+    printf("nsi\t%d\n", NSI);
+    printf("maxibdw\t%d\n", MAXIBDW);
     for (int i = 0; i < 6 * NFRN; i++)
     {
-        printf("\t%d\n", iv[i]);
+        printf("\t%d\n", IV[i]);
     }
 
     // if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
@@ -147,24 +177,24 @@ int main()
     // else
     //     printf("Solving equation succeeded!\n");
 
-    // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    // {
-    //     sfPrintError(4);
-    //     printf("\nPress any key to exit\n");
-    //     value = getchar();
+    if (solve_conjugate_gradient(TS, lv, DON, 6 * NFRN)) //solve matrix equation
+    {
+        sfPrintError(4);
+        printf("\nPress any key to exit\n");
+        value = getchar();
 
-    //     return 1;
-    // }
-    // else
-    //     printf("Solving equation succeeded!\n");
+        return 1;
+    }
+    else
+        printf("Solving equation succeeded!\n");
 
-    // sfPrintLine2();
-    // for (int i = 0; i < 6 * NFRN; i++)
-    // {
-    //     printf("%15.7f", DON[i]);
-    //     printf("\n");
-    // }
-    // sfPrintLine2();
+    sfPrintLine2();
+    for (int i = 0; i < 6 * NFRN; i++)
+    {
+        printf("%15.7f", DON[i]);
+        printf("\n");
+    }
+    sfPrintLine2();
 
     for (int i = 0; i < NOS; i++)
         if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
@@ -192,10 +222,10 @@ int main()
 
 bool sfInput()
 {
-    TNN = 7;
-    NFIN = 1;
+    TNN = 4;
+    NFIN = 2;
     NFRN = TNN - NFIN;
-    NOR = 6;
+    NOR = 3;
     NOL = 5;
     NOS = 3;
 
@@ -242,85 +272,52 @@ bool sfInput()
     RFE = (double *)malloc(6 * NOR * sizeof(double));
     memset(RFE, 0, 6 * NOR * sizeof(double));
 
-    XCN[0] = 1;
-    XCN[1] = 2;
-    XCN[2] = 3;
-    XCN[3] = 4;
-    XCN[4] = 5;
-    XCN[5] = 6;
-    XCN[6] = 7;
+    XCN[0] = 0;
+    XCN[1] = 3;
+    XCN[2] = 0;
+    XCN[3] = 0;
 
     YCN[0] = 0;
-    YCN[1] = 0;
+    YCN[1] = 9;
     YCN[2] = 0;
-    YCN[3] = 0;
-    YCN[4] = 0;
-    YCN[5] = 0;
-    YCN[6] = 0;
+    YCN[3] = 6;
 
     ZCN[0] = 0;
     ZCN[1] = 0;
-    ZCN[2] = 0;
-    ZCN[3] = 0;
-    ZCN[4] = 0;
-    ZCN[5] = 0;
-    ZCN[6] = 0;
+    ZCN[2] = 3;
+    ZCN[3] = 3;
 
-    BNR[0] = 1;
-    BNR[1] = 2;
-    BNR[2] = 3;
-    BNR[3] = 4;
-    BNR[4] = 5;
-    BNR[5] = 6;
+    BNR[0] = 3;
+    BNR[1] = 1;
+    BNR[2] = 2;
 
-    ENR[0] = 2;
+    ENR[0] = 4;
     ENR[1] = 3;
     ENR[2] = 4;
-    ENR[3] = 5;
-    ENR[4] = 6;
-    ENR[5] = 7;
 
     ELASTIC[0] = 210000000;
     ELASTIC[1] = 210000000;
     ELASTIC[2] = 210000000;
-    ELASTIC[3] = 210000000;
-    ELASTIC[4] = 210000000;
-    ELASTIC[5] = 210000000;
 
     SHEAR[0] = 80769000;
     SHEAR[1] = 80769000;
     SHEAR[2] = 80769000;
-    SHEAR[3] = 80769000;
-    SHEAR[4] = 80769000;
-    SHEAR[5] = 80769000;
 
     AREA[0] = 0.007854;
     AREA[1] = 0.007854;
     AREA[2] = 0.007854;
-    AREA[3] = 0.007854;
-    AREA[4] = 0.007854;
-    AREA[5] = 0.007854;
 
     IMY[0] = 0.0000049087;
     IMY[1] = 0.0000049087;
     IMY[2] = 0.0000049087;
-    IMY[3] = 0.0000049087;
-    IMY[4] = 0.0000049087;
-    IMY[5] = 0.0000049087;
 
     IMZ[0] = 0.0000049087;
     IMZ[1] = 0.0000049087;
     IMZ[2] = 0.0000049087;
-    IMZ[3] = 0.0000049087;
-    IMZ[4] = 0.0000049087;
-    IMZ[5] = 0.0000049087;
 
     THETA[0] = 0;
     THETA[1] = 0;
     THETA[2] = 0;
-    THETA[3] = 0;
-    THETA[4] = 0;
-    THETA[5] = 0;
 
     NRS[0] = 1;
     NRS[1] = 2;
@@ -363,15 +360,15 @@ bool sfInput()
     return 0;
 }
 
-bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
+bool sfBuildTotalStiff() //ts is total stiffness matrix
 {
     dovidw();
 
     double us[36] = {0};            //unit stiffness matrix
     int p[2] = {0}, dof = 6 * NFRN; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
 
-    ts = (double *)malloc(nsi * sizeof(double)); //allocate memory for total stiffness matrix
-    memset(ts, 0, nsi * sizeof(double));
+    TS = (double *)malloc(NSI * sizeof(double)); //allocate memory for total stiffness matrix
+    memset(TS, 0, NSI * sizeof(double));
 
     LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
     memset(LCS, 0, 4 * NOR * sizeof(double));
@@ -399,7 +396,7 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n <= m; n++)
                     {
-                        ts[iv[(p[i] + m)] + (p[i] + n) - (p[i] + m) - 1] += us[m * 6 + n]; //superpose
+                        TS[IV[(p[i] + m)] + (p[i] + n) - (p[i] + m) - 1] += us[m * 6 + n]; //superpose
                         //printf("%d, %f\n", iv[(p[i] + m)] + (p[i] + n) - (p[i] + m), ts[iv[(p[i] + m)] + (p[i] + n) - (p[i] + m)]);
                     }
             }
@@ -415,41 +412,13 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
             {
                 for (int n = 0; n < 6; n++)
                 {
-                    ts[iv[(p[1] + m)] + (p[0] + n) - (p[1] + m) - 1] += us[m * 6 + n]; //superpose
+                    TS[IV[(p[1] + m)] + (p[0] + n) - (p[1] + m) - 1] += us[m * 6 + n]; //superpose
                 }
             }
         }
     }
 
-    for (int mm = 0; mm < 6 * NFRN; mm++)
-    {
-        for (int nn = 0; nn < 6 * NFRN; nn++)
-        {
-            if (mm == nn)
-            {
-                printf("%.1f,", ts[iv[mm] - 1]);
-            }
-            else if (nn > mm)
-            {
-                if ((iv[nn] - nn + mm) > iv[nn - 1])
-                {
-                    printf("%.2f,", ts[iv[nn] - nn + mm - 1]);
-                }
-                else
-                {
-                    printf("%d,", 0);
-                }
-            }
-            else if (mm > nn)
-            {
-                if ((iv[mm] - mm + nn) > iv[mm - 1])
-                    printf("%.1f,", ts[iv[mm] - mm + nn - 1]);
-                else
-                    printf("%d,", 0);
-            }
-        }
-        printf("\n");
-    }
+    
     // for (int mm = 0; mm < 6 * NFRN;mm++)
     // {
     //     printf("%f \n", ts[iv[mm]]);
@@ -845,7 +814,7 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
 
 bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
 {
-    double *r, *p, *a, *z;
+    double *r, *p,*z;
     double gamma, gamma_new, alpha, beta;
 
     r = (double *)malloc(N * sizeof(double));
@@ -871,33 +840,33 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
     for (int n = 0; 1; ++n)
     {
         // z = A * p
-        for (int i = 0; i < N; ++i)
+        for (int i = 0; i < N; i++)
         {
-            for (int j = 0; j < N; ++j)
+            z[i] = 0.0;
+            for (int j = 0; j < N; j++)
             {
                 if (i == j)
                 {
-                    a[6 * i + j] = A[iv[i] - 1];
+                    z[i] += A[IV[i] - 1] * p[j];
                 }
                 else if (j > i)
                 {
-                    if ((iv[j] - j + i) > iv[j - 1])
+                    if ((IV[j] - j + i) > IV[j - 1])
                     {
-                        a[i * 6 + j] = A[iv[j] - j + i - 1];
+                        z[i] += A[IV[j] - j + i - 1] * p[j];
                     }
                     else
                     {
-                        a[i * 6 + j] = 0;
+                        z[i] += 0;
                     }
                 }
                 else if (i > j)
                 {
-                    if ((iv[i] - i + j) > iv[i - 1])
-                        a[i * 6 + j] = A[iv[i] - i + j - 1];
+                    if ((IV[i] - i + j) > IV[i - 1])
+                        z[i] += A[IV[i] - i + j - 1] * p[j];
                     else
-                        a[i * 6 + j] = 0;
+                        z[i] += 0;
                 }
-                z[i] += a[i*6+j] * p[j];
             }
         }
 
@@ -1161,11 +1130,12 @@ bool sfPrintError(int error)
 bool dovidw()
 {
     int it = 0, mm = 0, i, j;
-    maxibdw = 0;
+    int *peribdw; //bandwidth per line
+    MAXIBDW = 0;
     peribdw = (int *)malloc(TNN * sizeof(int));
-    memset(peribdw, 0, NFRN * sizeof(int));
-    iv = (int *)malloc(6 * NFRN * sizeof(int));
-    memset(iv, 0, 6 * NFRN * sizeof(int));
+    memset(peribdw, 0, TNN * sizeof(int));
+    IV = (int *)malloc(6 * NFRN * sizeof(int));
+    memset(IV, 0, 6 * NFRN * sizeof(int));
     for (i = 0; i < NOR; i++)
     {
         if (BNR[i] > NFIN)
@@ -1184,49 +1154,25 @@ bool dovidw()
     }
     for (i = NFIN; i < TNN; i++)
     {
-        if (peribdw[i - NFIN + 1] > maxibdw)
+        if (peribdw[i] > MAXIBDW)
         {
-            maxibdw = peribdw[i - NFIN + 1];
+            MAXIBDW = peribdw[i];
         }
         for (j = 1; j <= 6; j++)
         {
             it = it + 1;
             if (it == 1)
             {
-                iv[it - 1] = 6 * peribdw[i - NFIN + 1] + j;
+                IV[it - 1] = 6 * peribdw[i] + j;
             }
             else
             {
-                iv[it - 1] = iv[it - 2] + 6 * peribdw[i - NFIN + 1] + j;
+                IV[it - 1] = IV[it - 2] + 6 * peribdw[i] + j;
             }
         }
     }
-    maxibdw = 6 * maxibdw + 5;
-    nsi = iv[6 * NFRN - 1];
+    MAXIBDW = 6 * MAXIBDW + 5;
+    NSI = IV[6 * NFRN - 1];
+    free(peribdw);
 }
-bool VibmRead(double *a, int mm, int nn, double *ts)
-{
-    if (mm == nn)
-    {
-        a[6 * mm + nn] = ts[iv[mm] - 1];
-    }
-    else if (nn > mm)
-    {
-        if ((iv[nn] - nn + mm) > iv[nn - 1])
-        {
-            a[mm * 6 + nn] = ts[iv[nn] - nn + mm - 1];
-        }
-        else
-        {
-            a[mm * 6 + nn] = 0;
-        }
-    }
-    else if (mm > nn)
-    {
-        if ((iv[mm] - mm + nn) > iv[mm - 1])
-            a[mm * nn] = ts[iv[mm] - mm + nn - 1];
-        else
-            a[mm + nn] = 0;
-    }
-    return 0;
-}
+

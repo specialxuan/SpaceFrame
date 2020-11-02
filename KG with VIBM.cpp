@@ -365,7 +365,7 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
     dovidw();
 
     double us[36] = {0};            //unit stiffness matrix
-    int p[2] = {0}, dof = 6 * NFRN; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
+    int p[2] = {0}; //p is a temperary vector for i0j0
 
     TS = (double *)malloc(NSI * sizeof(double)); //allocate memory for total stiffness matrix
     memset(TS, 0, NSI * sizeof(double));
@@ -1174,5 +1174,6 @@ bool dovidw()
     MAXIBDW = 6 * MAXIBDW + 5;
     NSI = IV[6 * NFRN - 1];
     free(peribdw);
+    return 0;
 }
 

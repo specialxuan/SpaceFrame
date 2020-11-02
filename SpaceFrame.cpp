@@ -95,6 +95,106 @@ int main()
     else
         printf("Data input succeeded!\n");
 
+
+    int i = 0;
+    
+    printf("TNN: %d\n", TNN);
+    printf("NFIN: %d\n", NFIN);
+    printf("NOR: %d\n", NOR);
+    printf("NOL:% d\n", NOL);
+    printf("NOS: %d\nXCN ", NOS);
+    for (i = 0; i < TNN; i++)
+    {
+        printf("%f ", XCN[i]);
+    }
+    printf("\nYCN ");
+    for (i = 0; i < TNN; i++)
+    {
+        printf("%f ", YCN[i]);
+    }
+    printf("\nZCN ");
+    for (i = 0; i < TNN; i++)
+    {
+        printf("%f ", ZCN[i]);
+    }
+    printf("\nBNR ");
+    for (i = 0; i < NOR; i++)
+    {
+        printf("%d ", BNR[i]);
+    }
+    printf("\nENR ");
+    for (i = 0; i < NOR; i++)
+    {
+        printf("%d ", ENR[i]);
+    }
+    printf("\nELASTIC ");
+    for (i = 0; i < NOR; i++)
+    {
+        printf("%f ", ELASTIC[i]);
+    }
+    printf("\nSHEAR ");
+    for (i = 0; i < NOR; i++)
+    {
+        printf("%f ", SHEAR[i]);
+    }
+    printf("\nAREA ");
+    for (i = 0; i < NOR; i++)
+    {
+        printf("%f ", AREA[i]);
+    }
+    printf("\nIMY ");
+    for (i = 0; i < NOR; i++)
+    {
+        printf("%.11f ", IMY[i]);
+    }
+    printf("\nIMZ ");
+    for (i = 0; i < NOR; i++)
+    {
+        printf("%.11f ", IMZ[i]);
+    }
+    printf("\nTHETA ");
+    for (i = 0; i < NOR; i++)
+    {
+        printf("%f ", THETA[i]);
+    }
+    printf("\nNRL ");
+    for (i = 0; i < NOL; i++)
+    {
+        printf("%d ", NRL[i]);
+    }
+    printf("\nPLI ");
+    for (i = 0; i < NOL; i++)
+    {
+        printf("%d ", PLI[i]);
+    }
+    printf("\nKOL ");
+    for (i = 0; i < NOL; i++)
+    {
+        printf("%d ", KOL[i]);
+    }
+    printf("\nVOL ");
+    for (i = 0; i < NOL; i++)
+    {
+        printf("%f ", VOL[i]);
+    }
+    printf("\nDLB ");
+    for (i = 0; i < NOL; i++)
+    {
+        printf("%f ", DLB[i]);
+    }
+    printf("\nNRS ");
+    for (i = 0; i < NOS; i++)
+    {
+        printf("%d ", NRS[i]);
+    }
+    printf("\nDSB ");
+    for (i = 0; i < NOS; i++)
+    {
+        printf("%f ", DSB[i]);
+    }
+    printf("\n");
+
+
     int dof = 6 * NFRN;
     ts = (double *)malloc(dof * dof * sizeof(double)); //allocate memory for total stiffness matrix
     memset(ts, 0, dof * dof * sizeof(double));
@@ -111,7 +211,7 @@ int main()
     }
     else
         printf("Building total stiffness matrix succeeded!\n");
-        
+
     if (sfBuildLoadVector(lv)) //build load stiffness vector
     {
         sfPrintError(3);
@@ -123,18 +223,7 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    // if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    // {
-    //     sfPrintError(4);
-    //     printf("\nPress any key to exit\n");
-    //     value = getchar();
-
-    //     return 1;
-    // }
-    // else
-    //     printf("Solving equation succeeded!\n");
-
-    if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
     {
         sfPrintError(4);
         printf("\nPress any key to exit\n");
@@ -144,6 +233,17 @@ int main()
     }
     else
         printf("Solving equation succeeded!\n");
+
+    // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    // {
+    //     sfPrintError(4);
+    //     printf("\nPress any key to exit\n");
+    //     value = getchar();
+
+    //     return 1;
+    // }
+    // else
+    //     printf("Solving equation succeeded!\n");
 
     sfPrintLine2();
     for (int i = 0; i < 6 * NFRN; i++)
@@ -181,11 +281,11 @@ bool sfInput()
 {
     FILE *fp = NULL;                           //Define the file point
     char *line, *data;                         //Define the line string and separated string
-    char temporSpace[2077296];                 //Apply for temporary storage space
+    char temporSpace[1000000];                 //Apply for temporary storage space
     int rowIndex = 0;                          //Reset the number of rows to zero
     int columnIndex = 0;                       //Reset the number of columns to zero
     const char DIVIDE[] = ",";                 //Set the separater as a ','
-    if ((fp = fopen("sf.csv", "at+")) != NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf.csv", "r")) != NULL) //Start the process when the file opens successfully
     {
         fseek(fp, 0L, SEEK_SET);                                             //Locate file point to the first line
         while ((line = fgets(temporSpace, sizeof(temporSpace), fp)) != NULL) //The loop continues when the end of the file is not read
@@ -195,6 +295,8 @@ bool sfInput()
             {
                 if (strcmp(data, "END") == 0) //When the keyword 'END' is read, the reading process will be shut down
                 {
+                    fclose(fp); //Close the file
+                    fp = NULL;  //Reset the file point
                     return 0;
                 }
                 //----------------分配内存-------------------------------------------------
@@ -219,7 +321,7 @@ bool sfInput()
                     IMY = (double *)malloc(NOR * sizeof(double));
                     memset(IMY, 0, NOR * sizeof(double));
                     IMZ = (double *)malloc(NOR * sizeof(double));
-                    memset(IMZ, 0, NOR * sizeof(double));
+                    memset(IMY, 0, NOR * sizeof(double));
                     THETA = (double *)malloc(NOR * sizeof(double));
                     memset(THETA, 0, NOR * sizeof(double));
                     NRL = (int *)malloc(NOL * sizeof(int));
@@ -229,19 +331,19 @@ bool sfInput()
                     KOL = (int *)malloc(NOL * sizeof(int));
                     memset(KOL, 0, NOL * sizeof(int));
                     VOL = (double *)malloc(NOL * sizeof(double));
-                    memset(NRL, 0, NOL * sizeof(double));
+                    memset(VOL, 0, NOL * sizeof(double));
                     DLB = (double *)malloc(NOL * sizeof(double));
                     memset(DLB, 0, NOL * sizeof(double));
                     NRS = (int *)malloc(NOS * sizeof(int));
                     memset(NRS, 0, NOS * sizeof(int));
                     DSB = (double *)malloc(NOS * sizeof(double));
-                    memset(NRL, 0, NOS * sizeof(double));
-                    DON = (double *)malloc(3 * NFRN * sizeof(double));
-                    memset(DON, 0, 3 * NFRN * sizeof(double));
+                    memset(DSB, 0, NOS * sizeof(double));
+                    DON = (double *)malloc(6 * NFRN * sizeof(double));
+                    memset(DON, 0, 6 * NFRN * sizeof(double));
                     IFS = (double *)malloc(3 * NOS * sizeof(double));
                     memset(IFS, 0, 3 * NOS * sizeof(double));
                     RFE = (double *)malloc(6 * NOR * sizeof(double));
-                    memset(NRL, 0, 6 * NOR * sizeof(double));
+                    memset(RFE, 0, 6 * NOR * sizeof(double));
                 }
                 //-------------------分配结束-------------------------------------------------
                 if (columnIndex++ != 0) //Skip the saving of the first column
@@ -258,6 +360,7 @@ bool sfInput()
                     case 2:
                         if (columnIndex == 2)
                             NFIN = atoi(data);
+                        NFRN = TNN - NFIN;
                         break;
                     case 3:
                         if (columnIndex == 2)
@@ -393,7 +496,7 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
         }
     }
 
-   return 0;
+    return 0;
 }
 
 bool sfLCosSin()
@@ -1071,4 +1174,3 @@ bool sfPrintError(int error)
 
     return 0;
 }
-

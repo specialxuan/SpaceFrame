@@ -884,21 +884,42 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
     return 0;
 }
 
-bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
+bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
 {
+    if (A == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (b == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (x == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (n == 0)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+
     double *r, *p, *a, *z;
     double gamma, gamma_new, alpha, beta;
 
-    r = (double *)malloc(N * sizeof(double));
-    p = (double *)malloc(N * sizeof(double));
-    z = (double *)malloc(N * sizeof(double));
+    r = (double *)malloc(n * sizeof(double));
+    p = (double *)malloc(n * sizeof(double));
+    z = (double *)malloc(n * sizeof(double));
 
     // x = [0 ... 0]
     // r = b - A * x
     // p = r
     // gamma = r' * r
     gamma = 0.0;
-    for (int i = 0; i < N; ++i)
+    for (int i = 0; i < n; ++i)
     {
         x[i] = 0.0;
         r[i] = b[i];
@@ -909,17 +930,17 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
     for (int n = 0; 1; ++n)
     {
         // z = A * p
-        for (int i = 0; i < N; ++i)
+        for (int i = 0; i < n; ++i)
         {
-            a = A + (i * N);
+            a = A + (i * n);
             z[i] = 0.0;
-            for (int j = 0; j < N; ++j)
+            for (int j = 0; j < n; ++j)
                 z[i] += a[j] * p[j];
         }
 
         // alpha = gamma / (p' * z)
         alpha = 0.0;
-        for (int i = 0; i < N; ++i)
+        for (int i = 0; i < n; ++i)
             alpha += p[i] * z[i];
         alpha = gamma / alpha;
 
@@ -927,7 +948,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
         // r = r - alpha * z
         // gamma_new = r' * r
         gamma_new = 0.0;
-        for (int i = 0; i < N; ++i)
+        for (int i = 0; i < n; ++i)
         {
             x[i] += alpha * p[i];
             r[i] -= alpha * z[i];
@@ -940,7 +961,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
         beta = gamma_new / gamma;
 
         // p = r + (gamma_new / gamma) * p;
-        for (int i = 0; i < N; ++i)
+        for (int i = 0; i < n; ++i)
             p[i] = r[i] + beta * p[i];
 
         // gamma = gamma_new

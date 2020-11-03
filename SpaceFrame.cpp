@@ -61,6 +61,8 @@ bool sfReactionForce(int, double *, double *);
 bool sfCholesky(double *, double *, double *, int);
 //solve equation of matrix by conjugate gradient
 bool solve_conjugate_gradient(double *A, double *b, double *x, int N);
+//solve equation of matrix by conjugate gradient parallel
+bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N);
 //calculate internal force of rods
 bool sfInternalForce(int, int, double);
 //calculate internal force of cantilever beam
@@ -973,6 +975,84 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
     free(z);
 
     return 0;
+}
+
+bool solve_conjugate_gradient_par(double* A, double* b, double* x, int N)
+{
+	double* r, * p , * z, tol = 1e-16;
+	double gamma, gamma_new, alpha, beta;
+
+	r = (double*)malloc(N * sizeof(double));
+	p = (double*)malloc(N * sizeof(double));
+	z = (double*)malloc(N * sizeof(double));
+
+	// x = [0 ... 0]
+	// r = b - A * x
+	// p = r
+	// gamma = r' * r
+	gamma = 0.0;
+    #pragma omp parallel for reduction(+:gamma)
+	for (int i = 0; i < N; ++i) {
+		x[i] = 0.0;
+		r[i] = b[i];
+		p[i] = r[i];
+		gamma += r[i] * r[i];
+	}
+    
+	for (int n = 0; true; ++n) 
+    {
+		// z = A * p
+        #pragma omp parallel for
+		for (int i = 0; i < N; ++i) 
+        {
+			z[i] = 0.0;
+			for (int j = 0; j < N; ++j)
+				z[i] += A[i * N + j] * p[j];
+        }
+
+		// alpha = gamma / (p' * z)
+		alpha = 0.0;
+        #pragma omp parallel for reduction(+:alpha)
+		for (int i = 0; i < N; ++i)
+        {
+            // printf("%d\n", i);
+            alpha += p[i] * z[i];
+        }
+		alpha = gamma / alpha;
+
+		// x = x + alpha * p
+		// r = r - alpha * z
+		// gamma_new = r' * r
+		gamma_new = 0.0;
+        #pragma omp parallel for reduction(+:gamma_new)
+		for (int i = 0; i < N; ++i) 
+        {
+			x[i] += alpha * p[i];
+			r[i] -= alpha * z[i];
+			gamma_new += r[i] * r[i];
+		}
+
+		if (sqrt(gamma_new) < tol)
+			break;
+
+		beta = gamma_new / gamma;
+
+		// p = r + (gamma_new / gamma) * p;
+        #pragma omp parallel for
+		for (int i = 0; i < N; ++i)
+        {
+			p[i] = r[i] + beta * p[i];
+        }
+
+		// gamma = gamma_new
+		gamma = gamma_new;
+	}
+
+	free(r);
+	free(p);
+	free(z);
+
+	return 0;
 }
 
 bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods

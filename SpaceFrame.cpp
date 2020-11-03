@@ -285,7 +285,7 @@ bool sfInput()
     int rowIndex = 0;                          //Reset the number of rows to zero
     int columnIndex = 0;                       //Reset the number of columns to zero
     const char DIVIDE[] = ",";                 //Set the separater as a ','
-    if ((fp = fopen("sf.csv", "r")) != NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf_1.csv", "r")) != NULL) //Start the process when the file opens successfully
     {
         fseek(fp, 0L, SEEK_SET);                                             //Locate file point to the first line
         while ((line = fgets(temporSpace, sizeof(temporSpace), fp)) != NULL) //The loop continues when the end of the file is not read

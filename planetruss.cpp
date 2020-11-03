@@ -125,7 +125,7 @@ int main()
 	}
 	else
 		printf("Calculating internal force succeeded!\n");
-	//PTPrint();
+	// PTPrint();
 
 	end1 = clock();
 	printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
@@ -426,7 +426,7 @@ double* PTBuildLoadVector()
 	pp = (double*)malloc(2 * NFRN * sizeof(double));
 	if (pp != NULL)
 		memset(pp, 0, 2 * NFRN * sizeof(double));
-    #pragma omp parallel for
+    // #pragma omp parallel for
 	for (int i = NFIN; i <= TNN; i++)
 	{
 		pp[2 * (i - NFIN)] = XCL[i];
@@ -530,7 +530,7 @@ bool PTRodForce()
 {
 	int i = 0, j = 0, * p = 0;
 	double d1[2] = { 0 }, d2[2] = { 0 }, rd = 0;
-    #pragma omp parallel for
+    // #pragma omp parallel for
 	for (int k = 0; k < NOR; k++)
 	{
 		p = PTI0J0(k);
@@ -694,7 +694,7 @@ bool solve_conjugate_gradient(double* A, double* b, double* x, int N)
 		gamma += r[i] * r[i];
 	}
     
-	for (int n = 0; n < N; ++n) 
+	for (int n = 0; TRUE; ++n) 
     {
 		// z = A * p
         #pragma omp parallel for

@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <Windows.h>
 
 #define EPS 1e-15
 
@@ -82,8 +84,14 @@ int main()
 {
     double *ts = 0, *lv = 0; //declare total stiffness and load vector
 
+    clock_t start1 = 0, end1 = 0;
+	DWORD start,end;
+
     printf("Welcome to use the calculator of space frame!\nPress any key to start");
     char value = getchar(); //pause
+
+    start1 = clock();
+    start= GetTickCount(); 
 
     sfPrintLine(); //"------------------------------"
     if (sfInput()) //input data
@@ -280,6 +288,11 @@ int main()
     //     printf("\t%f\n", IFS[i]);
     // }
     // sfPrintLine2();
+
+    end1 = clock();
+	printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
+    end= GetTickCount();  
+    printf("realtime=%f\n",(double)(end-start)/1000); 
 
     printf("Press any key to exit\n");
     value = getchar(); //pause

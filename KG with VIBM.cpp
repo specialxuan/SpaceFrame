@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define EPS 1e-15
-
 int TNN;  //total number of nodes
 int NFIN; //number of fixed nodes
 int NFRN; //number of free nodes
@@ -53,6 +51,7 @@ int TNNSD[6]; //the total number of nodes with specify displacement.
 int *NNSD;    //the number of nodes with specify displacement
 double *VSD;  //the value of specify displacement
 
+double EPS;//accuracy of conjugate gradient method
 //read data from .csv
 bool sfInput();
 //build total stiffness matrix
@@ -298,6 +297,8 @@ bool sfInput()
     memset(IFS, 0, 3 * NOS * sizeof(double));
     RFE = (double *)malloc(6 * NOR * sizeof(double));
     memset(RFE, 0, 6 * NOR * sizeof(double));
+
+    EPS = 1e-15;
 
     XCN[0] = 0;
     XCN[1] = 3;
@@ -885,6 +886,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
     // p = r
     // gamma = r' * r
     gamma = 0.0;
+    #pragma omp parallel for reduction(+:gamma)
     for (int i = 0; i < N; ++i)
     {
         x[i] = 0.0;
@@ -892,10 +894,11 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
         p[i] = r[i];
         gamma += r[i] * r[i];
     }
-
+    
     for (int n = 0; 1; ++n)
     {
         // z = A * p
+        #pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             z[i] = 0.0;
@@ -928,6 +931,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
 
         // alpha = gamma / (p' * z)
         alpha = 0.0;
+        #pragma omp parallel for reduction(+:alpha)
         for (int i = 0; i < N; ++i)
             alpha += p[i] * z[i];
         alpha = gamma / alpha;
@@ -936,6 +940,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
         // r = r - alpha * z
         // gamma_new = r' * r
         gamma_new = 0.0;
+        #pragma omp parallel for reduction(+:gamma_new)
         for (int i = 0; i < N; ++i)
         {
             x[i] += alpha * p[i];
@@ -949,6 +954,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
         beta = gamma_new / gamma;
 
         // p = r + (gamma_new / gamma) * p;
+        #pragma omp parallel for
         for (int i = 0; i < N; ++i)
             p[i] = r[i] + beta * p[i];
 

@@ -47,26 +47,11 @@ int MAXIBDW; //half bandwidth
 
 double *TS; //total stifness
 
-int UEL;   //the total number of node with delta x
-int VEL;   //the total number of node with delta y
-int WEL;   //the total number of node with delta z
-int THEUL; //the total number of node with theta x
-int THEVL; //the total number of node with theta y
-int THEWL; //the total number of node with theta z
-
-int *UL;   //the number of node with delta x
-int *VL;   //the number of node with delta y
-int *WL;   //the number of node with delta z
-int *THUL; //the number of node with theta x
-int *THVL; //the number of node with theta y
-int *THWL; //the number of node with theta z
-
-double *ULV;  //the value of delta x
-double *VLV;  //the value of delta y
-double *WLV;  //the value of delta z
-double *THUV; //the value of theta x
-double *THVV; //the value of theta y
-double *THWV; //the value of theta z
+int MAXTNN;   //the max total number of nodes with specify displacement
+int TNNSD[6]; //the total number of nodes with specify displacement.
+              //for example 4,0,0,0,1,0 means that there are four nodes with delta x and one node with theta y
+int *NNSD;    //the number of nodes with specify displacement
+double *VSD;  //the value of specify displacement
 
 //read data from .csv
 bool sfInput();
@@ -243,43 +228,27 @@ int main()
 
 bool sfInput()
 {
-    UEL = 1;
-    THEUL = 1;
-    UL = (int *)malloc(UEL * sizeof(int));
-    memset(UL, 0, sizeof(int));
-    ULV = (double *)malloc(UEL * sizeof(double));
-    memset(ULV, 0, sizeof(double));
-
-    VL = (int *)malloc(VEL * sizeof(int));
-    memset(VL, 0, sizeof(int));
-    VLV = (double *)malloc(VEL * sizeof(double));
-    memset(VLV, 0, sizeof(double));
-
-    WL = (int *)malloc(WEL * sizeof(int));
-    memset(WL, 0, sizeof(int));
-    WLV = (double *)malloc(WEL * sizeof(double));
-    memset(WLV, 0, sizeof(double));
-
-    THUL = (int *)malloc(THEUL * sizeof(int));
-    memset(THUL, 0, sizeof(int));
-    THUV = (double *)malloc(THEUL * sizeof(double));
-    memset(THUV, 0, sizeof(double));
-
-    THVL = (int *)malloc(THEVL * sizeof(int));
-    memset(THVL, 0, sizeof(int));
-    THVV = (double *)malloc(THEVL * sizeof(double));
-    memset(THVV, 0, sizeof(double));
-
-    THWL = (int *)malloc(THEWL * sizeof(int));
-    memset(UL, 0, sizeof(int));
-    THWV = (double *)malloc(THEWL * sizeof(double));
-    memset(THWV, 0, sizeof(double));
-
-    UL[0] = 4;
-    ULV[0] = 0;
-    THUL[0] = 3;
-    THUV[0]=0.01;
-
+    TNNSD[0] = 1;
+    TNNSD[5] = 2;
+    int temp = 0;
+    for (int i = 0; i < 6; i++)
+    {
+        if (TNNSD[i] > temp)
+        {
+            temp = TNNSD[i];
+        }
+    }
+    MAXTNN = temp;
+    NNSD = (int *)malloc(6 * MAXTNN * sizeof(int));
+    VSD = (double *)malloc(6 * MAXTNN * sizeof(double));
+    memset(NNSD, 0, 6 * MAXTNN * sizeof(int));
+    memset(VSD, 0, 6 * MAXTNN * sizeof(double));
+    NNSD[0] = 4;
+    NNSD[10] = 3;
+    NNSD[11] = 4;
+    VSD[0] = 0;
+    VSD[10] = 1;
+    VSD[11] = 0;
     TNN = 4;
     NFIN = 2;
     NFRN = TNN - NFIN;
@@ -697,119 +666,35 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
                         lv[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
         }
     }
-    if (UEL != 0)
+
+    for (int i = 0; i < 6; i++)
     {
-        for (int i = 0; i < UEL; i++)
+        if (TNNSD[i] <= 0)
         {
-            IJ = 6 * (UL[i] - NFIN) - 6;
+            continue;
+        }
+        for (int j = 0; j < MAXTNN; j++)
+        {
+            if (NNSD[i * MAXTNN + j] == 0)
+            {
+                continue;
+            }
+            IJ = 6 * (NNSD[i * MAXTNN + j] - NFIN) - 6;
             if (IJ >= 0)
             {
-                if (ULV[i] == 0)
+
+                if (VSD[i * MAXTNN + j] == 0)
                 {
-                    TS[IV[IJ] - 1] += 10000000000;
+                    TS[IV[IJ + i] - 1] += 10000000000;
                 }
                 else
                 {
-                    TS[IV[IJ] - 1] = 10000000000;
-                    lv[IJ] = 10000000000 * ULV[i];
+                    TS[IV[IJ + i] - 1] = 10000000000;
+                    lv[IJ+i] = 10000000000 * VSD[i * MAXTNN + j];
                 }
             }
         }
-    }
-    if (VEL != 0)
-    {
-        for (int i = 0; i < VEL; i++)
-        {
-            IJ = 6 * (VL[i] - NFIN) - 6;
-            if (IJ >= 0)
-            {
-                if (VLV[i] == 0)
-                {
-                    TS[IV[IJ + 1] - 1] += 10000000000;
-                }
-                else
-                {
-                    TS[IV[IJ + 1] - 1] = 10000000000;
-                    lv[IJ + 1] = 10000000000 * VLV[i];
-                }
-            }
-        }
-    }
-    if (WEL != 0)
-    {
-        for (int i = 0; i < WEL; i++)
-        {
-            IJ = 6 * (WL[i] - NFIN) - 6;
-            if (IJ >= 0)
-            {
-                if (WLV[i] == 0)
-                {
-                    TS[IV[IJ + 2] - 1] += 10000000000;
-                }
-                else
-                {
-                    TS[IV[IJ + 2] - 1] = 10000000000;
-                    lv[IJ + 2] = 10000000000 * WLV[i];
-                }
-            }
-        }
-    }
-    if (THEUL != 0)
-    {
-        for (int i = 0; i < THEUL; i++)
-        {
-            IJ = 6 * (THUL[i] - NFIN) - 6;
-            if (IJ >= 0)
-            {
-                if (THUV[i] == 0)
-                {
-                    TS[IV[IJ + 3] - 1] += 10000000000;
-                }
-                else
-                {
-                    TS[IV[IJ + 3] - 1] = 10000000000;
-                    lv[IJ + 3] = 10000000000 * THUV[i];
-                }
-            }
-        }
-    }
-    if (THEVL != 0)
-    {
-        for (int i = 0; i < THEVL; i++)
-        {
-            IJ = 6 * (THVL[i] - NFIN) - 6;
-            if (IJ >= 0)
-            {
-                if (THVV[i] == 0)
-                {
-                    TS[IV[IJ + 4] - 1] += 10000000000;
-                }
-                else
-                {
-                    TS[IV[IJ + 4] - 1] = 10000000000;
-                    lv[IJ + 4] = 10000000000 * THVV[i];
-                }
-            }
-        }
-    }
-    if (THEWL != 0)
-    {
-        for (int i = 0; i < THEWL; i++)
-        {
-            IJ = 6 * (THWL[i] - NFIN) - 6;
-            if (IJ >= 0)
-            {
-                if (THWV[i] == 0)
-                {
-                    TS[IV[IJ + 5] - 1] += 10000000000;
-                }
-                else
-                {
-                    TS[IV[IJ + 5] - 1] = 10000000000;
-                    lv[IJ + 5] = 10000000000 * THWV[i];
-                }
-            }
-        }
+        
     }
 
     return 0;

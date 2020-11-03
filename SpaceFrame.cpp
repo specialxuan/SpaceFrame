@@ -97,9 +97,8 @@ int main()
     else
         printf("Data input succeeded!\n");
 
-
     int i = 0;
-    
+
     printf("TNN: %d\n", TNN);
     printf("NFIN: %d\n", NFIN);
     printf("NOR: %d\n", NOR);
@@ -196,7 +195,6 @@ int main()
     }
     printf("\n");
 
-
     int dof = 6 * NFRN;
     ts = (double *)malloc(dof * dof * sizeof(double)); //allocate memory for total stiffness matrix
     memset(ts, 0, dof * dof * sizeof(double));
@@ -281,166 +279,170 @@ int main()
 
 bool sfInput()
 {
-    FILE *fp = NULL;                           //Define the file point
-    char *line, *data;                         //Define the line string and separated string
-    char temporSpace[1000000];                 //Apply for temporary storage space
-    int rowIndex = 0;                          //Reset the number of rows to zero
-    int columnIndex = 0;                       //Reset the number of columns to zero
-    const char DIVIDE[] = ",";                 //Set the separater as a ','
-    if ((fp = fopen("sf_1.csv", "r")) != NULL) //Start the process when the file opens successfully
+    FILE *fp = NULL;                   //Define the file point
+    char *line = 0, *data = 0;         //Define the line string and separated string
+    char temporSpace[1000000];         //Apply for temporary storage space
+    int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
+    const char DIVIDE[] = ",";         //Set the separater as a ','
+
+    if ((fp = fopen("sf_1.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
-        fseek(fp, 0L, SEEK_SET);                                             //Locate file point to the first line
-        while ((line = fgets(temporSpace, sizeof(temporSpace), fp)) != NULL) //The loop continues when the end of the file is not read
-        {
-            data = strtok(line, DIVIDE); //Split strings with a ',' as a separator
-            while (data != NULL)         //Read the data of each row
-            {
-                if (strcmp(data, "END") == 0) //When the keyword 'END' is read, the reading process will be shut down
-                {
-                    fclose(fp); //Close the file
-                    fp = NULL;  //Reset the file point
-                    return 0;
-                }
-                //----------------分配内存-------------------------------------------------
-                if (rowIndex == 5) //Request space for multiple variable when loops to the 5th line
-                {
-                    XCN = (double *)malloc(TNN * sizeof(double));
-                    memset(XCN, 0, TNN * sizeof(double));
-                    YCN = (double *)malloc(TNN * sizeof(double));
-                    memset(YCN, 0, TNN * sizeof(double));
-                    ZCN = (double *)malloc(TNN * sizeof(double));
-                    memset(ZCN, 0, TNN * sizeof(double));
-                    BNR = (int *)malloc(NOR * sizeof(int));
-                    memset(BNR, 0, NOR * sizeof(int));
-                    ENR = (int *)malloc(NOR * sizeof(int));
-                    memset(ENR, 0, NOR * sizeof(int));
-                    ELASTIC = (double *)malloc(NOR * sizeof(double));
-                    memset(ELASTIC, 0, NOR * sizeof(double));
-                    SHEAR = (double *)malloc(NOR * sizeof(double));
-                    memset(SHEAR, 0, NOR * sizeof(double));
-                    AREA = (double *)malloc(NOR * sizeof(double));
-                    memset(AREA, 0, NOR * sizeof(double));
-                    IMY = (double *)malloc(NOR * sizeof(double));
-                    memset(IMY, 0, NOR * sizeof(double));
-                    IMZ = (double *)malloc(NOR * sizeof(double));
-                    memset(IMY, 0, NOR * sizeof(double));
-                    THETA = (double *)malloc(NOR * sizeof(double));
-                    memset(THETA, 0, NOR * sizeof(double));
-                    NRL = (int *)malloc(NOL * sizeof(int));
-                    memset(NRL, 0, NOL * sizeof(int));
-                    PLI = (int *)malloc(NOL * sizeof(int));
-                    memset(PLI, 0, NOL * sizeof(int));
-                    KOL = (int *)malloc(NOL * sizeof(int));
-                    memset(KOL, 0, NOL * sizeof(int));
-                    VOL = (double *)malloc(NOL * sizeof(double));
-                    memset(VOL, 0, NOL * sizeof(double));
-                    DLB = (double *)malloc(NOL * sizeof(double));
-                    memset(DLB, 0, NOL * sizeof(double));
-                    NRS = (int *)malloc(NOS * sizeof(int));
-                    memset(NRS, 0, NOS * sizeof(int));
-                    DSB = (double *)malloc(NOS * sizeof(double));
-                    memset(DSB, 0, NOS * sizeof(double));
-                    DON = (double *)malloc(6 * NFRN * sizeof(double));
-                    memset(DON, 0, 6 * NFRN * sizeof(double));
-                    IFS = (double *)malloc(3 * NOS * sizeof(double));
-                    memset(IFS, 0, 3 * NOS * sizeof(double));
-                    RFE = (double *)malloc(6 * NOR * sizeof(double));
-                    memset(RFE, 0, 6 * NOR * sizeof(double));
-                }
-                //-------------------分配结束-------------------------------------------------
-                if (columnIndex++ != 0) //Skip the saving of the first column
-                {
-                    //--------------------------------数据输入-------------------------------------
-                    switch (rowIndex) //Store variables of each column in different ways
-                    {
-                    case 0:
-                        break;
-                    case 1:
-                        if (columnIndex == 2)
-                            TNN = atoi(data);
-                        break;
-                    case 2:
-                        if (columnIndex == 2)
-                            NFIN = atoi(data);
-                        NFRN = TNN - NFIN;
-                        break;
-                    case 3:
-                        if (columnIndex == 2)
-                            NOR = atoi(data);
-                        break;
-                    case 4:
-                        if (columnIndex == 2)
-                            NOL = atoi(data);
-                        break;
-                    case 5:
-                        if (columnIndex == 2)
-                            NOS = atoi(data);
-                        break;
-                    case 6:
-                        XCN[columnIndex - 2] = atof(data);
-                        break;
-                    case 7:
-                        YCN[columnIndex - 2] = atof(data);
-                        break;
-                    case 8:
-                        ZCN[columnIndex - 2] = atof(data);
-                        break;
-                    case 9:
-                        BNR[columnIndex - 2] = atoi(data);
-                        break;
-                    case 10:
-                        ENR[columnIndex - 2] = atoi(data);
-                        break;
-                    case 11:
-                        ELASTIC[columnIndex - 2] = atof(data);
-                        break;
-                    case 12:
-                        SHEAR[columnIndex - 2] = atof(data);
-                        break;
-                    case 13:
-                        AREA[columnIndex - 2] = atof(data);
-                        break;
-                    case 14:
-                        IMY[columnIndex - 2] = atof(data);
-                        break;
-                    case 15:
-                        IMZ[columnIndex - 2] = atof(data);
-                        break;
-                    case 16:
-                        THETA[columnIndex - 2] = atof(data);
-                        break;
-                    case 17:
-                        NRL[columnIndex - 2] = atoi(data);
-                        break;
-                    case 18:
-                        PLI[columnIndex - 2] = atoi(data);
-                        break;
-                    case 19:
-                        KOL[columnIndex - 2] = atoi(data);
-                        break;
-                    case 20:
-                        VOL[columnIndex - 2] = atof(data);
-                        break;
-                    case 21:
-                        DLB[columnIndex - 2] = atof(data);
-                        break;
-                    case 22:
-                        NRS[columnIndex - 2] = atoi(data);
-                        break;
-                    case 23:
-                        DSB[columnIndex - 2] = atof(data);
-                        break;
-                    }
-                    //--------------------------------录入结束-------------------------------------
-                }
-                data = strtok(NULL, DIVIDE); //Reset data
-            }
-            rowIndex++;      //RowIndex steps forward once
-            columnIndex = 0; //Reset columnIndex
-        }
-        fclose(fp); //Close the file
-        fp = NULL;  //Reset the file point
+        return 0;
     }
+    
+    fseek(fp, 0L, SEEK_SET);                                             //Locate file point to the first line
+    while ((line = fgets(temporSpace, sizeof(temporSpace), fp)) != NULL) //The loop continues when the end of the file is not read
+    {
+        data = strtok(line, DIVIDE); //Split strings with a ',' as a separator
+        while (data != NULL)         //Read the data of each row
+        {
+            if (strcmp(data, "END") == 0) //When the keyword 'END' is read, the reading process will be shut down
+            {
+                fclose(fp); //Close the file
+                fp = NULL;  //Reset the file point
+                return 0;
+            }
+            //----------------allocate memories-------------------------------------------------
+            if (rowIndex == 5) //Request space for multiple variable when loops to the 5th line
+            {
+                XCN = (double *)malloc(TNN * sizeof(double));
+                memset(XCN, 0, TNN * sizeof(double));
+                YCN = (double *)malloc(TNN * sizeof(double));
+                memset(YCN, 0, TNN * sizeof(double));
+                ZCN = (double *)malloc(TNN * sizeof(double));
+                memset(ZCN, 0, TNN * sizeof(double));
+                BNR = (int *)malloc(NOR * sizeof(int));
+                memset(BNR, 0, NOR * sizeof(int));
+                ENR = (int *)malloc(NOR * sizeof(int));
+                memset(ENR, 0, NOR * sizeof(int));
+                ELASTIC = (double *)malloc(NOR * sizeof(double));
+                memset(ELASTIC, 0, NOR * sizeof(double));
+                SHEAR = (double *)malloc(NOR * sizeof(double));
+                memset(SHEAR, 0, NOR * sizeof(double));
+                AREA = (double *)malloc(NOR * sizeof(double));
+                memset(AREA, 0, NOR * sizeof(double));
+                IMY = (double *)malloc(NOR * sizeof(double));
+                memset(IMY, 0, NOR * sizeof(double));
+                IMZ = (double *)malloc(NOR * sizeof(double));
+                memset(IMY, 0, NOR * sizeof(double));
+                THETA = (double *)malloc(NOR * sizeof(double));
+                memset(THETA, 0, NOR * sizeof(double));
+                NRL = (int *)malloc(NOL * sizeof(int));
+                memset(NRL, 0, NOL * sizeof(int));
+                PLI = (int *)malloc(NOL * sizeof(int));
+                memset(PLI, 0, NOL * sizeof(int));
+                KOL = (int *)malloc(NOL * sizeof(int));
+                memset(KOL, 0, NOL * sizeof(int));
+                VOL = (double *)malloc(NOL * sizeof(double));
+                memset(VOL, 0, NOL * sizeof(double));
+                DLB = (double *)malloc(NOL * sizeof(double));
+                memset(DLB, 0, NOL * sizeof(double));
+                NRS = (int *)malloc(NOS * sizeof(int));
+                memset(NRS, 0, NOS * sizeof(int));
+                DSB = (double *)malloc(NOS * sizeof(double));
+                memset(DSB, 0, NOS * sizeof(double));
+                DON = (double *)malloc(6 * NFRN * sizeof(double));
+                memset(DON, 0, 6 * NFRN * sizeof(double));
+                IFS = (double *)malloc(3 * NOS * sizeof(double));
+                memset(IFS, 0, 3 * NOS * sizeof(double));
+                RFE = (double *)malloc(6 * NOR * sizeof(double));
+                memset(RFE, 0, 6 * NOR * sizeof(double));
+            }
+            //-------------------allocate finished-------------------------------------------------
+            if (columnIndex++ == 0) //Skip the saving of the first column
+            {
+                data = strtok(NULL, DIVIDE); //Reset data
+                continue;
+            }
+            //-----------------------------data input-------------------------------------
+            switch (rowIndex) //Store variables of each column in different ways
+            {
+            case 0:
+                break;
+            case 1:
+                if (columnIndex == 2)
+                    TNN = atoi(data);
+                break;
+            case 2:
+                if (columnIndex == 2)
+                    NFIN = atoi(data);
+                NFRN = TNN - NFIN;
+                break;
+            case 3:
+                if (columnIndex == 2)
+                    NOR = atoi(data);
+                break;
+            case 4:
+                if (columnIndex == 2)
+                    NOL = atoi(data);
+                break;
+            case 5:
+                if (columnIndex == 2)
+                    NOS = atoi(data);
+                break;
+            case 6:
+                XCN[columnIndex - 2] = atof(data);
+                break;
+            case 7:
+                YCN[columnIndex - 2] = atof(data);
+                break;
+            case 8:
+                ZCN[columnIndex - 2] = atof(data);
+                break;
+            case 9:
+                BNR[columnIndex - 2] = atoi(data);
+                break;
+            case 10:
+                ENR[columnIndex - 2] = atoi(data);
+                break;
+            case 11:
+                ELASTIC[columnIndex - 2] = atof(data);
+                break;
+            case 12:
+                SHEAR[columnIndex - 2] = atof(data);
+                break;
+            case 13:
+                AREA[columnIndex - 2] = atof(data);
+                break;
+            case 14:
+                IMY[columnIndex - 2] = atof(data);
+                break;
+            case 15:
+                IMZ[columnIndex - 2] = atof(data);
+                break;
+            case 16:
+                THETA[columnIndex - 2] = atof(data);
+                break;
+            case 17:
+                NRL[columnIndex - 2] = atoi(data);
+                break;
+            case 18:
+                PLI[columnIndex - 2] = atoi(data);
+                break;
+            case 19:
+                KOL[columnIndex - 2] = atoi(data);
+                break;
+            case 20:
+                VOL[columnIndex - 2] = atof(data);
+                break;
+            case 21:
+                DLB[columnIndex - 2] = atof(data);
+                break;
+            case 22:
+                NRS[columnIndex - 2] = atoi(data);
+                break;
+            case 23:
+                DSB[columnIndex - 2] = atof(data);
+                break;
+                //--------------------------------录入结束-------------------------------------
+            }
+            data = strtok(NULL, DIVIDE); //Reset data
+        }
+        rowIndex++;      //RowIndex steps forward once
+        columnIndex = 0; //Reset columnIndex
+    }
+    fclose(fp); //Close the file
+    fp = NULL;  //Reset the file point
 
     return 0;
 }
@@ -977,82 +979,107 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
     return 0;
 }
 
-bool solve_conjugate_gradient_par(double* A, double* b, double* x, int N)
+bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
 {
-	double* r, * p , * z, tol = 1e-16;
-	double gamma, gamma_new, alpha, beta;
-
-	r = (double*)malloc(N * sizeof(double));
-	p = (double*)malloc(N * sizeof(double));
-	z = (double*)malloc(N * sizeof(double));
-
-	// x = [0 ... 0]
-	// r = b - A * x
-	// p = r
-	// gamma = r' * r
-	gamma = 0.0;
-    #pragma omp parallel for reduction(+:gamma)
-	for (int i = 0; i < N; ++i) {
-		x[i] = 0.0;
-		r[i] = b[i];
-		p[i] = r[i];
-		gamma += r[i] * r[i];
-	}
-    
-	for (int n = 0; true; ++n) 
+    if (A == NULL)
     {
-		// z = A * p
-        #pragma omp parallel for
-		for (int i = 0; i < N; ++i) 
+        sfPrintError(12);
+        return 1;
+    }
+    else if (b == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (x == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (n == 0)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+
+    double *r, *p, *z, tol = 1e-16;
+    double gamma, gamma_new, alpha, beta;
+
+    r = (double *)malloc(n * sizeof(double));
+    p = (double *)malloc(n * sizeof(double));
+    z = (double *)malloc(n * sizeof(double));
+
+    // x = [0 ... 0]
+    // r = b - A * x
+    // p = r
+    // gamma = r' * r
+    gamma = 0.0;
+#pragma omp parallel for reduction(+ \
+                                   : gamma)
+    for (int i = 0; i < n; ++i)
+    {
+        x[i] = 0.0;
+        r[i] = b[i];
+        p[i] = r[i];
+        gamma += r[i] * r[i];
+    }
+
+    for (int n = 0; true; ++n)
+    {
+// z = A * p
+#pragma omp parallel for
+        for (int i = 0; i < n; ++i)
         {
-			z[i] = 0.0;
-			for (int j = 0; j < N; ++j)
-				z[i] += A[i * N + j] * p[j];
+            z[i] = 0.0;
+            for (int j = 0; j < n; ++j)
+                z[i] += A[i * n + j] * p[j];
         }
 
-		// alpha = gamma / (p' * z)
-		alpha = 0.0;
-        #pragma omp parallel for reduction(+:alpha)
-		for (int i = 0; i < N; ++i)
+        // alpha = gamma / (p' * z)
+        alpha = 0.0;
+#pragma omp parallel for reduction(+ \
+                                   : alpha)
+        for (int i = 0; i < n; ++i)
         {
             // printf("%d\n", i);
             alpha += p[i] * z[i];
         }
-		alpha = gamma / alpha;
+        alpha = gamma / alpha;
 
-		// x = x + alpha * p
-		// r = r - alpha * z
-		// gamma_new = r' * r
-		gamma_new = 0.0;
-        #pragma omp parallel for reduction(+:gamma_new)
-		for (int i = 0; i < N; ++i) 
+        // x = x + alpha * p
+        // r = r - alpha * z
+        // gamma_new = r' * r
+        gamma_new = 0.0;
+#pragma omp parallel for reduction(+ \
+                                   : gamma_new)
+        for (int i = 0; i < n; ++i)
         {
-			x[i] += alpha * p[i];
-			r[i] -= alpha * z[i];
-			gamma_new += r[i] * r[i];
-		}
-
-		if (sqrt(gamma_new) < tol)
-			break;
-
-		beta = gamma_new / gamma;
-
-		// p = r + (gamma_new / gamma) * p;
-        #pragma omp parallel for
-		for (int i = 0; i < N; ++i)
-        {
-			p[i] = r[i] + beta * p[i];
+            x[i] += alpha * p[i];
+            r[i] -= alpha * z[i];
+            gamma_new += r[i] * r[i];
         }
 
-		// gamma = gamma_new
-		gamma = gamma_new;
-	}
+        if (sqrt(gamma_new) < tol)
+            break;
 
-	free(r);
-	free(p);
-	free(z);
+        beta = gamma_new / gamma;
 
-	return 0;
+// p = r + (gamma_new / gamma) * p;
+#pragma omp parallel for
+        for (int i = 0; i < n; ++i)
+        {
+            p[i] = r[i] + beta * p[i];
+        }
+
+        // gamma = gamma_new
+        gamma = gamma_new;
+    }
+
+    free(r);
+    free(p);
+    free(z);
+
+    return 0;
 }
 
 bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods

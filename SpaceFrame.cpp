@@ -97,103 +97,102 @@ int main()
     else
         printf("Data input succeeded!\n");
 
-    int i = 0;
-
-    printf("TNN: %d\n", TNN);
-    printf("NFIN: %d\n", NFIN);
-    printf("NOR: %d\n", NOR);
-    printf("NOL:% d\n", NOL);
-    printf("NOS: %d\nXCN ", NOS);
-    for (i = 0; i < TNN; i++)
-    {
-        printf("%f ", XCN[i]);
-    }
-    printf("\nYCN ");
-    for (i = 0; i < TNN; i++)
-    {
-        printf("%f ", YCN[i]);
-    }
-    printf("\nZCN ");
-    for (i = 0; i < TNN; i++)
-    {
-        printf("%f ", ZCN[i]);
-    }
-    printf("\nBNR ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%d ", BNR[i]);
-    }
-    printf("\nENR ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%d ", ENR[i]);
-    }
-    printf("\nELASTIC ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%f ", ELASTIC[i]);
-    }
-    printf("\nSHEAR ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%f ", SHEAR[i]);
-    }
-    printf("\nAREA ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%f ", AREA[i]);
-    }
-    printf("\nIMY ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%.11f ", IMY[i]);
-    }
-    printf("\nIMZ ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%.11f ", IMZ[i]);
-    }
-    printf("\nTHETA ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%f ", THETA[i]);
-    }
-    printf("\nNRL ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%d ", NRL[i]);
-    }
-    printf("\nPLI ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%d ", PLI[i]);
-    }
-    printf("\nKOL ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%d ", KOL[i]);
-    }
-    printf("\nVOL ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%f ", VOL[i]);
-    }
-    printf("\nDLB ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%f ", DLB[i]);
-    }
-    printf("\nNRS ");
-    for (i = 0; i < NOS; i++)
-    {
-        printf("%d ", NRS[i]);
-    }
-    printf("\nDSB ");
-    for (i = 0; i < NOS; i++)
-    {
-        printf("%f ", DSB[i]);
-    }
-    printf("\n");
+    // int i = 0;
+    // printf("TNN: %d\n", TNN);
+    // printf("NFIN: %d\n", NFIN);
+    // printf("NOR: %d\n", NOR);
+    // printf("NOL:% d\n", NOL);
+    // printf("NOS: %d\nXCN ", NOS);
+    // for (i = 0; i < TNN; i++)
+    // {
+    //     printf("%f ", XCN[i]);
+    // }
+    // printf("\nYCN ");
+    // for (i = 0; i < TNN; i++)
+    // {
+    //     printf("%f ", YCN[i]);
+    // }
+    // printf("\nZCN ");
+    // for (i = 0; i < TNN; i++)
+    // {
+    //     printf("%f ", ZCN[i]);
+    // }
+    // printf("\nBNR ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%d ", BNR[i]);
+    // }
+    // printf("\nENR ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%d ", ENR[i]);
+    // }
+    // printf("\nELASTIC ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%f ", ELASTIC[i]);
+    // }
+    // printf("\nSHEAR ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%f ", SHEAR[i]);
+    // }
+    // printf("\nAREA ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%f ", AREA[i]);
+    // }
+    // printf("\nIMY ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%.11f ", IMY[i]);
+    // }
+    // printf("\nIMZ ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%.11f ", IMZ[i]);
+    // }
+    // printf("\nTHETA ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%f ", THETA[i]);
+    // }
+    // printf("\nNRL ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%d ", NRL[i]);
+    // }
+    // printf("\nPLI ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%d ", PLI[i]);
+    // }
+    // printf("\nKOL ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%d ", KOL[i]);
+    // }
+    // printf("\nVOL ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%f ", VOL[i]);
+    // }
+    // printf("\nDLB ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%f ", DLB[i]);
+    // }
+    // printf("\nNRS ");
+    // for (i = 0; i < NOS; i++)
+    // {
+    //     printf("%d ", NRS[i]);
+    // }
+    // printf("\nDSB ");
+    // for (i = 0; i < NOS; i++)
+    // {
+    //     printf("%f ", DSB[i]);
+    // }
+    // printf("\n");
 
     int dof = 6 * NFRN;
     ts = (double *)malloc(dof * dof * sizeof(double)); //allocate memory for total stiffness matrix
@@ -235,6 +234,17 @@ int main()
         printf("Solving equation succeeded!\n");
 
     // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    // {
+    //     sfPrintError(4);
+    //     printf("\nPress any key to exit\n");
+    //     value = getchar();
+
+    //     return 1;
+    // }
+    // else
+    //     printf("Solving equation succeeded!\n");
+
+    // if (solve_conjugate_gradient_par(ts, lv, DON, 6 * NFRN)) //solve matrix equation
     // {
     //     sfPrintError(4);
     //     printf("\nPress any key to exit\n");
@@ -302,7 +312,7 @@ bool sfInput()
                 fp = NULL;  //Reset the file point
                 return 0;
             }
-            //----------------allocate memories-------------------------------------------------
+            //allocate memories
             if (rowIndex == 5) //Request space for multiple variable when loops to the 5th line
             {
                 XCN = (double *)malloc(TNN * sizeof(double));
@@ -348,13 +358,13 @@ bool sfInput()
                 RFE = (double *)malloc(6 * NOR * sizeof(double));
                 memset(RFE, 0, 6 * NOR * sizeof(double));
             }
-            //-------------------allocate finished-------------------------------------------------
+            //allocate finished
             if (columnIndex++ == 0) //Skip the saving of the first column
             {
                 data = strtok(NULL, DIVIDE); //Reset data
                 continue;
             }
-            //-----------------------------data input-------------------------------------
+            //data input
             switch (rowIndex) //Store variables of each column in different ways
             {
             case 0:
@@ -434,7 +444,7 @@ bool sfInput()
             case 23:
                 DSB[columnIndex - 2] = atof(data);
                 break;
-                //--------------------------------录入结束-------------------------------------
+                //input finished
             }
             data = strtok(NULL, DIVIDE); //Reset data
         }

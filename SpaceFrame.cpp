@@ -237,18 +237,7 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    if (sfCholesky(TS, lv, DON, 6 * NFRN)) //solve matrix equation
-    {
-        sfPrintError(4);
-        printf("\nPress any key to exit\n");
-        value = getchar();
-
-        return 1;
-    }
-    else
-        printf("Solving equation succeeded!\n");
-
-    // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    // if (sfCholesky(TS, lv, DON, 6 * NFRN)) //solve matrix equation
     // {
     //     sfPrintError(4);
     //     printf("\nPress any key to exit\n");
@@ -258,6 +247,17 @@ int main()
     // }
     // else
     //     printf("Solving equation succeeded!\n");
+
+    if (solve_conjugate_gradient(TS, lv, DON, 6 * NFRN)) //solve matrix equation
+    {
+        sfPrintError(4);
+        printf("\nPress any key to exit\n");
+        value = getchar();
+
+        return 1;
+    }
+    else
+        printf("Solving equation succeeded!\n");
 
     sfPrintLine2();
     for (int i = 0; i < 6 * NFRN; i++)
@@ -457,10 +457,11 @@ bool sfInput()
     return 0;
 }
 
-bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
+bool sfBuildTotalStiff() //ts is total stiffness matrix
 {
+     dovidw();
     double us[36] = {0};            //unit stiffness matrix
-    int p[2] = {0}, dof = 6 * NFRN; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
+    int p[2] = {0}; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
     TS = (double *)malloc(NSI* sizeof(double)); //allocate memory for total stiffness matrix
     memset(TS, 0, NSI* sizeof(double));
     LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
@@ -471,7 +472,7 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
         sfPrintError(6);
         return 1;
     }
-
+   
     for (int k = 0; k < NOR; k++)
     {
         p[0] = 6 * (BNR[k] - NFIN - 1); // tag: match the displacement with nods

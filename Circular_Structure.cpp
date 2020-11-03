@@ -55,9 +55,10 @@ int main()
     fprintf(fp, "\n");
 
     fprintf(fp, "TSR");
-    for (int i = 0; i < 2 * n; i++)
+    for (int i = 0; i < 2 * n; i += 2)
     {
-        fprintf(fp, ",%d", 4800000);
+        int tsr = 100 * rand() % (3000000) + 2000000;
+        fprintf(fp, ",%d,%d", tsr, tsr);
     }
     fprintf(fp, "\n");
 
@@ -86,7 +87,7 @@ int main()
     }
     for (int i = n + 1; i < 2 * n + 1; i++)
     {
-        fprintf(fp, ",%d", -1);
+        fprintf(fp, ",%d", -10000);
     }
     fprintf(fp, "\n");
 

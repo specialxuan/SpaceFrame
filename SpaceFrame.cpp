@@ -255,13 +255,13 @@ int main()
     // else
     //     printf("Solving equation succeeded!\n");
 
-    sfPrintLine2();
-    for (int i = 0; i < 6 * NFRN; i++)
-    {
-        printf("%15.7f", DON[i]);
-        printf("\n");
-    }
-    sfPrintLine2();
+    // sfPrintLine2();
+    // for (int i = 0; i < 6 * NFRN; i++)
+    // {
+    //     printf("%15.7f", DON[i]);
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
 
     for (int i = 0; i < NOS; i++)
         if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
@@ -274,12 +274,12 @@ int main()
         }
     sfOutput(); //output data.
 
-    sfPrintLine2();
-    for (int i = 0; i < 6 * NOS; i++)
-    {
-        printf("\t%f\n", IFS[i]);
-    }
-    sfPrintLine2();
+    // sfPrintLine2();
+    // for (int i = 0; i < 6 * NOS; i++)
+    // {
+    //     printf("\t%f\n", IFS[i]);
+    // }
+    // sfPrintLine2();
 
     printf("Press any key to exit\n");
     value = getchar(); //pause
@@ -295,11 +295,11 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf_1.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf_test.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
-    
+
     fseek(fp, 0L, SEEK_SET);                                             //Locate file point to the first line
     while ((line = fgets(temporSpace, sizeof(temporSpace), fp)) != NULL) //The loop continues when the end of the file is not read
     {
@@ -459,6 +459,12 @@ bool sfInput()
 
 bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
 {
+    if (ts == NULL)
+    {
+        sfPrintError(15);
+        return 0;
+    }
+
     double us[36] = {0};            //unit stiffness matrix
     int p[2] = {0}, dof = 6 * NFRN; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
 
@@ -537,6 +543,22 @@ bool sfLCosSin()
 
 bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
 {
+    if (k < 0)
+    {
+        sfPrintError(16);
+        return 0;
+    }
+    if (flag < 1 || flag > 4)
+    {
+        sfPrintError(16);
+        return 0;
+    }
+    if (us == NULL)
+    {
+        sfPrintError(16);
+        return 0;
+    }
+
     double rd[36] = {0}, t[36] = {0}, c[36] = {0}, tmp = 0; //rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
     memset(us, 0, 36 * sizeof(double));
 
@@ -579,6 +601,22 @@ bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, fl
 
 bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, flag is the number of matrix
 {
+    if (k < 0)
+    {
+        sfPrintError(17);
+        return 0;
+    }
+    if (flag < 0 || flag > 4)
+    {
+        sfPrintError(17);
+        return 0;
+    }
+    if (rd == NULL)
+    {
+        sfPrintError(17);
+        return 0;
+    }
+
     double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = LCS[0 * NOR + k];
 
     a = ELASTIC[k] * AREA[k] / l;         //EA/1
@@ -646,6 +684,17 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
 
 bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose matrix
 {
+    if (k < 0)
+    {
+        sfPrintError(18);
+        return 0;
+    }
+    if (t == NULL)
+    {
+        sfPrintError(18);
+        return 0;
+    }
+
     double coa = 0, cob = 0, coc = 0, sic = 0, sit = 0, cot = 0, m = 0, n = 0; //co means cosine, si means sine, m and n is temperary variable
 
     memset(t, 0, 36 * sizeof(double));
@@ -692,6 +741,12 @@ bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose ma
 
 bool sfBuildLoadVector(double *lv) //lv is the load vector
 {
+    if (lv == 0)
+    {
+        sfPrintError(19);
+        return 0;
+    }
+
     int rod = 0, p[2] = {0};          //rod is the number of rods, dof is the degree of freedom
     double rf[12] = {0}, t[36] = {0}; //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
 
@@ -732,6 +787,22 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
 
 bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load, rfb and rfe is the reaction force at begining and end of rods
 {
+    if (i < 0)
+    {
+        sfPrintError(20);
+        return 0;
+    }
+    if (rfb == NULL)
+    {
+        sfPrintError(20);
+        return 0;
+    }
+    if (rfe == NULL)
+    {
+        sfPrintError(20);
+        return 0;
+    }
+
     double ra = 0, rb = 0, a = 0, b = 0, q = VOL[i], xq = DLB[i]; //ra, rb, a and b are middle variable
     int rod = NRL[i] - 1, pm = PLI[i], t = 0;                     //rod is the number of rods
 
@@ -1094,6 +1165,17 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
 
 bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
 {
+    if (m < 0)
+    {
+        sfPrintError(21);
+        return 0;
+    }
+    if (k < 0)
+    {
+        sfPrintError(21);
+        return 0;
+    }
+
     int n = 6 * (k - 1); //n is the matching place of rods
     double tf[6] = {0};  //tf is temperary variable
 
@@ -1138,6 +1220,17 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
 
 bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load, xp is the distance between the section and the begining of rod, tf is internal force
 {
+    if (i < 0)
+    {
+        sfPrintError(22);
+        return 0;
+    }
+    if (tf == NULL)
+    {
+        sfPrintError(22);
+        return 0;
+    }
+
     double xq = DLB[i], t = xq - xp, r = xp / xq, q = VOL[i]; //t and r are temperary variables
     int e = PLI[i];
     switch (KOL[i]) //calculate section force according to kind of loads
@@ -1195,6 +1288,17 @@ bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load,
 
 bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, tref is the end force of rods
 {
+    if (k < 1)
+    {
+        sfPrintError(23);
+        return 0;
+    }
+    if (tref == NULL)
+    {
+        sfPrintError(23);
+        return 0;
+    }
+
     int p[2] = {0};                                  //p is a temperary vector for i0j0
     double rd[36] = {0}, rdb[36] = {0}, t[36] = {0}; //rd
 
@@ -1305,6 +1409,40 @@ bool sfPrintError(int error)
     case 14:
         printf("Calculating end force failed!\n");
         break;
+    case 15:
+        printf("Allocating total stiffness matrix failed!\n");
+        break;
+    case 16:
+        printf("There is something wrong in building unit stiffness matrix!\n");
+        break;
+    case 17:
+        printf("There is something wrong in building local stiffness matrix!\n");
+        break;
+    case 18:
+        printf("There is something wrong in building transpose matrix failed!\n");
+        break;
+    case 19:
+        printf("There is something wrong in building load vector!\n");
+        break;
+    case 20:
+        printf("There is something wrong in calculating reaction force!\n");
+        break;
+    case 21:
+        printf("There is something wrong in calculating internal force!\n");
+        break;
+    case 22:
+        printf("There is something wrong in calculating internal force of cantilever!\n");
+        break;
+    case 23:
+        printf("There is something wrong in calculating internal force of displacement!\n");
+        break;
+    case 24:
+        printf("!\n");
+        break;
+    case 25:
+        printf("!\n");
+        break;
+        
     default:
         break;
     }

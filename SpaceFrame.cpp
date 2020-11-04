@@ -92,6 +92,7 @@ int main()
 
     start1 = clock();
     start = GetTickCount();
+    
     sfPrintLine(); //"------------------------------"
     if (sfInput()) //input data
     {
@@ -178,13 +179,6 @@ int main()
             return 1;
         }
     sfOutput(); //output data.
-
-    sfPrintLine2();
-    for (int i = 0; i < 6 * NOS; i++)
-    {
-        printf("\t%f\n", IFS[i]);
-    }
-    sfPrintLine2();
 
     end1 = clock();
     printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);

@@ -1,3 +1,4 @@
+#include <Windows.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
@@ -5,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <Windows.h>
 
 #define EPS 1e-15
 
@@ -85,13 +85,13 @@ int main()
     double *ts = 0, *lv = 0; //declare total stiffness and load vector
 
     clock_t start1 = 0, end1 = 0;
-	DWORD start,end;
+    DWORD start, end;
 
     printf("Welcome to use the calculator of space frame!\nPress any key to start");
     char value = getchar(); //pause
 
     start1 = clock();
-    start= GetTickCount(); 
+    start = GetTickCount();
 
     sfPrintLine(); //"------------------------------"
     if (sfInput()) //input data
@@ -293,9 +293,9 @@ int main()
     // sfPrintLine2();
 
     end1 = clock();
-	printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
-    end= GetTickCount();  
-    printf("realtime=%f\n",(double)(end-start)/1000); 
+    printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
+    end = GetTickCount();
+    printf("realtime=%f\n", (double)(end - start) / 1000);
 
     printf("Press any key to exit\n");
     value = getchar(); //pause
@@ -1373,6 +1373,27 @@ bool sfPrintLine2()
 
 bool sfOutput()
 {
+    free(XCN);
+    free(YCN);
+    free(ZCN);
+    free(BNR);
+    free(ENR);
+    free(ELASTIC);
+    free(SHEAR);
+    free(AREA);
+    free(IMY);
+    free(IMZ);
+    free(THETA);
+    free(NRL);
+    free(PLI);
+    free(KOL);
+    free(VOL);
+    free(DLB);
+    free(NRS);
+    free(DSB);
+    free(DON);
+    free(IFS);
+    free(RFE);
     return 0;
 }
 
@@ -1456,7 +1477,7 @@ bool sfPrintError(int error)
     case 25:
         printf("!\n");
         break;
-        
+
     default:
         break;
     }

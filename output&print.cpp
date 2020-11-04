@@ -41,7 +41,7 @@ double *IFS; //the internal force in the section
 double *RFE; //the reaction force of the end node
 void KGaaa()
 {
-	printf("************************************************************************\n");
+	printf("************************************************************************************************************************************\n");
 }
 bool sfInput()
 {
@@ -161,45 +161,46 @@ bool sfInput()
 		fp = NULL;																//Reset the file point
 	}	
 }
-bool output_and_print()
+bool sfPrint()
 {
 	
 	int i,j; 
-	printf("\t\t\tCalculation of space rigid frame\n");
+	printf("\t\t\tCalculation Of Space Rigid Frame\n");
 	KGaaa();
 	
-	printf("\t\tTNN =%d\t\t\tNFIN=%d\n\t\tNFRN=%d\t\t\tNOR =%d\n", TNN, NFIN, NFRN, NOR) ;
-	printf("\t\tNOL =%d\t\t\tNOS =%d\n" , NOL,NOS);
+	printf("\t\tTNN = %d\t\t\tNFIN = %d\n\t\tNFRN = %d\t\tNOR = %d\n", TNN, NFIN, NFRN, NOR) ;
+	printf("\t\tNOL = %d\t\t\tNOS = %d\n" , NOL,NOS);
 	KGaaa();
 	
-	printf("	NUMBER OF NODES\tXcoordinate\t\tcoordinate\t\tZcoordinate\n");
+	printf("NUMBER OF NODES     Coordinate-X    Coordinate-Y    Coordinate-Z\n");
 	for(i=1;i<=TNN; i++)
-		printf("%d\t %5.7f\t%5.7f\t85.7f\n",i,XCN[i-1],YCN[i-1],ZCN[i-1]);
+		printf("%15d%15.7f%15.7f%15.7f\n",i,XCN[i-1],YCN[i-1],ZCN[i-1]);
 	KGaaa();
 	
-	printf("	NUMBER OF NODES\tLEFT NODES\t\tRIGHT NODES\t\tElastic modulus\t\tShear modulus\t\tArea\t\tInertia moment of y-axis Jy\t\tInertia moment of z-axis Jz\n");
+	printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus  Shear modulus    Area    Inertia moment Yaxis   Inertia moment Zaxis\n");
 	for(i=0; i<NOR;i++)
-		printf("	%d\t	%d\t	%d\t %5.0f %5.0f %5.4f %.5f %.5f\n",i+1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i],IMY[i],IMZ[i]);
-	printf("NOS\tPLI\tDLB\n");
+		printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f%23.5f\n",i+1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i],IMY[i],IMZ[i]);
+	KGaaa();
+	printf("NUMBER OF SECTIONS         PLI            DLB\n");
 	for(i=1;i<=NOS;i++)
-		printf("%d\t\t%d\t\t %5.7f\n",i,NRS[i-1],DSB[i-1]);
+		printf("%15d%15d%15.7f\n",i,NRS[i-1],DSB[i-1]);
 	KGaaa();
 	
-	printf("\nThe results are as follows: \n");
+	printf("Cauculating......\nThe results are as follows: \n");
 	KGaaa() ;
 
-	printf("NUMBER OF NODES\tX displacement\tY displacement\tZ displacement\tX diversion\tY diversion\tZ diversion\n");
+	printf("NUMBER OF NODES   Displacement-X Displacement-Y Displacement-Z   Diversion-X    Diversion-Y    Diversion-Z\n");
 	for (i=NFIN+1, j=0;i<=TNN;i++,j++)
-		printf("%d%5.7f%5.7f%5.7f%5.7f %5.7f %5.7f\n",i,DON[6*j],DON[6*j+1], DON[6*j+2],DON[6*j+3],DON[6*j+4],DON[6*j+5]);
+		printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n",i,DON[6*j],DON[6*j+1], DON[6*j+2],DON[6*j+3],DON[6*j+4],DON[6*j+5]);
 	KGaaa() ;
 
-	printf("NUMBER OF SECTIONS\tAxial force X\tShear force Y\tShear force Z\tTorque x\tBending momentY\tBending moment Z\n");
+	printf("NUMBER OF SECTIONS Axial force-X  Shear force-Y  Shear force-Z    Torque-X   Bending moment-Y  Bending moment-Z\n");
 	for (i=0;i<NOS;i++)
-		printf("	%d	%5.7f	%5.7f	%5.7f	%5.7f	%5.7f	%5.7f\n",i+1, IFS[6*i], IFS[6*i+1], IFS[6*i+2],IFS[6*i+3],IFS[6*i+4], IFS[6*i+5]);
+		printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n",i+1, IFS[6*i], IFS[6*i+1], IFS[6*i+2],IFS[6*i+3],IFS[6*i+4], IFS[6*i+5]);
 		
 	
 }
-void writeExcel()
+void sfOutput()
 {
 	char chy[4]={ 'x' ,'a' ,'h','w' } ;
 	int data[4]={ 1 , 3 , 6 ,9	};
@@ -210,7 +211,7 @@ void writeExcel()
 	fprintf(fp,"TNN,%d\nNFIN,%d\nNFRN,%d\nNOR,%d\nNOL,%d\nNOS,%d", TNN, NFIN, NFRN, NOR, NOL, NOS);
 	
 	//------------NODES-------------------------------------------------
-	fprintf(fp,"NODES\n,");
+	fprintf(fp,"\nNODES,");
 	for(i=0;i<TNN;i++)
 		fprintf(fp,"%d,",i+1);
 	
@@ -317,13 +318,12 @@ void writeExcel()
 		fprintf(fp,"%f,%f,%f,",IFS[6*i+3],IFS[6*i+4],IFS[6*i+5]);
 	fclose(fp);
 }
-					
-//	writeExcel()  ;	
 
 int main()
 {
 	sfInput();
-	output_and_print();
-	writeExcel()  ;
+	sfOutput();
+	sfPrint();
 	return 0;
 }
+

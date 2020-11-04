@@ -181,7 +181,6 @@ int main()
 
             return 1;
         }
-    sfOutput(); //output data.
 
     sfPrintLine2();
     for (int i = 0; i < 6 * NOS; i++)
@@ -189,6 +188,8 @@ int main()
         printf("\t%f\n", IFS[i]);
     }
     sfPrintLine2();
+    
+    sfOutput(); //output data.
 
     printf("Press any key to exit\n");
     value = getchar(); //pause
@@ -243,7 +244,7 @@ bool sfInput()
     memset(DSB, 0, NOS * sizeof(double));
     DON = (double *)malloc(6 * NFRN * sizeof(double));
     memset(DON, 0, 6 * NFRN * sizeof(double));
-    IFS = (double *)malloc(3 * NOS * sizeof(double));
+    IFS = (double *)malloc(6 * NOS * sizeof(double));
     memset(IFS, 0, 3 * NOS * sizeof(double));
     RFE = (double *)malloc(6 * NOR * sizeof(double));
     memset(RFE, 0, 6 * NOR * sizeof(double));
@@ -1064,7 +1065,7 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
         }
     }
 
-    sfPrintLine2();
+    sfPrintLine2(); //note
     for (int i = 0; i < 6; i++)
     {
         printf("%f\t", tref[i]);
@@ -1089,6 +1090,28 @@ bool sfPrintLine2()
 
 bool sfOutput()
 {
+    free(XCN);
+    free(YCN);
+    free(ZCN);
+    free(BNR);
+    free(ENR);
+    free(ELASTIC);
+    free(SHEAR);
+    free(AREA);
+    free(IMY);
+    free(IMZ);
+    free(THETA);
+    free(NRL);
+    free(PLI);
+    free(KOL);
+    free(VOL);
+    free(DLB);
+    free(NRS);
+    free(DSB);
+    free(DON);
+    free(IFS);
+    free(RFE);
+
     return 0;
 }
 

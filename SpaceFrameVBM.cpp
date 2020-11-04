@@ -47,7 +47,7 @@ int *IV;     //the location of diagonal element
 int NSI;     //upper limit
 int MAXIBDW; //half bandwidth
 
-double *TS; //total stifness
+double *TS; //total stiffness
 
 int MAXTNN;   //the max total number of nodes with specify displacement
 int TNNSD[6]; //the total number of nodes with specify displacement.
@@ -505,13 +505,8 @@ bool sfInput()
     return 0;
 }
 
-bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
+bool sfBuildTotalStiff() //ts is total stiffness matrix
 {
-    if (ts == NULL)
-    {
-        sfPrintError(15);
-        return 0;
-    }
 
     dovidw();
 

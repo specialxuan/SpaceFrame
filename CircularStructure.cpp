@@ -72,7 +72,7 @@ int main()
     fprintf(fp, "ELASTIC,");
     for (int i = 0; i < nor; i++)
     {
-        fprintf(fp, "%d,", 210000000/* + 100000 * (rand() % 1000)*/);
+        fprintf(fp, "%d,", 210000000 + 100000 * (rand() % 1000));
     }
     fprintf(fp, "\n");
 
@@ -93,14 +93,14 @@ int main()
     fprintf(fp, "IMY,");
     for (int i = 0; i < nor; i++)
     {
-        fprintf(fp, "%.10f,", 0.0000040001/* + 0.0000000001 * (rand() % 10000)*/);
+        fprintf(fp, "%.10f,", 0.0000040001 + 0.0000000001 * (rand() % 10000));
     }
     fprintf(fp, "\n");
 
     fprintf(fp, "IMZ,");
     for (int i = 0; i < nor; i++)
     {
-        fprintf(fp, "%.10f,", 0.0000040001/* + 0.0000000001 * (rand() % 10000)*/);
+        fprintf(fp, "%.10f,", 0.0000040001 + 0.0000000001 * (rand() % 10000));
     }
     fprintf(fp, "\n");
 
@@ -114,7 +114,7 @@ int main()
     fprintf(fp, "NRL,");
     for (int i = 0; i < (m + 1) * (n + 1); i++)
     {
-        fprintf(fp, "%d,", i + 1/* * ((2 * m + 1) * (2 * n + 1) - m * n) * (l - 1)*/);
+        fprintf(fp, "%d,", i + 1 + ((2 * m + 1) * (2 * n + 1) - m * n) * (l - 1));
     }
     fprintf(fp, "\n");
 

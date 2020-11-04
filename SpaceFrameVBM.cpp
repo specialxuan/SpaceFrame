@@ -327,7 +327,7 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf_test.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -594,14 +594,14 @@ bool dovidw()
             if (mm > peribdw[ENR[i] - 1])
             {
                 peribdw[ENR[i] - 1] = mm;
-                printf("%d %d\n", ENR[i], peribdw[ENR[i] - 1]);
+                // printf("%d %d\n", ENR[i], peribdw[ENR[i] - 1]);
             }
         }
     }
-    for (i = 0; i < TNN; i++)
-    {
-        printf("%d %d\n", i, peribdw[i]);
-    }
+    // for (i = 0; i < TNN; i++)
+    // {
+    //     printf("%d %d\n", i, peribdw[i]);
+    // }
     for (i = NFIN; i < TNN; i++)
     {
         if (peribdw[i] > MAXIBDW)
@@ -1535,38 +1535,38 @@ bool sfPrintLine2()
 
 bool sfOutput()
 {
-    printf("\t\t\tCalculation Of Space Rigid Frame\n");
-    sfPrintLine();
+    // printf("\t\t\tCalculation Of Space Rigid Frame\n");
+    // sfPrintLine();
 
-    printf("\t\tTNN = %d\t\t\tNFIN = %d\n\t\tNFRN = %d\t\tNOR = %d\n", TNN, NFIN, NFRN, NOR);
-    printf("\t\tNOL = %d\t\t\tNOS = %d\n", NOL, NOS);
-    sfPrintLine();
+    // printf("\t\tTNN = %d\t\t\tNFIN = %d\n\t\tNFRN = %d\t\tNOR = %d\n", TNN, NFIN, NFRN, NOR);
+    // printf("\t\tNOL = %d\t\t\tNOS = %d\n", NOL, NOS);
+    // sfPrintLine();
 
-    printf("NUMBER OF NODES     Coordinate-X    Coordinate-Y    Coordinate-Z\n");
-    for (int i = 0; i < TNN; i++)
-        printf("%15d%15.7f%15.7f%15.7f\n", i + 1, XCN[i], YCN[i], ZCN[i]);
-    sfPrintLine();
+    // printf("NUMBER OF NODES     Coordinate-X    Coordinate-Y    Coordinate-Z\n");
+    // for (int i = 0; i < TNN; i++)
+    //     printf("%15d%15.7f%15.7f%15.7f\n", i + 1, XCN[i], YCN[i], ZCN[i]);
+    // sfPrintLine();
 
-    printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus  Shear modulus    Area   Inertia moment Y axis  Inertia moment Z axis\n");
-    for (int i = 0; i < NOR; i++)
-        printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f%23.5f\n", i + 1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i], IMY[i], IMZ[i]);
-    sfPrintLine();
-    printf("NUMBER OF SECTIONS         PLI            DLB\n");
-    for (int i = 0; i < NOS; i++)
-        printf("%15d%15d%15.7f\n", i + 1, NRS[i], DSB[i]);
-    sfPrintLine();
+    // printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus  Shear modulus    Area   Inertia moment Y axis  Inertia moment Z axis\n");
+    // for (int i = 0; i < NOR; i++)
+    //     printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f%23.5f\n", i + 1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i], IMY[i], IMZ[i]);
+    // sfPrintLine();
+    // printf("NUMBER OF SECTIONS         PLI            DLB\n");
+    // for (int i = 0; i < NOS; i++)
+    //     printf("%15d%15d%15.7f\n", i + 1, NRS[i], DSB[i]);
+    // sfPrintLine();
 
-    printf("Calculating......\nThe results are as follows: \n");
-    sfPrintLine();
+    // printf("Calculating......\nThe results are as follows: \n");
+    // sfPrintLine();
 
-    printf("NUMBER OF NODES   Displacement-X Displacement-Y Displacement-Z   Diversion-X    Diversion-Y    Diversion-Z\n");
-    for (int i = NFIN; i < TNN; i++)
-        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, DON[6 * (i - NFIN)], DON[6 * (i - NFIN) + 1], DON[6 * (i - NFIN) + 2], DON[6 * (i - NFIN) + 3], DON[6 * (i - NFIN) + 4], DON[6 * (i - NFIN) + 5]);
-    sfPrintLine();
+    // printf("NUMBER OF NODES   Displacement-X Displacement-Y Displacement-Z   Diversion-X    Diversion-Y    Diversion-Z\n");
+    // for (int i = NFIN; i < TNN; i++)
+    //     printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, DON[6 * (i - NFIN)], DON[6 * (i - NFIN) + 1], DON[6 * (i - NFIN) + 2], DON[6 * (i - NFIN) + 3], DON[6 * (i - NFIN) + 4], DON[6 * (i - NFIN) + 5]);
+    // sfPrintLine();
 
-    printf("NUMBER OF SECTIONS Axial force-X  Shear force-Y  Shear force-Z    Torque-X   Bending moment-Y  Bending moment-Z\n");
-    for (int i = 0; i < NOS; i++)
-        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, IFS[6 * i], IFS[6 * i + 1], IFS[6 * i + 2], IFS[6 * i + 3], IFS[6 * i + 4], IFS[6 * i + 5]);
+    // printf("NUMBER OF SECTIONS Axial force-X  Shear force-Y  Shear force-Z    Torque-X   Bending moment-Y  Bending moment-Z\n");
+    // for (int i = 0; i < NOS; i++)
+    //     printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, IFS[6 * i], IFS[6 * i + 1], IFS[6 * i + 2], IFS[6 * i + 3], IFS[6 * i + 4], IFS[6 * i + 5]);
 
     FILE *fp = NULL;
     fp = fopen("sfRESULT.csv", "w");

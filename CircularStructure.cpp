@@ -68,7 +68,7 @@ int main()
     fprintf(fp, "ELASTIC,");
     for (int i = 0; i < n; i++)
     {
-        fprintf(fp, "%d,", 210000000);
+        fprintf(fp, "%d,", 210000000 + 100000 * (rand() % 1000));
     }
     fprintf(fp, "\n");
 

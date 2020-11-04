@@ -230,16 +230,16 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    {
-        sfPrintError(4);
-        printf("\nPress any key to exit\n");
-        value = getchar();
+    // if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    // {
+    //     sfPrintError(4);
+    //     printf("\nPress any key to exit\n");
+    //     value = getchar();
 
-        return 1;
-    }
-    else
-        printf("Solving equation succeeded!\n");
+    //     return 1;
+    // }
+    // else
+    //     printf("Solving equation succeeded!\n");
 
     // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
     // {
@@ -252,16 +252,16 @@ int main()
     // else
     //     printf("Solving equation succeeded!\n");
 
-    // if (solve_conjugate_gradient_par(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    // {
-    //     sfPrintError(4);
-    //     printf("\nPress any key to exit\n");
-    //     value = getchar();
+    if (solve_conjugate_gradient_par(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    {
+        sfPrintError(4);
+        printf("\nPress any key to exit\n");
+        value = getchar();
 
-    //     return 1;
-    // }
-    // else
-    //     printf("Solving equation succeeded!\n");
+        return 1;
+    }
+    else
+        printf("Solving equation succeeded!\n");
 
     // sfPrintLine2();
     // for (int i = 0; i < 6 * NFRN; i++)
@@ -1025,7 +1025,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
         gamma += r[i] * r[i];
     }
 
-    for (int n = 0; 1; ++n)
+    for (int n = 0; true; ++n)
     {
         // z = A * p
         for (int i = 0; i < n; ++i)

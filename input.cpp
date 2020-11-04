@@ -49,7 +49,7 @@ bool sfInput()
 //	memset(temporSpace,0,10000 * sizeof(char));
 	int rowIndex = 0;														//Reset the number of rows to zero
 	int columnIndex = 0;													//Reset the number of columns to zero
-//	int maxcol=9;                                                           //Define the maxium number of columns
+	int maxcol=0;                                                           //Define the maxium number of columns
 	const char DIVIDE[] = ",";												//Set the separater as a ','
 	if ((fp = fopen("sf.csv","at+")) != NULL)								//Start the process when the file opens successfully
 	{
@@ -116,12 +116,12 @@ bool sfInput()
 					switch(rowIndex)											//Store variables of each column in different ways
 					{
 						case 0 :  break;
-						case 1 :  if(columnIndex == 2)TNN = atoi(data);			break;
-						case 2 :  if(columnIndex == 2)NFIN = atoi(data);		break;
-						case 3 :  if(columnIndex == 2)NOR = atoi(data);			break;
-						case 4 :  if(columnIndex == 2)NOL = atoi(data);			break;
-						case 5 :  if(columnIndex == 2)NOS = atoi(data);			break;
-						case 6 :  XCN[columnIndex-2] = atof(data);			break;
+						case 1 :  if(columnIndex == 2)TNN = atoi(data);							break;
+						case 2 :  if(columnIndex == 2)NFIN = atoi(data); NFRN = TNN - NFIN;		break;
+						case 3 :  if(columnIndex == 2)NOR = atoi(data);							break;
+						case 4 :  if(columnIndex == 2)NOL = atoi(data);							break;
+						case 5 :  if(columnIndex == 2)NOS = atoi(data);							break;
+						case 6 :  XCN[columnIndex-2] = atof(data); maxcol = TNN;			break;
 						case 7 :  YCN[columnIndex-2] = atof(data);			break;
 						case 8 :  ZCN[columnIndex-2] = atof(data);			break;
 						case 9 :  BNR[columnIndex-2] = atoi(data);			break;
@@ -147,6 +147,8 @@ bool sfInput()
 					data = strtok(NULL, DIVIDE);								//Reset data
 			}
 			rowIndex ++;														//RowIndex steps forward once
+			if(columnIndex-1 != maxcol)
+				return 1;
 			columnIndex = 0;													//Reset columnIndex
 		}
 		fclose(fp);																//Close the file

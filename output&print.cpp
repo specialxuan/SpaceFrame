@@ -66,7 +66,7 @@ bool sfInput()
 				{
 					return 0;
 				}
-				//----------------分配内存-------------------------------------------------				
+				//-----------------------------------------------------------------------				
 				if(rowIndex == 5)											//Request space for multiple variable when loops to the 5th line
 				{
 					XCN = (double *)malloc(TNN * sizeof(double));
@@ -112,10 +112,10 @@ bool sfInput()
     				RFE = (double *)malloc(6 * NOR * sizeof(double));
     				memset(NRL, 0, 6 * NOR * sizeof(double));
 				}
-				//-------------------分配结束-------------------------------------------------
+				//--------------------------------------------------------------------------
 				if(columnIndex++ != 0)											//Skip the saving of the first column
 				{
-					//--------------------------------数据输入-------------------------------------
+					//----------------------------------------------------------------------------
 					switch(rowIndex)											//Store variables of each column in different ways
 					{
 						case 0 :  break;
@@ -143,7 +143,7 @@ bool sfInput()
 						case 22:  NRS[columnIndex-2] = atoi(data); maxcol = NOS;			break;
 						case 23:  DSB[columnIndex-2] = atof(data); maxcol = NOS;			break;
 					}
-					//--------------------------------录入结束-------------------------------------	
+					//---------------------------------------------------------------------------	
 				}
 //					if (columnIndex == maxcol) 				 					//Only read the first 'maxcol' columns
 //						break;
@@ -164,36 +164,36 @@ bool sfInput()
 bool output_and_print()
 {
 	
-	int i,j; //循坏控制変量
-	printf("\t\t\t空同剛架结构汁算\n");
+	int i,j; 
+	printf("\t\t\tCalculation of space rigid frame\n");
 	KGaaa();
 	
 	printf("\t\tTNN =%d\t\t\tNFIN=%d\n\t\tNFRN=%d\t\t\tNOR =%d\n", TNN, NFIN, NFRN, NOR) ;
 	printf("\t\tNOL =%d\t\t\tNOS =%d\n" , NOL,NOS);
 	KGaaa();
 	
-	printf("	节点号\tX坐标\t\tY坐标\t\tZ坐标\n");
+	printf("	NUMBER OF NODES\tXcoordinate\t\tcoordinate\t\tZcoordinate\n");
 	for(i=1;i<=TNN; i++)
 		printf("%d\t %5.7f\t%5.7f\t85.7f\n",i,XCN[i-1],YCN[i-1],ZCN[i-1]);
 	KGaaa();
 	
-	printf("	杆件号	左节点	右节点	弾性模量E	剪切模量G	截面枳A		慣性矩Jy	慣性矩Jz\n");
+	printf("	NUMBER OF NODES\tLEFT NODES\t\tRIGHT NODES\t\tElastic modulus\t\tShear modulus\t\tArea\t\tInertia moment of y-axis Jy\t\tInertia moment of z-axis Jz\n");
 	for(i=0; i<NOR;i++)
 		printf("	%d\t	%d\t	%d\t %5.0f %5.0f %5.4f %.5f %.5f\n",i+1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i],IMY[i],IMZ[i]);
-	printf("截面号\t所在杆件号\t距左端距禽\n");
+	printf("NOS\tPLI\tDLB\n");
 	for(i=1;i<=NOS;i++)
 		printf("%d\t\t%d\t\t %5.7f\n",i,NRS[i-1],DSB[i-1]);
 	KGaaa();
 	
-	printf("\n結果輸出如下: \n");
+	printf("\nThe results are as follows: \n");
 	KGaaa() ;
 
-	printf("节点号位移X\t位移Y\t位移z\t特角x\t装角Y\t特角z\n");
+	printf("NUMBER OF NODES\tX displacement\tY displacement\tZ displacement\tX diversion\tY diversion\tZ diversion\n");
 	for (i=NFIN+1, j=0;i<=TNN;i++,j++)
 		printf("%d%5.7f%5.7f%5.7f%5.7f %5.7f %5.7f\n",i,DON[6*j],DON[6*j+1], DON[6*j+2],DON[6*j+3],DON[6*j+4],DON[6*j+5]);
 	KGaaa() ;
 
-	printf("截面号	軸力x\t	剪力Y\t剪力z\t	抂矩x\t弯矩Y\t	弯矩 Z\n");
+	printf("NUMBER OF SECTIONS\tAxial force X\tShear force Y\tShear force Z\tTorque x\tBending momentY\tBending moment Z\n");
 	for (i=0;i<NOS;i++)
 		printf("	%d	%5.7f	%5.7f	%5.7f	%5.7f	%5.7f	%5.7f\n",i+1, IFS[6*i], IFS[6*i+1], IFS[6*i+2],IFS[6*i+3],IFS[6*i+4], IFS[6*i+5]);
 		
@@ -306,13 +306,13 @@ void writeExcel()
 	//-----------RESULTS OF SECTIONS--------------------------------------
 	fprintf(fp,"\nNOS,");
 	for(i=0;i<NOS;i++)
-		fprintf(fp,"x%d,y%d,z%d,",i+NOS+1,i+NOS+1,i+NOS+1);
+		fprintf(fp,"x%d(AXIAL),y%d(SHEAR),z%d(SHEAR),",i+NOS+1,i+NOS+1,i+NOS+1);
 		
-	fprintf(fp,"\nSHEAR FORCE,");
+	fprintf(fp,"\nAXIAL&SHEAR FORCE,");
 	for(i=0;i<NOS;i++)
 		fprintf(fp,"%f,%f,%f,",IFS[6*i],IFS[6*i+1],IFS[6*i+2]);
 	
-	fprintf(fp,"\nBENDING MOMENT,");
+	fprintf(fp,"\nTORQUE&BENDING MOMENT,");
 	for(i=0;i<NOS;i++)
 		fprintf(fp,"%f,%f,%f,",IFS[6*i+3],IFS[6*i+4],IFS[6*i+5]);
 	fclose(fp);

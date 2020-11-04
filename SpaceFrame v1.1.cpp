@@ -153,6 +153,7 @@ int main()
         }
 
     sfOutput(); //output data.
+    sfFree(); //free memories
 
     end1 = clock();
     printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);

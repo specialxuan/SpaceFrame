@@ -59,12 +59,8 @@ bool sfBuildTrans(int, double *);
 bool sfBuildLoadVector(double *);
 //calculate reaction force
 bool sfReactionForce(int, double *, double *);
-//solve equation of matrix by cholesky
-bool sfCholesky(double *, double *, double *, int);
 //solve equation of matrix by conjugate gradient
 bool solve_conjugate_gradient(double *A, double *b, double *x, int N);
-//solve equation of matrix by conjugate gradient parallel
-bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N);
 //calculate internal force of rods
 bool sfInternalForce(int, int, double);
 //calculate internal force of cantilever beam
@@ -92,7 +88,6 @@ int main()
 
     start1 = clock();
     start = GetTickCount();
-
     sfPrintLine(); //"------------------------------"
     if (sfInput()) //input data
     {
@@ -133,29 +128,7 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    // if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    // {
-    //     sfPrintError(4);
-    //     printf("\nPress any key to exit\n");
-    //     value = getchar();
-
-    //     return 1;
-    // }
-    // else
-    //     printf("Solving equation succeeded!\n");
-
-    // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    // {
-    //     sfPrintError(4);
-    //     printf("\nPress any key to exit\n");
-    //     value = getchar();
-
-    //     return 1;
-    // }
-    // else
-    //     printf("Solving equation succeeded!\n");
-
-    if (solve_conjugate_gradient_par(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
     {
         sfPrintError(4);
         printf("\nPress any key to exit\n");
@@ -179,7 +152,6 @@ int main()
             return 1;
         }
     sfOutput(); //output data.
-    sfFree(); //free memories
 
     end1 = clock();
     printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
@@ -800,96 +772,6 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
     return 0;
 }
 
-bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
-{
-    if (A == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (b == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (x == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (n == 0)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-
-    double sum = 0, *L = 0, *D = 0, *y = 0;
-
-    L = (double *)malloc(n * n * sizeof(double));
-    if (L != NULL)
-        memset(L, 0, n * n * sizeof(double));
-    for (int i = 0; i < n; i++)
-    {
-        L[i * n + i] = 1;
-    }
-    D = (double *)malloc(n * sizeof(double));
-    memset(D, 0, n * sizeof(double));
-    y = (double *)malloc(n * sizeof(double));
-    if (y != NULL)
-        memset(y, 0, n * sizeof(double));
-
-    // factorize matrix A
-    D[0] = A[0 * n + 0];
-    for (int i = 1; i < n; i++)
-    {
-        for (int j = 0; j < i; j++)
-        {
-            sum = 0;
-            for (int k = 0; k < j; k++)
-            {
-                sum = sum + L[i * n + k] * D[k] * L[j * n + k];
-            }
-            L[i * n + j] = (A[i * n + j] - sum) / D[j];
-        }
-        sum = 0;
-        for (int k = 0; k < i; k++)
-        {
-            sum = sum + L[i * n + k] * L[i * n + k] * D[k];
-        }
-        D[i] = A[i * n + i] - sum;
-    }
-
-    // solve y by Ly=b
-    y[0] = b[0];
-    for (int i = 1; i < n; i++)
-    {
-        sum = 0;
-        for (int j = 0; j < i; j++)
-        {
-            sum = sum + L[i * n + j] * y[j];
-        }
-        y[i] = b[i] - sum;
-    }
-
-    // solve x by DL(t)=y
-    x[n - 1] = y[n - 1] / D[n - 1];
-    for (int i = n - 2; i >= 0; i--)
-    {
-        sum = 0;
-        for (int j = i + 1; j < n; j++)
-        {
-            sum = sum + L[j * n + i] * x[j];
-        }
-        x[i] = y[i] / D[i] - sum;
-    }
-
-    free(L);
-    free(D);
-    free(y);
-
-    return 0;
-}
-
 bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
 {
     double *r, *p, *a, *z;
@@ -948,109 +830,6 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
         // p = r + (gamma_new / gamma) * p;
         for (int i = 0; i < N; ++i)
             p[i] = r[i] + beta * p[i];
-
-        // gamma = gamma_new
-        gamma = gamma_new;
-    }
-
-    free(r);
-    free(p);
-    free(z);
-
-    return 0;
-}
-
-bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
-{
-    if (A == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (b == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (x == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (N == 0)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-
-    double *r, *p, *z, tol = 1e-16;
-    double gamma, gamma_new, alpha, beta;
-
-    r = (double *)malloc(N * sizeof(double));
-    p = (double *)malloc(N * sizeof(double));
-    z = (double *)malloc(N * sizeof(double));
-
-    // x = [0 ... 0]
-    // r = b - A * x
-    // p = r
-    // gamma = r' * r
-    gamma = 0.0;
-#pragma omp parallel for reduction(+ \
-                                   : gamma)
-    for (int i = 0; i < N; ++i)
-    {
-        x[i] = 0.0;
-        r[i] = b[i];
-        p[i] = r[i];
-        gamma += r[i] * r[i];
-    }
-
-    for (int n = 0; true; ++n)
-    {
-// z = A * p
-#pragma omp parallel for
-        for (int i = 0; i < N; ++i)
-        {
-            z[i] = 0.0;
-            for (int j = 0; j < N; ++j)
-                z[i] += A[i * N + j] * p[j];
-        }
-
-        // alpha = gamma / (p' * z)
-        alpha = 0.0;
-#pragma omp parallel for reduction(+ \
-                                   : alpha)
-        for (int i = 0; i < N; ++i)
-        {
-            // printf("%d\n", i);
-            alpha += p[i] * z[i];
-        }
-        alpha = gamma / alpha;
-
-        // x = x + alpha * p
-        // r = r - alpha * z
-        // gamma_new = r' * r
-        gamma_new = 0.0;
-#pragma omp parallel for reduction(+ \
-                                   : gamma_new)
-        for (int i = 0; i < N; ++i)
-        {
-            x[i] += alpha * p[i];
-            r[i] -= alpha * z[i];
-            gamma_new += r[i] * r[i];
-        }
-
-        if (sqrt(gamma_new) < tol)
-            break;
-
-        beta = gamma_new / gamma;
-
-// p = r + (gamma_new / gamma) * p;
-#pragma omp parallel for
-        for (int i = 0; i < N; ++i)
-        {
-            p[i] = r[i] + beta * p[i];
-        }
 
         // gamma = gamma_new
         gamma = gamma_new;

@@ -263,6 +263,9 @@ int main()
     else
         printf("Solving equation succeeded!\n");
 
+    free(ts);
+    free(lv);
+
     // sfPrintLine2();
     // for (int i = 0; i < 6 * NFRN; i++)
     // {
@@ -283,7 +286,7 @@ int main()
     sfOutput(); //output data.
 
     // sfPrintLine2();
-    // for (int i = 0; i < 6 * NOS; i++)
+    // for (int i = 0; i < 6 * NOS; i += 1)
     // {
     //     printf("\t%f\n", IFS[i]);
     // }
@@ -528,6 +531,17 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
             }
         }
     }
+
+    // sfPrintLine2();
+    // for (int i = 0; i < dof; i++)
+    // {
+    //     for (int j = 0; j < dof; j++)
+    //     {
+    //         printf("%15.2f", ts[i * dof + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
 
     return 0;
 }
@@ -795,6 +809,14 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         }
     }
 
+    // sfPrintLine2();
+    // for (int i = 0; i < 6 * NFRN; i++)
+    // {
+    //     printf("%20.7f,", lv[i]);
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
+
     return 0;
 }
 
@@ -982,42 +1004,21 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
     return 0;
 }
 
-bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
+bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
 {
-    if (A == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (b == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (x == NULL)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-    else if (n == 0)
-    {
-        sfPrintError(12);
-        return 1;
-    }
-
     double *r, *p, *a, *z;
     double gamma, gamma_new, alpha, beta;
 
-    r = (double *)malloc(n * sizeof(double));
-    p = (double *)malloc(n * sizeof(double));
-    z = (double *)malloc(n * sizeof(double));
+    r = (double *)malloc(N * sizeof(double));
+    p = (double *)malloc(N * sizeof(double));
+    z = (double *)malloc(N * sizeof(double));
 
     // x = [0 ... 0]
     // r = b - A * x
     // p = r
     // gamma = r' * r
     gamma = 0.0;
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < N; ++i)
     {
         x[i] = 0.0;
         r[i] = b[i];
@@ -1025,20 +1026,20 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
         gamma += r[i] * r[i];
     }
 
-    for (int n = 0; true; ++n)
+    for (int n = 0; 1; ++n)
     {
         // z = A * p
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < N; ++i)
         {
-            a = A + (i * n);
+            a = A + (i * N);
             z[i] = 0.0;
-            for (int j = 0; j < n; ++j)
+            for (int j = 0; j < N; ++j)
                 z[i] += a[j] * p[j];
         }
 
         // alpha = gamma / (p' * z)
         alpha = 0.0;
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < N; ++i)
             alpha += p[i] * z[i];
         alpha = gamma / alpha;
 
@@ -1046,7 +1047,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
         // r = r - alpha * z
         // gamma_new = r' * r
         gamma_new = 0.0;
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < N; ++i)
         {
             x[i] += alpha * p[i];
             r[i] -= alpha * z[i];
@@ -1059,7 +1060,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
         beta = gamma_new / gamma;
 
         // p = r + (gamma_new / gamma) * p;
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < N; ++i)
             p[i] = r[i] + beta * p[i];
 
         // gamma = gamma_new
@@ -1073,7 +1074,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int n)
     return 0;
 }
 
-bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
+bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
 {
     if (A == NULL)
     {
@@ -1090,7 +1091,7 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
         sfPrintError(12);
         return 1;
     }
-    else if (n == 0)
+    else if (N == 0)
     {
         sfPrintError(12);
         return 1;
@@ -1099,9 +1100,9 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
     double *r, *p, *z, tol = 1e-16;
     double gamma, gamma_new, alpha, beta;
 
-    r = (double *)malloc(n * sizeof(double));
-    p = (double *)malloc(n * sizeof(double));
-    z = (double *)malloc(n * sizeof(double));
+    r = (double *)malloc(N * sizeof(double));
+    p = (double *)malloc(N * sizeof(double));
+    z = (double *)malloc(N * sizeof(double));
 
     // x = [0 ... 0]
     // r = b - A * x
@@ -1110,7 +1111,7 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
     gamma = 0.0;
 #pragma omp parallel for reduction(+ \
                                    : gamma)
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < N; ++i)
     {
         x[i] = 0.0;
         r[i] = b[i];
@@ -1122,18 +1123,18 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
     {
 // z = A * p
 #pragma omp parallel for
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < N; ++i)
         {
             z[i] = 0.0;
-            for (int j = 0; j < n; ++j)
-                z[i] += A[i * n + j] * p[j];
+            for (int j = 0; j < N; ++j)
+                z[i] += A[i * N + j] * p[j];
         }
 
         // alpha = gamma / (p' * z)
         alpha = 0.0;
 #pragma omp parallel for reduction(+ \
                                    : alpha)
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < N; ++i)
         {
             // printf("%d\n", i);
             alpha += p[i] * z[i];
@@ -1146,7 +1147,7 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
         gamma_new = 0.0;
 #pragma omp parallel for reduction(+ \
                                    : gamma_new)
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < N; ++i)
         {
             x[i] += alpha * p[i];
             r[i] -= alpha * z[i];
@@ -1160,7 +1161,7 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int n)
 
 // p = r + (gamma_new / gamma) * p;
 #pragma omp parallel for
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < N; ++i)
         {
             p[i] = r[i] + beta * p[i];
         }

@@ -26,11 +26,11 @@ double *ELASTIC; //elastic modulus
 double *SHEAR;   //shear modulus
 double *AREA;    //area
 //double *IMY;     //inertia moment of Y axis
-double *IMZ;     //inertia moment of Z axis
+double *IMZ; //inertia moment of Z axis
 //double *THETA;   //theta the deflection angle of main inertia axis
 
-int *NRL;    //the number of rods with load
-int *PLI;    //the plane of the load's in
+int *NRL; //the number of rods with load
+// int *PLI;    //the plane of the load's in
 int *KOL;    //the kind of load
 double *VOL; //the value of load
 double *DLB; //the distance between load and the beginning node
@@ -44,54 +44,54 @@ double *IFS; //the internal force in the section
 double *RFE; //the reaction force of the end node
 
 //read data from .csv
-bool sfInput();
+bool plInput();
 //build total stiffness matrix
-bool sfBuildTotalStiff(double *);
+bool plBuildTotalStiff(double *);
 //calculate the length sine and cosine of rods
-bool sfLCosSin();
+bool plLCosSin();
 //build unit stiffness matrix
-bool sfBuildUnitStiff(int, int, double *);
+bool plBuildUnitStiff(int, int, double *);
 //build local stiffness matrix
-bool sfBuildLocalStiff(int, int, double *);
+bool plBuildLocalStiff(int, int, double *);
 //build transpose matrix
-bool sfBuildTrans(int, double *);
+bool plBuildTrans(int, double *);
 //build load vector
-bool sfBuildLoadVector(double *);
+bool plBuildLoadVector(double *);
 //calculate reaction force
-bool sfReactionForce(int, double *, double *);
+bool plReactionForce(int, double *, double *);
 //solve equation of matrix by cholesky
-bool sfCholesky(double *, double *, double *, int);
+bool plCholesky(double *, double *, double *, int);
 //calculate internal force of rods
-bool sfInternalForce(int, int, double);
+bool plInternalForce(int, int, double);
 //calculate internal force of cantilever beam
-bool sfCtlInternalForce(int, double, double *);
+bool plCtlInternalForce(int, double, double *);
 //calculate internal force of displacement
-bool sfDisplacementForce(int, double *);
+bool plDisplacementForce(int, double *);
 //print"----------------------------------------"
-bool sfPrintLine();
+bool plPrintLine();
 //print"****************************************"
-bool sfPrintLine2();
+bool plPrintLine2();
 //output data
-bool sfOutput();
+bool plOutput();
 //print error
-bool sfPrintError(int);
+bool plPrintError(int);
 //free memories
-bool sfFree();
+bool plFree();
 
 int main()
 {
     double *ts = 0, *lv = 0; //declare total stiffness and load vector
-    clock_t start1 = 0, end1 = 0;
-    DWORD start, end;
+    // clock_t start1 = 0, end1 = 0;
+    // DWORD start, end;
     printf("Welcome to use the calculator of space frame!\nPress any key to start");
     char value = getchar(); //pause
 
-    start1 = clock();
-    start = GetTickCount();
-    sfPrintLine(); //"------------------------------"
-    if (sfInput()) //input data
+    // start1 = clock();
+    // start = GetTickCount();
+    plPrintLine(); //"------------------------------"
+    if (plInput()) //input data
     {
-        sfPrintError(1);
+        plPrintError(1);
         printf("\nPress any key to exit\n");
         value = getchar();
 
@@ -100,15 +100,15 @@ int main()
     else
         printf("Data input succeeded!\n");
 
-    int dof = 6 * NFRN;
+    int dof = 3 * NFRN;
     ts = (double *)malloc(dof * dof * sizeof(double)); //allocate memory for total stiffness matrix
     memset(ts, 0, dof * dof * sizeof(double));
     lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
     memset(lv, 0, dof * sizeof(double));
 
-    if (sfBuildTotalStiff(ts)) //build total stiffness matrix
+    if (plBuildTotalStiff(ts)) //build total stiffness matrix
     {
-        sfPrintError(2);
+        plPrintError(2);
         printf("\nPress any key to exit\n");
         value = getchar();
 
@@ -117,9 +117,9 @@ int main()
     else
         printf("Building total stiffness matrix succeeded!\n");
 
-    if (sfBuildLoadVector(lv)) //build load stiffness vector
+    if (plBuildLoadVector(lv)) //build load stiffness vector
     {
-        sfPrintError(3);
+        plPrintError(3);
         printf("\nPress any key to exit\n");
         value = getchar();
 
@@ -128,9 +128,9 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    if (plCholesky(ts, lv, DON, 3 * NFRN)) //solve matrix equation
     {
-        sfPrintError(4);
+        plPrintError(4);
         printf("\nPress any key to exit\n");
         value = getchar();
 
@@ -143,22 +143,22 @@ int main()
     free(lv);
 
     for (int i = 0; i < NOS; i++)
-        if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
+        if (plInternalForce(3 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
         {
-            sfPrintError(5);
+            plPrintError(5);
             printf("\nPress any key to exit\n");
             value = getchar();
 
             return 1;
         }
 
-    sfOutput(); //output data.
-    sfFree(); //free memories
+    plOutput(); //output data.
+    plFree();   //free memories
 
-    end1 = clock();
-    printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
-    end = GetTickCount();
-    printf("realtime=%f\n", (double)(end - start) / 1000);
+    // end1 = clock();
+    // printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
+    // end = GetTickCount();
+    // printf("realtime=%f\n", (double)(end - start) / 1000);
 
     printf("Press any key to exit\n");
     value = getchar(); //pause
@@ -166,7 +166,7 @@ int main()
     return 0;
 }
 
-bool sfInput()
+bool plInput()
 {
     FILE *fp = NULL;                   //Define the file point
     char *line = 0, *data = 0;         //Define the line string and separated string
@@ -247,8 +247,8 @@ bool sfInput()
                     //memset(THETA, 0, NOR * sizeof(double));
                     NRL = (int *)malloc(NOL * sizeof(int));
                     memset(NRL, 0, NOL * sizeof(int));
-                    PLI = (int *)malloc(NOL * sizeof(int));
-                    memset(PLI, 0, NOL * sizeof(int));
+                    // PLI = (int *)malloc(NOL * sizeof(int));
+                    // memset(PLI, 0, NOL * sizeof(int));
                     KOL = (int *)malloc(NOL * sizeof(int));
                     memset(KOL, 0, NOL * sizeof(int));
                     VOL = (double *)malloc(NOL * sizeof(double));
@@ -307,25 +307,21 @@ bool sfInput()
                 break;
             case 18:
                 if (columnIndex - 2 < NOL)
-                    PLI[columnIndex - 2] = atoi(data);
+                    KOL[columnIndex - 2] = atoi(data);
                 break;
             case 19:
                 if (columnIndex - 2 < NOL)
-                    KOL[columnIndex - 2] = atoi(data);
+                    VOL[columnIndex - 2] = atof(data);
                 break;
             case 20:
                 if (columnIndex - 2 < NOL)
-                    VOL[columnIndex - 2] = atof(data);
-                break;
-            case 21:
-                if (columnIndex - 2 < NOL)
                     DLB[columnIndex - 2] = atof(data);
                 break;
-            case 22:
+            case 21:
                 if (columnIndex - 2 < NOS)
                     NRS[columnIndex - 2] = atoi(data);
                 break;
-            case 23:
+            case 22:
                 if (columnIndex - 2 < NOS)
                     DSB[columnIndex - 2] = atof(data);
                 break;
@@ -342,23 +338,23 @@ bool sfInput()
     return 0;
 }
 
-bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
+bool plBuildTotalStiff(double *ts) //ts is total stiffness matrix
 {
     if (ts == NULL)
     {
-        sfPrintError(15);
+        plPrintError(15);
         return 0;
     }
 
-    double us[3] = {0};            //unit stiffness matrix
+    double us[9] = {0};             //unit stiffness matrix
     int p[2] = {0}, dof = 3 * NFRN; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
 
     LCS = (double *)malloc(3 * NOR * sizeof(double)); //allocate memory for rods' parameter
     memset(LCS, 0, 3 * NOR * sizeof(double));
 
-    if (sfLCosSin()) //calculate the length, cosine and sine of all rods
+    if (plLCosSin()) //calculate the length, cosine and sine of all rods
     {
-        sfPrintError(6);
+        plPrintError(6);
         return 1;
     }
 
@@ -371,9 +367,9 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
         {
             if (p[i] >= 0) //determine free node
             {
-                if (sfBuildUnitStiff(k, i + 1, us)) //build unit stiffness matrix
+                if (plBuildUnitStiff(k, i + 1, us)) //build unit stiffness matrix
                 {
-                    sfPrintError(7);
+                    plPrintError(7);
                     return 1;
                 }
                 for (int m = 0; m < 3; m++)
@@ -385,9 +381,9 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
         {
             for (int i = 0; i < 2; i++)
             {
-                if (sfBuildUnitStiff(k, i + 3, us)) //build unit stiffness matrix
+                if (plBuildUnitStiff(k, i + 3, us)) //build unit stiffness matrix
                 {
-                    sfPrintError(7);
+                    plPrintError(7);
                     return 1;
                 }
                 for (int m = 0; m < 3; m++)
@@ -404,7 +400,7 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
     return 0;
 }
 
-bool sfLCosSin()
+bool plLCosSin()
 {
     for (int k = 0; k < NOR; k++)
     {
@@ -412,49 +408,49 @@ bool sfLCosSin()
         LCS[1 * NOR + k] = XCN[j] - XCN[i];
         LCS[2 * NOR + k] = YCN[j] - YCN[i];
         //LCS[3 * NOR + k] = ZCN[j] - ZCN[i];
-        LCS[0 * NOR + k] = sqrt(LCS[1 * NOR + k] * LCS[1 * NOR + k] + LCS[2 * NOR + k] * LCS[2 * NOR + k] + LCS[3 * NOR + k] * LCS[3 * NOR + k]);
+        LCS[0 * NOR + k] = sqrt(LCS[1 * NOR + k] * LCS[1 * NOR + k] + LCS[2 * NOR + k] * LCS[2 * NOR + k]);
         if (LCS[0 * NOR + k] < EPS) //if the length of rod is too small, then return error
         {
-            sfPrintError(8);
+            plPrintError(8);
             return 1;
         }
         LCS[1 * NOR + k] = LCS[1 * NOR + k] / LCS[0 * NOR + k];
         LCS[2 * NOR + k] = LCS[2 * NOR + k] / LCS[0 * NOR + k];
-        LCS[3 * NOR + k] = LCS[3 * NOR + k] / LCS[0 * NOR + k];
+        // LCS[3 * NOR + k] = LCS[3 * NOR + k] / LCS[0 * NOR + k];
     }
 
     return 0;
 }
 
-bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
+bool plBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
 {
     if (k < 0)
     {
-        sfPrintError(16);
+        plPrintError(16);
         return 0;
     }
     if (flag < 1 || flag > 4)
     {
-        sfPrintError(16);
+        plPrintError(16);
         return 0;
     }
     if (us == NULL)
     {
-        sfPrintError(16);
+        plPrintError(16);
         return 0;
     }
 
     double rd[9] = {0}, t[9] = {0}, c[9] = {0}, tmp = 0; //rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
     memset(us, 0, 9 * sizeof(double));
 
-    if (sfBuildLocalStiff(k, flag, rd)) //build local stiffness matrix
+    if (plBuildLocalStiff(k, flag, rd)) //build local stiffness matrix
     {
-        sfPrintError(9);
+        plPrintError(9);
         return 1;
     }
-    if (sfBuildTrans(k, t)) //build transpose matrix
+    if (plBuildTrans(k, t)) //build transpose matrix
     {
-        sfPrintError(10);
+        plPrintError(10);
         return 1;
     }
 
@@ -484,31 +480,31 @@ bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, fl
     return 0;
 }
 
-bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, flag is the number of matrix
+bool plBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, flag is the number of matrix
 {
     if (k < 0)
     {
-        sfPrintError(17);
+        plPrintError(17);
         return 0;
     }
     if (flag < 0 || flag > 4)
     {
-        sfPrintError(17);
+        plPrintError(17);
         return 0;
     }
     if (rd == NULL)
     {
-        sfPrintError(17);
+        plPrintError(17);
         return 0;
     }
 
     double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = LCS[0 * NOR + k];
 
-    a = ELASTIC[k] * AREA[k] / l;         //EA/1
-    d = 4 * ELASTIC[k] * IMZ[k] / l;      //4EJ(y)/1
-    c = d / 2 * 3 / l;                    //6EJ(z)/l/l
-	b = c * 2/ l; 					      //GJ(p)/1
-	e = 2 * d / l;                       	//12EJ(y)/l/l/l
+    a = ELASTIC[k] * AREA[k] / l;    //EA/1
+    d = 4 * ELASTIC[k] * IMZ[k] / l; //4EJ(y)/1
+    c = d / 2 * 3 / l;               //6EJ(z)/l/l
+    b = c * 2 / l;                   //GJ(p)/1
+    e = d / 2;                       //12EJ(y)/l/l/l
     //f = 4 * ELASTIC[k] * IMZ[k] / l;      //4EJ(z)/l
     //g = f / 2 * 3 / l;                    //6EJ(Z)/l/l
     //h = 2 * g / l;                        //12EJ(z)/l/l/l
@@ -519,7 +515,7 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
         rd[0 * 3 + 0] = a;
         rd[1 * 3 + 1] = b;
         rd[1 * 3 + 2] = rd[2 * 3 + 1] = -c;
-        rd[2 * 3 + 2] = e;
+        rd[2 * 3 + 2] = d;
         //rd[2 * 6 + 4] = rd[4 * 6 + 2] = -d;
         //rd[3 * 6 + 3] = b;
         //rd[4 * 6 + 4] = c;
@@ -529,7 +525,7 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
         rd[0 * 3 + 0] = a;
         rd[1 * 3 + 1] = b;
         rd[1 * 3 + 2] = rd[2 * 3 + 1] = c;
-        rd[2 * 3 + 2] = e;
+        rd[2 * 3 + 2] = d;
         //rd[2 * 6 + 4] = rd[4 * 6 + 2] = d;
         //rd[3 * 6 + 3] = b;
         //rd[4 * 6 + 4] = c;
@@ -539,7 +535,7 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
         rd[0 * 3 + 0] = -a;
         rd[1 * 3 + 1] = -b;
         rd[1 * 3 + 2] = -c;
-		rd[2 * 3 + 1] = c;
+        rd[2 * 3 + 1] = c;
         rd[2 * 3 + 2] = e;
         //rd[2 * 6 + 2] = -e;
         //rd[2 * 6 + 4] = -d;
@@ -552,7 +548,7 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
         rd[0 * 3 + 0] = -a;
         rd[1 * 3 + 1] = -b;
         rd[1 * 3 + 2] = c;
-		rd[2 * 3 + 1] = -c;
+        rd[2 * 3 + 1] = -c;
         rd[2 * 3 + 2] = e;
         //rd[2 * 6 + 2] = -e;
         //rd[2 * 6 + 4] = d;
@@ -569,91 +565,92 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
     return 0;
 }
 
-bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose matrix
+bool plBuildTrans(int k, double *t) //k is the number of rods, t is transpose matrix
 {
     if (k < 0)
     {
-        sfPrintError(18);
+        plPrintError(18);
         return 0;
     }
     if (t == NULL)
     {
-        sfPrintError(18);
+        plPrintError(18);
         return 0;
     }
 
-    double coa = 0, cob = 0, coc = 0, sic = 0, sit = 0, cot = 0, m = 0, n = 0; //co means cosine, si means sine, m and n is temperary variable
+    // double coa = 0, cob = 0, coc = 0, sic = 0, sit = 0, cot = 0, m = 0, n = 0; //co means cosine, si means sine, m and n is temperary variable
+    // memset(t, 0, 9 * sizeof(double));
+    // coa = LCS[1 * NOR + k]; //cosine alpha
+    // cob = LCS[2 * NOR + k]; //cosine beta
+    // coc = LCS[3 * NOR + k]; //cosine gama
+    // sit = sin(THETA[k]);    //sine theta
+    // cot = cos(THETA[k]);    //cosine theta
+    // if (fabs(coc - 1) < EPS) //vertical(z axis positive direction) rods' transpose matrix
+    // {
+    //     t[2 * 6 + 0] = t[5 * 6 + 3] = 1;
+    //     t[0 * 6 + 1] = t[3 * 6 + 4] = t[1 * 6 + 2] = t[4 * 6 + 5] = sit;
+    //     t[1 * 6 + 1] = t[4 * 6 + 4] = cot;
+    //     t[0 * 6 + 2] = t[3 * 6 + 5] = -cot;
+    // }
+    // else if (fabs(coc + 1) < EPS) //vertical(z axis negative direction) rods' transpose matrix
+    // {
+    //     t[2 * 6 + 0] = t[5 * 6 + 3] = -1;
+    //     t[0 * 6 + 1] = t[3 * 6 + 4] = sit;
+    //     t[1 * 6 + 2] = t[4 * 6 + 5] = -sit;
+    //     t[1 * 6 + 1] = t[4 * 6 + 4] = t[0 * 6 + 2] = t[3 * 6 + 5] = cot;
+    // }
+    // else
+    // {
+    //     sic = sqrt(1 - coc * coc); //sine gama
+    //     m = coa * coc;             //cosine alpha times cosine gama
+    //     n = cob * coc;             //cosine beta times cosine gama
+    //     t[0 * 6 + 0] = t[3 * 6 + 3] = coa;
+    //     t[1 * 6 + 0] = t[4 * 6 + 3] = cob;
+    //     t[2 * 6 + 0] = t[5 * 6 + 3] = coc;
+    //     t[0 * 6 + 1] = t[3 * 6 + 4] = (cob * sit - m * cot) / sic;
+    //     t[1 * 6 + 1] = t[4 * 6 + 4] = -(n * cot + coa * sit) / sic;
+    //     t[2 * 6 + 1] = t[5 * 6 + 4] = cot * sic;
+    //     t[0 * 2 + 2] = t[3 * 6 + 5] = (m * sit + cob * cot) / sic;
+    //     t[1 * 6 + 2] = t[4 * 6 + 5] = (n * sit - coa * cot) / sic;
+    //     t[2 * 6 + 2] = t[5 * 6 + 5] = -sit * sic;
+    // }
 
-    memset(t, 0, 9 * sizeof(double));
-
-    coa = LCS[1 * NOR + k]; //cosine alpha
-    cob = LCS[2 * NOR + k]; //cosine beta
-    //coc = LCS[3 * NOR + k]; //cosine gama
-    //sit = sin(THETA[k]);    //sine theta
-    //cot = cos(THETA[k]);    //cosine theta
-
-    if (fabs(coc - 1) < EPS) //vertical(z axis positive direction) rods' transpose matrix
-    {
-        t[2 * 6 + 0] = t[5 * 6 + 3] = 1;
-        t[0 * 6 + 1] = t[3 * 6 + 4] = t[1 * 6 + 2] = t[4 * 6 + 5] = sit;
-        t[1 * 6 + 1] = t[4 * 6 + 4] = cot;
-        t[0 * 6 + 2] = t[3 * 6 + 5] = -cot;
-    }
-    else if (fabs(coc + 1) < EPS) //vertical(z axis negative direction) rods' transpose matrix
-    {
-        t[2 * 6 + 0] = t[5 * 6 + 3] = -1;
-        t[0 * 6 + 1] = t[3 * 6 + 4] = sit;
-        t[1 * 6 + 2] = t[4 * 6 + 5] = -sit;
-        t[1 * 6 + 1] = t[4 * 6 + 4] = t[0 * 6 + 2] = t[3 * 6 + 5] = cot;
-    }
-    else
-    {
-        sic = sqrt(1 - coc * coc); //sine gama
-        m = coa * coc;             //cosine alpha times cosine gama
-        n = cob * coc;             //cosine beta times cosine gama
-
-        t[0 * 6 + 0] = t[3 * 6 + 3] = coa;
-        t[1 * 6 + 0] = t[4 * 6 + 3] = cob;
-        t[2 * 6 + 0] = t[5 * 6 + 3] = coc;
-        t[0 * 6 + 1] = t[3 * 6 + 4] = (cob * sit - m * cot) / sic;
-        t[1 * 6 + 1] = t[4 * 6 + 4] = -(n * cot + coa * sit) / sic;
-        t[2 * 6 + 1] = t[5 * 6 + 4] = cot * sic;
-        t[0 * 2 + 2] = t[3 * 6 + 5] = (m * sit + cob * cot) / sic;
-        t[1 * 6 + 2] = t[4 * 6 + 5] = (n * sit - coa * cot) / sic;
-        t[2 * 6 + 2] = t[5 * 6 + 5] = -sit * sic;
-    }
+    t[0 * 3 + 0] = t[1 * 3 + 1] = LCS[1 * NOR + k];
+    t[1 * 3 + 0] = LCS[2 * NOR + k];
+    t[0 * 3 + 1] = -1 * LCS[2 * NOR + k];
+    t[2 * 3 + 2] = 1;
 
     return 0;
 }
 
-bool sfBuildLoadVector(double *lv) //lv is the load vector
+bool plBuildLoadVector(double *lv) //lv is the load vector
 {
     if (lv == 0)
     {
-        sfPrintError(19);
+        plPrintError(19);
         return 0;
     }
 
-    int rod = 0, p[2] = {0};          //rod is the number of rods, dof is the degree of freedom
+    int rod = 0, p[2] = {0};        //rod is the number of rods, dof is the degree of freedom
     double rf[6] = {0}, t[9] = {0}; //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
 
     for (int i = 0; i < NOL; i++)
     {
-        rod = NRL[i] - 1;                   //the number of rods with load
+        rod = NRL[i] - 1;                  //the number of rods with load
         memset(rf, 0, 3 * sizeof(double)); //zero clearing
 
-        if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //calculate reaction force
+        if (plReactionForce(i, &rf[0 * 3], &rf[1 * 3])) //calculate reaction force
         {
-            sfPrintError(11);
+            plPrintError(11);
             return 1;
         }
         for (int j = 0; j < 3; j++) //add reaction force to RFE
         {
             RFE[3 * rod + j] += rf[1 * 3 + j];
         }
-        if (sfBuildTrans(rod, t)) //build transpose matrix
+        if (plBuildTrans(rod, t)) //build transpose matrix
         {
-            sfPrintError(10);
+            plPrintError(10);
             return 1;
         }
 
@@ -672,92 +669,92 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
     return 0;
 }
 
-bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load, rfb and rfe is the reaction force at begining and end of rods
+bool plReactionForce(int i, double *rfb, double *rfe) //i is the number of load, rfb and rfe is the reaction force at begining and end of rods
 {
     if (i < 0)
     {
-        sfPrintError(20);
+        plPrintError(20);
         return 0;
     }
     if (rfb == NULL)
     {
-        sfPrintError(20);
+        plPrintError(20);
         return 0;
     }
     if (rfe == NULL)
     {
-        sfPrintError(20);
+        plPrintError(20);
         return 0;
     }
 
     double ra = 0, rb = 0, a = 0, b = 0, q = VOL[i], xq = DLB[i]; //ra, rb, a and b are middle variable
-    int rod = NRL[i] - 1, pm = PLI[i], t = 0;                     //rod is the number of rods
+    int rod = NRL[i] - 1, t = 0;                                  //rod is the number of rods
 
-    if (pm == 0) //load is in XY plane
-    {
-        t = -1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
-    }
-    else if (pm == 1) //load is in XZ plane
-    {
-        t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
-    }
+    // if (pm == 0) //load is in XY plane
+    // {
+    //     t = -1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
+    // }
+    // else if (pm == 1) //load is in XZ plane
+    // {
+    //     t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
+    // }
     ra = DLB[i] / LCS[0 * NOR + rod]; //x(q) / L
     rb = 1 - ra;                      //1 - x(q) / L
     switch (KOL[i])
     {
     case 1: //vertical concentrating load
         a = rb * rb;
-        rfb[pm + 1] = -q * rb * (1 + ra - 2 * ra);
-        rfe[pm + 1] = -q - rfb[pm + 1];
-        rfb[2 - pm] = t * q * rb * ra * (LCS[0 * NOR + rod] - xq);
-        rfe[2 - pm] = -t * q * ra * rb * xq;
+        rfb[1] = -q * (1 + 2 * ra);
+        rfe[1] = -q - rfb[1];
+        rfb[2] = a * q * xq;
+        rfe[2] = -q * ra * rb * xq;
         break;
     case 2: //vertical uniform load
         a = q * xq;
         b = a * xq / 12;
-        rfb[pm + 1] = -a * (1 + 0.5 * ra * ra * ra - ra * ra);
-        rfe[pm + 1] = -a - rfb[pm + 1];
-        rfb[2 - pm] = t * b * (6 - 8 * ra + 3 * ra * ra);
-        rfe[2 - pm] = -t * b * (2 * ra - 3 * ra * ra);
+        rfb[1] = -a * (1 + 0.5 * ra * ra * ra - ra * ra);
+        rfe[1] = -a - rfb[1];
+        rfb[2] = b * (6 - 8 * ra + 3 * ra * ra);
+        rfe[2] = -b * ra * (4 - 3 * ra);
         break;
     case 3: //axial concentrating force when PLI == 0, torque when PLI ==1
-        rfb[3 * pm] = -q * rb;
-        rfe[3 * pm] = -q * ra;
+        rfb[0] = -q * rb;
+        rfe[0] = -q * ra;
         break;
     case 4: //axial uniform load
         a = q * xq;
-        rfe[3 * pm] = -a * ra / 2;
-        rfb[3 * pm] = -a - rfe[3 * pm];
+        rfe[0] = -a * ra / 2;
+        rfb[0] = -a - rfe[0];
         break;
     case 5: //vertical triangle distributed load
-        a = q * xq / 2;
-        b = -0.4 * ra * ra;
-        rfb[pm + 1] = -2 * a * (0.5 - 0.75 * ra * ra + 0.4 * ra * ra * ra);
-        rfe[pm + 1] = -a - rfb[pm + 1];
-        rfb[5 - pm] = t * a * (2 / 3 + b - ra);
-        rfe[5 - pm] = -t * a * (0.5 * ra + b);
+        a = q * xq;
+        // b = -0.4 * ra * ra;
+        rfb[1] = -0.25 * a * (2 - 3 * ra * ra + 1.6 * ra * ra * ra);
+        rfe[1] = -a / 2 - rfb[1];
+        rfb[2] = a * xq * (2 - 3 * ra + 1.2 * ra * ra) / 6;
+        rfe[2] = -a * ra * xq * (1 - 0.8 * ra) / 4;
         break;
     case 6: //concentrating bending moment
-        rfb[2 - pm] = t * 6 * q * rb * ra / LCS[0 * NOR + rod];
-        rfe[2 - pm] = -rfb[2 - pm];
-        rfb[pm + 4] = t * q * rb * (-1 + 3 * ra);
-        rfe[pm + 4] = t * q * ra * (2 - 3 * ra);
+        rfb[1] = 6 * q * rb * ra / LCS[0 * NOR + rod];
+        rfe[1] = -rfb[1];
+        rfb[2] = -q * rb * (2 - 3 * rb);
+        rfe[2] = -q * ra * (2 - 3 * ra);
         break;
     case 7: //unifrom temperature rise
         rfb[0] = q * xq * ELASTIC[rod] * AREA[rod];
         rfe[0] = -rfb[0];
         break;
     case 8: //different temperature rise
-        if (pm == 0)
-        {
-            a = IMZ[rod];
-        }
-        //else if (pm == 1)
-        {
-            //a = IMY[rod];
-        }
-        rfb[5 - pm] = t * q * 2 * ELASTIC[rod] * a * xq;
-        rfe[5 - pm] = -rfb[5 - pm];
+        // if (pm == 0)
+        // {
+        //     a = IMZ[rod];
+        // }
+        // //else if (pm == 1)
+        // {
+        //     //a = IMY[rod];
+        // }
+        rfb[2] = q * 2 * ELASTIC[rod] * IMZ[rod] * xq;
+        rfe[2] = -rfb[2];
         break;
     default:
         break;
@@ -766,26 +763,26 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
     return 0;
 }
 
-bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
+bool plCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
 {
     if (A == NULL)
     {
-        sfPrintError(12);
+        plPrintError(12);
         return 1;
     }
     else if (b == NULL)
     {
-        sfPrintError(12);
+        plPrintError(12);
         return 1;
     }
     else if (x == NULL)
     {
-        sfPrintError(12);
+        plPrintError(12);
         return 1;
     }
     else if (n == 0)
     {
-        sfPrintError(12);
+        plPrintError(12);
         return 1;
     }
 
@@ -856,16 +853,16 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
     return 0;
 }
 
-bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
+bool plInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
 {
     if (m < 0)
     {
-        sfPrintError(21);
+        plPrintError(21);
         return 0;
     }
     if (k < 0)
     {
-        sfPrintError(21);
+        plPrintError(21);
         return 0;
     }
 
@@ -874,7 +871,7 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
 
     IFS[m] = RFE[n]; //calculate internal force cause by reaction force at the end of rods
     IFS[m + 1] = -RFE[n + 1];
-    IFS[m + 2] = IFS[m + 2]  -RFE[n + 2]+ RFE[n + 1] * (LCS[0 * NOR + k - 1] - xp);
+    IFS[m + 2] = IFS[m + 2] - RFE[n + 2] + RFE[n + 1] * (LCS[0 * NOR + k - 1] - xp);
     //IFS[m + 3] = RFE[n + 3];
     //IFS[m + 4] = -RFE[n + 4] + RFE[n + 2] * (LCS[0 * NOR + k - 1] - xp);
     //IFS[m + 5] = RFE[n + 5] + RFE[n + 1] * (LCS[0 * NOR + k - 1] - xp);
@@ -884,9 +881,9 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
         if (NRL[i] == k) //if load is on rod k
         {
             memset(tf, 0, 3 * sizeof(double)); //zero clear tf
-            if (sfCtlInternalForce(i, xp, tf)) // calculate internal force of cantilever beam
+            if (plCtlInternalForce(i, xp, tf)) // calculate internal force of cantilever beam
             {
-                sfPrintError(13);
+                plPrintError(13);
                 return 1;
             }
             for (int j = 0; j < 3; j++) //add internal force of cantilever into IFR
@@ -895,9 +892,9 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
             }
         }
     }
-    if (sfDisplacementForce(k, tf)) //calculate end force
+    if (plDisplacementForce(k, tf)) //calculate end force
     {
-        sfPrintError(14);
+        plPrintError(14);
         return 1;
     }
 
@@ -911,60 +908,59 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
     return 0;
 }
 
-bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load, xp is the distance between the section and the begining of rod, tf is internal force
+bool plCtlInternalForce(int i, double xp, double *tf) //i is the number of load, xp is the distance between the section and the begining of rod, tf is internal force
 {
     if (i < 0)
     {
-        sfPrintError(22);
+        plPrintError(22);
         return 0;
     }
     if (tf == NULL)
     {
-        sfPrintError(22);
+        plPrintError(22);
         return 0;
     }
 
     double xq = DLB[i], t = xq - xp, r = xp / xq, q = VOL[i]; //t and r are temperary variables
-    int e = PLI[i];
-    switch (KOL[i]) //calculate section force according to kind of loads
+    switch (KOL[i])                                           //calculate section force according to kind of loads
     {
     case 1:
         if (xp < xq)
         {
-            tf[e + 1] = -q;
-            tf[2 - e] = q * t;
+            tf[1] = -q;
+            tf[2] = q * t;
         }
         break;
     case 2:
         if (xp < xq)
         {
-            tf[e + 1] = -q * t;
-            tf[2 - e] = 0.5 * q * t * t;
+            tf[1] = -q * t;
+            tf[2] = 0.5 * q * t * t;
         }
         break;
     case 3:
         if (xp < xq)
         {
-            tf[3 * e] = q;
+            tf[0] = q;
         }
         break;
     case 4:
         if (xp < xq)
         {
-            tf[3 * e] = q * t;
+            tf[0] = q * t;
         }
         break;
     case 5:
         if (xp < xq)
         {
-            tf[e + 1] = -q * (1 + r) * t / 2;
-            tf[2 - e] = q * t * t * (2 + r) / 6;
+            tf[1] = -q * (1 + r) * t / 2;
+            tf[2] = q * t * t * (2 + r) / 6;
         }
         break;
     case 6:
         if (xp < xq)
         {
-            tf[e + 1] = (2 * e - 1) * q;
+            tf[2] = q;
         }
         break;
     case 7: //temperature change don't generate internal force on cantilever beam
@@ -979,27 +975,27 @@ bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load,
     return 0;
 }
 
-bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, tref is the end force of rods
+bool plDisplacementForce(int k, double *tref) //k is the actual number of rods, tref is the end force of rods
 {
     if (k < 1)
     {
-        sfPrintError(23);
+        plPrintError(23);
         return 0;
     }
     if (tref == NULL)
     {
-        sfPrintError(23);
+        plPrintError(23);
         return 0;
     }
 
-    int p[2] = {0};                                  //p is a temperary vector for i0j0
+    int p[2] = {0};                               //p is a temperary vector for i0j0
     double rd[9] = {0}, rdb[9] = {0}, t[9] = {0}; //rd
 
     memset(tref, 0, 3 * sizeof(double));
 
-    if (sfBuildTrans(k - 1, t)) //calculate transpose matrix
+    if (plBuildTrans(k - 1, t)) //calculate transpose matrix
     {
-        sfPrintError(10);
+        plPrintError(10);
         return 1;
     }
 
@@ -1010,9 +1006,9 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
     {
         if (p[i] >= 0) //determine free node
         {
-            if (sfBuildLocalStiff(k - 1, 2 * i + 1, rd)) //build unit stiffness matrix
+            if (plBuildLocalStiff(k - 1, 2 * i + 1, rd)) //build unit stiffness matrix
             {
-                sfPrintError(9);
+                plPrintError(9);
                 return 1;
             }
 
@@ -1038,55 +1034,53 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
     return 0;
 }
 
-bool sfPrintLine()
+bool plPrintLine()
 {
     printf("--------------------------------------------------------------------------\n");
     return 0;
 }
 
-bool sfPrintLine2()
+bool plPrintLine2()
 {
     printf("**************************************************************************\n");
     return 0;
 }
 
-bool sfOutput()
+bool plOutput()
 {
     printf("\t\t\tCalculation Of Space Rigid Frame\n");
-    sfPrintLine();
+    plPrintLine();
 
     printf("\t\tTNN = %d\t\t\tNFIN = %d\n\t\tNFRN = %d\t\tNOR = %d\n", TNN, NFIN, NFRN, NOR);
     printf("\t\tNOL = %d\t\t\tNOS = %d\n", NOL, NOS);
-    sfPrintLine();
+    plPrintLine();
 
     printf("NUMBER OF NODES     Coordinate-X    Coordinate-Y\n");
     for (int i = 0; i < TNN; i++)
-        printf("%15d%15.7f\n", i + 1, XCN[i]);
-    sfPrintLine();
+        printf("%15d%15.7f%15.7f\n", i + 1, XCN[i], YCN[i]);
+    plPrintLine();
 
     printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus  Shear modulus    Area  Inertia moment Z axis\n");
     for (int i = 0; i < NOR; i++)
         printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f\n", i + 1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i], IMZ[i]);
-    sfPrintLine();
-    printf("NUMBER OF SECTIONS         PLI            DLB\n");
+    plPrintLine();
+
+    printf("NUMBER OF SECTIONS         NRS            DSB\n");
     for (int i = 0; i < NOS; i++)
         printf("%15d%15d%15.7f\n", i + 1, NRS[i], DSB[i]);
-    sfPrintLine();
+    plPrintLine();
 
-    printf("Calculating......\nThe results are as follows: \n");
-    sfPrintLine();
-
-    printf("NUMBER OF NODES   Displacement-X Displacement-Y Displacement-Z   Diversion-X    Diversion-Y    Diversion-Z\n");
+    printf("NUMBER OF NODES   Displacement-X Displacement-Y   Diversion\n");
     for (int i = NFIN; i < TNN; i++)
-        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, DON[6 * (i - NFIN)], DON[6 * (i - NFIN) + 1], DON[6 * (i - NFIN) + 2], DON[6 * (i - NFIN) + 3], DON[6 * (i - NFIN) + 4], DON[6 * (i - NFIN) + 5]);
-    sfPrintLine();
+        printf("%15d%15.7f%15.7f%15.7f\n", i + 1, DON[3 * (i - NFIN)], DON[3 * (i - NFIN) + 1], DON[3 * (i - NFIN) + 2]);
+    plPrintLine();
 
-    printf("NUMBER OF SECTIONS Axial force-X  Shear force-Y  Shear force-Z    Torque-X   Bending moment-Y  Bending moment-Z\n");
+    printf("NUMBER OF SECTIONS Axial force    Shear force    Bending moment\n");
     for (int i = 0; i < NOS; i++)
-        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, IFS[6 * i], IFS[6 * i + 1], IFS[6 * i + 2], IFS[6 * i + 3], IFS[6 * i + 4], IFS[6 * i + 5]);
+        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, IFS[3 * i], IFS[3 * i + 1], IFS[3 * i + 2]);
 
     FILE *fp = NULL;
-    fp = fopen("sfRESULT.csv", "w");
+    fp = fopen("plRESULT.csv", "w");
     fprintf(fp, "TITLE\n");
     fprintf(fp, "TNN,%d\nNFIN,%d\nNFRN,%d\nNOR,%d\nNOL,%d\nNOS,%d", TNN, NFIN, NFRN, NOR, NOL, NOS);
 
@@ -1120,26 +1114,26 @@ bool sfOutput()
     for (int i = 0; i < NOR; i++)
         fprintf(fp, "%f,", AREA[i]);
 
-  //  fprintf(fp, "\nIMY,");
-  //  for (int i = 0; i < NOR; i++)
-  //      fprintf(fp, "%f,", IMY[i]);
+    //  fprintf(fp, "\nIMY,");
+    //  for (int i = 0; i < NOR; i++)
+    //      fprintf(fp, "%f,", IMY[i]);
 
     fprintf(fp, "\nIMZ,");
     for (int i = 0; i < NOR; i++)
         fprintf(fp, "%f,", IMZ[i]);
 
-  //  fprintf(fp, "\nTHETA,");
-  //  for (int i = 0; i < NOR; i++)
-  //      fprintf(fp, "%f,", THETA[i]);
+    //  fprintf(fp, "\nTHETA,");
+    //  for (int i = 0; i < NOR; i++)
+    //      fprintf(fp, "%f,", THETA[i]);
 
     //------------LOADS-------------------------------------------------
     fprintf(fp, "\nLOADS,");
     for (int i = 0; i < NOL; i++)
         fprintf(fp, "%d,", i + 1);
 
-    fprintf(fp, "\nPLI,");
-    for (int i = 0; i < NOL; i++)
-        fprintf(fp, "%d,", PLI[i]);
+    // fprintf(fp, "\nPLI,");
+    // for (int i = 0; i < NOL; i++)
+    //     fprintf(fp, "%d,", PLI[i]);
 
     fprintf(fp, "\nNRL,");
     for (int i = 0; i < NOL; i++)
@@ -1200,21 +1194,21 @@ bool sfOutput()
     return 0;
 }
 
-bool sfFree()
+bool plFree()
 {
     free(XCN);
     free(YCN);
-   // free(ZCN);
+    // free(ZCN);
     free(BNR);
     free(ENR);
     free(ELASTIC);
     free(SHEAR);
     free(AREA);
-  //  free(IMY);
+    //  free(IMY);
     free(IMZ);
-  //  free(THETA);
+    //  free(THETA);
     free(NRL);
-    free(PLI);
+    // free(PLI);
     free(KOL);
     free(VOL);
     free(DLB);
@@ -1227,7 +1221,7 @@ bool sfFree()
     return 0;
 }
 
-bool sfPrintError(int error)
+bool plPrintError(int error)
 {
     printf("ERROR:\t");
     switch (error)
@@ -1315,4 +1309,3 @@ bool sfPrintError(int error)
 
     return 0;
 }
-

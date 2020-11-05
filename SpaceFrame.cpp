@@ -55,8 +55,8 @@ int TNNSD[6]; //the total number of nodes with specify displacement.
 int *NNSD;    //the number of nodes with specify displacement
 double *VSD;  //the value of specify displacement
 
-double *ROU;//the density of rods
-double g = 9.81;//acceleration of gravity
+double *ROU;     //the density of rods
+double g = 9.81; //acceleration of gravity
 
 //read data from .csv
 bool sfInput();
@@ -259,18 +259,7 @@ int main()
     // else
     //     printf("Solving equation succeeded!\n");
 
-    // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    // {
-    //     sfPrintError(4);
-    //     printf("\nPress any key to exit\n");
-    //     value = getchar();
-
-    //     return 1;
-    // }
-    // else
-    //     printf("Solving equation succeeded!\n");
-
-    if (solve_conjugate_gradient_par(TS, lv, DON, 6 * NFRN)) //solve matrix equation
+    if (solve_conjugate_gradient(TS, lv, DON, 6 * NFRN)) //solve matrix equation
     {
         sfPrintError(4);
         printf("\nPress any key to exit\n");
@@ -280,6 +269,17 @@ int main()
     }
     else
         printf("Solving equation succeeded!\n");
+
+    // if (solve_conjugate_gradient_par(TS, lv, DON, 6 * NFRN)) //solve matrix equation
+    // {
+    //     sfPrintError(4);
+    //     printf("\nPress any key to exit\n");
+    //     value = getchar();
+
+    //     return 1;
+    // }
+    // else
+    //     printf("Solving equation succeeded!\n");
 
     free(TS);
     free(lv);
@@ -338,14 +338,14 @@ bool sfInput()
     VSD = (double *)malloc(6 * MAXTNN * sizeof(double));
     memset(NNSD, 0, 6 * MAXTNN * sizeof(int));
     memset(VSD, 0, 6 * MAXTNN * sizeof(double));
-    memset(ROU, 0, NOR* sizeof(double));
+    memset(ROU, 0, NOR * sizeof(double));
     FILE *fp = NULL;                   //Define the file point
     char *line = 0, *data = 0;         //Define the line string and separated string
     char temporSpace[1000000];         //Apply for temporary storage space
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf_test.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -416,16 +416,16 @@ bool sfInput()
                     memset(IMY, 0, NOR * sizeof(double));
                     THETA = (double *)malloc(NOR * sizeof(double));
                     memset(THETA, 0, NOR * sizeof(double));
-                    NRL = (int *)malloc((NOL+NOR) * sizeof(int));
-                    memset(NRL, 0, NOL * sizeof(int));
-                    PLI = (int *)malloc(NOL * sizeof(int));
-                    memset(PLI, 0, NOL * sizeof(int));
-                    KOL = (int *)malloc((NOL+NOR) * sizeof(int));
-                    memset(KOL, 0, NOL * sizeof(int));
-                    VOL = (double *)malloc((NOL+NOR) * sizeof(double));
-                    memset(VOL, 0, NOL * sizeof(double));
-                    DLB = (double *)malloc((NOL+NOR) * sizeof(double));
-                    memset(DLB, 0, NOL * sizeof(double));
+                    NRL = (int *)malloc((NOL + NOR) * sizeof(int));
+                    memset(NRL, 0, (NOL + NOR) * sizeof(int));
+                    PLI = (int *)malloc((NOL + NOR) * sizeof(int));
+                    memset(PLI, 0, (NOL + NOR) * sizeof(int));
+                    KOL = (int *)malloc((NOL + NOR) * sizeof(int));
+                    memset(KOL, 0, (NOL + NOR) * sizeof(int));
+                    VOL = (double *)malloc((NOL + NOR) * sizeof(double));
+                    memset(VOL, 0, (NOL + NOR) * sizeof(double));
+                    DLB = (double *)malloc((NOL + NOR) * sizeof(double));
+                    memset(DLB, 0, (NOL + NOR) * sizeof(double));
                     NRS = (int *)malloc(NOS * sizeof(int));
                     memset(NRS, 0, NOS * sizeof(int));
                     DSB = (double *)malloc(NOS * sizeof(double));
@@ -528,11 +528,11 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
 
     dovidw();
 
-    double us[36] = {0};            //unit stiffness matrix
-    int p[2] = {0}; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
+    double us[36] = {0}; //unit stiffness matrix
+    int p[2] = {0};      //p is a temperary vector for i0j0, dof is the degree of freedom of nods
 
-    TS = (double *)malloc(NSI* sizeof(double)); //allocate memory for total stiffness matrix
-    memset(TS, 0, NSI* sizeof(double));
+    TS = (double *)malloc(NSI * sizeof(double)); //allocate memory for total stiffness matrix
+    memset(TS, 0, NSI * sizeof(double));
     LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
     memset(LCS, 0, 4 * NOR * sizeof(double));
 
@@ -873,47 +873,48 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         return 0;
     }
 
-    int rod = 0, p[2] = {0}, IJ = 0;          //rod is the number of rods, dof is the degree of freedom
+    int rod = 0, p[2] = {0}, IJ = 0;  //rod is the number of rods, dof is the degree of freedom
     double rf[12] = {0}, t[36] = {0}; //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
 
-    for (int i = 0; i < NOR;i++)
+    for (int i = 0; i < NOR; i++)
     {
         NRL[NOL + i] = i + 1;
         KOL[NOL + i] = 2;
         DLB[NOL + i] = LCS[0 * NOR + i];
-        VOL[NOL + i] = AREA[i] * g * ROU[i];
+        VOL[NOL + i] = -1 * AREA[i] * g * ROU[i];
+        PLI[NOL + i] = 1;
     }
-        for (int i = 0; i < ( NOL + NOR ); i++ )
+    for (int i = 0; i < (NOL + NOR); i++)
+    {
+        rod = NRL[i] - 1;                   //the number of rods with load
+        memset(rf, 0, 12 * sizeof(double)); //zero clearing
+
+        if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //calculate reaction force
         {
-            rod = NRL[i] - 1;                   //the number of rods with load
-            memset(rf, 0, 12 * sizeof(double)); //zero clearing
-
-            if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //calculate reaction force
-            {
-                sfPrintError(11);
-                return 1;
-            }
-            for (int j = 0; j < 6; j++) //add reaction force to RFE
-            {
-                RFE[6 * rod + j] += rf[1 * 6 + j];
-            }
-            if (sfBuildTrans(rod, t)) //build transpose matrix
-            {
-                sfPrintError(10);
-                return 1;
-            }
-
-            p[0] = 6 * (BNR[rod] - NFIN - 1); // tag: match the displacement with nods
-            p[1] = 6 * (ENR[rod] - NFIN - 1);
-
-            for (int j = 0; j < 2; j++) //add reaction force to load vector
-            {
-                if (p[j] >= 0) //determine free node
-                    for (int m = 0; m < 6; m++)
-                        for (int n = 0; n < 6; n++)
-                            lv[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
-            }
+            sfPrintError(11);
+            return 1;
         }
+        for (int j = 0; j < 6; j++) //add reaction force to RFE
+        {
+            RFE[6 * rod + j] += rf[1 * 6 + j];
+        }
+        if (sfBuildTrans(rod, t)) //build transpose matrix
+        {
+            sfPrintError(10);
+            return 1;
+        }
+
+        p[0] = 6 * (BNR[rod] - NFIN - 1); // tag: match the displacement with nods
+        p[1] = 6 * (ENR[rod] - NFIN - 1);
+
+        for (int j = 0; j < 2; j++) //add reaction force to load vector
+        {
+            if (p[j] >= 0) //determine free node
+                for (int m = 0; m < 6; m++)
+                    for (int n = 0; n < 6; n++)
+                        lv[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
+        }
+    }
     for (int i = 0; i < 6; i++)
     {
         if (TNNSD[i] <= 0)
@@ -937,13 +938,11 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
                 else
                 {
                     TS[IV[IJ + i] - 1] = 10000000000;
-                    lv[IJ+i] = 10000000000 * VSD[i * MAXTNN + j];
+                    lv[IJ + i] = 10000000000 * VSD[i * MAXTNN + j];
                 }
             }
         }
-        
     }
-
 
     // sfPrintLine2();
     // for (int i = 0; i < 6 * NFRN; i++)
@@ -1167,7 +1166,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
     for (int n = 0; 1; ++n)
     {
         // z = A * p
-for (int i = 0; i < N; i++)
+        for (int i = 0; i < N; i++)
         {
             z[i] = 0.0;
             for (int j = 0; j < N; j++)
@@ -1266,7 +1265,7 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
     memset(p, 0, sizeof(double));
     z = (double *)malloc(N * sizeof(double));
     memset(z, 0, sizeof(double));
-    
+
     // x = [0 ... 0]
     // r = b - A * x
     // p = r

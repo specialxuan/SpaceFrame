@@ -271,7 +271,7 @@ int main()
     // sfPrintLine2();
     // for (int i = 0; i < 6 * NFRN; i++)
     // {
-    //     printf("%15.7f", DON[i]);
+    //     printf("%15.15f", DON[i]);
     //     printf("\n");
     // }
     // sfPrintLine2();
@@ -285,15 +285,16 @@ int main()
 
             return 1;
         }
+
+    sfPrintLine2();
+    for (int i = 0; i < 6 * NOS; i += 1)
+    {
+        printf("%15.15f\n", IFS[i]);
+    }
+    sfPrintLine2();
+
     sfOutput(); //output data.
     sfFree();
-
-    // sfPrintLine2();
-    // for (int i = 0; i < 6 * NOS; i += 1)
-    // {
-    //     printf("\t%f\n", IFS[i]);
-    // }
-    // sfPrintLine2();
 
     end1 = clock();
     printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
@@ -314,7 +315,7 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf_test.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }

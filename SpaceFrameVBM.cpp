@@ -7,7 +7,9 @@
 #include <string.h>
 #include <time.h>
 
-#define EPS 1e-15
+double EPS = 1e-10;
+double MAXTS;
+double MAXLV;
 
 int TNN;  //total number of nodes
 int NFIN; //number of fixed nodes
@@ -284,7 +286,7 @@ int main()
     // sfPrintLine2();
     // for (int i = 0; i < 6 * NFRN; i++)
     // {
-    //     printf("%15.7f", DON[i]);
+    //     printf("%15.15f", DON[i]);
     //     printf("\n");
     // }
     // sfPrintLine2();
@@ -298,15 +300,16 @@ int main()
 
             return 1;
         }
+
+    sfPrintLine2();
+    for (int i = 0; i < 6 * NOS; i += 1)
+    {
+        printf("%15.15f\n", IFS[i]);
+    }
+    sfPrintLine2();
+
     sfOutput(); //output data.
     sfFree();
-
-    // sfPrintLine2();
-    // for (int i = 0; i < 6 * NOS; i += 1)
-    // {
-    //     printf("\t%f\n", IFS[i]);
-    // }
-    // sfPrintLine2();
 
     end1 = clock();
     printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
@@ -510,11 +513,11 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
 
     dovidw();
 
-    double us[36] = {0};            //unit stiffness matrix
-    int p[2] = {0}; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
+    double us[36] = {0}; //unit stiffness matrix
+    int p[2] = {0};      //p is a temperary vector for i0j0, dof is the degree of freedom of nods
 
-    TS = (double *)malloc(NSI* sizeof(double)); //allocate memory for total stiffness matrix
-    memset(TS, 0, NSI* sizeof(double));
+    TS = (double *)malloc(NSI * sizeof(double)); //allocate memory for total stiffness matrix
+    memset(TS, 0, NSI * sizeof(double));
     LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
     memset(LCS, 0, 4 * NOR * sizeof(double));
 
@@ -562,6 +565,10 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
             }
         }
     }
+
+    for (int i = 0; i < NSI; i++)
+        if (fabs(TS[i]) > MAXTS)
+            MAXTS = TS[i];
 
     // sfPrintLine2();
     // for (int i = 0; i < dof; i++)
@@ -855,7 +862,7 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         return 0;
     }
 
-    int rod = 0, p[2] = {0}, IJ = 0;          //rod is the number of rods, dof is the degree of freedom
+    int rod = 0, p[2] = {0}, IJ = 0;  //rod is the number of rods, dof is the degree of freedom
     double rf[12] = {0}, t[36] = {0}; //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
 
     for (int i = 0; i < NOL; i++)
@@ -912,13 +919,11 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
                 else
                 {
                     TS[IV[IJ + i] - 1] = 10000000000;
-                    lv[IJ+i] = 10000000000 * VSD[i * MAXTNN + j];
+                    lv[IJ + i] = 10000000000 * VSD[i * MAXTNN + j];
                 }
             }
         }
-        
     }
-
 
     // sfPrintLine2();
     // for (int i = 0; i < 6 * NFRN; i++)
@@ -927,6 +932,10 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
     //     printf("\n");
     // }
     // sfPrintLine2();
+
+    for (int i = 0; i < 6 * NFRN; i++)
+        if (fabs(lv[i]) > MAXLV)
+            MAXLV = lv[i];
 
     return 0;
 }
@@ -1143,7 +1152,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
     for (int n = 0; 1; ++n)
     {
         // z = A * p
-for (int i = 0; i < N; i++)
+        for (int i = 0; i < N; i++)
         {
             z[i] = 0.0;
             for (int j = 0; j < N; j++)
@@ -1242,7 +1251,16 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
     memset(p, 0, sizeof(double));
     z = (double *)malloc(N * sizeof(double));
     memset(z, 0, sizeof(double));
-    
+
+    for (int i = 0; i < NSI; i++)
+    {
+        A[i] = A[i] / MAXTS;
+    }
+    for (int i = 0; i < N; i++)
+    {
+        b[i] = b[i] / MAXLV;
+    }
+
     // x = [0 ... 0]
     // r = b - A * x
     // p = r
@@ -1330,6 +1348,11 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
 
         // gamma = gamma_new
         gamma = gamma_new;
+    }
+
+    for (int i = 0; i < N; i++)
+    {
+        x[i] = x[i] * MAXLV / MAXTS;
     }
 
     free(r);

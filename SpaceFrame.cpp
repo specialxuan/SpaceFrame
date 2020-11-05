@@ -1,9 +1,11 @@
+#include <Windows.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define EPS 1e-15
 
@@ -45,13 +47,16 @@ int *IV;     //the location of diagonal element
 int NSI;     //upper limit
 int MAXIBDW; //half bandwidth
 
-double *TS; //total stifness
+double *TS; //total stiffness
 
 int MAXTNN;   //the max total number of nodes with specify displacement
 int TNNSD[6]; //the total number of nodes with specify displacement.
               //for example 4,0,0,0,1,0 means that there are four nodes with delta x and one node with theta y
 int *NNSD;    //the number of nodes with specify displacement
 double *VSD;  //the value of specify displacement
+
+double *ROU;//the density of rods
+double g = 9.81;//acceleration of gravity
 
 //read data from .csv
 bool sfInput();
@@ -89,14 +94,23 @@ bool sfPrintLine2();
 bool sfOutput();
 //print error
 bool sfPrintError(int);
+//prepare to build variable bandwidth matrix
 bool dovidw();
+//free memories
+bool sfFree();
 
 int main()
 {
     double *lv = 0; //declare total stiffness and load vector
 
+    clock_t start1 = 0, end1 = 0;
+    DWORD start, end;
+
     printf("Welcome to use the calculator of space frame!\nPress any key to start");
     char value = getchar(); //pause
+
+    start1 = clock();
+    start = GetTickCount();
 
     sfPrintLine(); //"------------------------------"
     if (sfInput()) //input data
@@ -110,108 +124,105 @@ int main()
     else
         printf("Data input succeeded!\n");
 
-
-    int i = 0;
-    
-    printf("TNN: %d\n", TNN);
-    printf("NFIN: %d\n", NFIN);
-    printf("NOR: %d\n", NOR);
-    printf("NOL:% d\n", NOL);
-    printf("NOS: %d\nXCN ", NOS);
-    for (i = 0; i < TNN; i++)
-    {
-        printf("%f ", XCN[i]);
-    }
-    printf("\nYCN ");
-    for (i = 0; i < TNN; i++)
-    {
-        printf("%f ", YCN[i]);
-    }
-    printf("\nZCN ");
-    for (i = 0; i < TNN; i++)
-    {
-        printf("%f ", ZCN[i]);
-    }
-    printf("\nBNR ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%d ", BNR[i]);
-    }
-    printf("\nENR ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%d ", ENR[i]);
-    }
-    printf("\nELASTIC ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%f ", ELASTIC[i]);
-    }
-    printf("\nSHEAR ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%f ", SHEAR[i]);
-    }
-    printf("\nAREA ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%f ", AREA[i]);
-    }
-    printf("\nIMY ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%.11f ", IMY[i]);
-    }
-    printf("\nIMZ ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%.11f ", IMZ[i]);
-    }
-    printf("\nTHETA ");
-    for (i = 0; i < NOR; i++)
-    {
-        printf("%f ", THETA[i]);
-    }
-    printf("\nNRL ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%d ", NRL[i]);
-    }
-    printf("\nPLI ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%d ", PLI[i]);
-    }
-    printf("\nKOL ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%d ", KOL[i]);
-    }
-    printf("\nVOL ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%f ", VOL[i]);
-    }
-    printf("\nDLB ");
-    for (i = 0; i < NOL; i++)
-    {
-        printf("%f ", DLB[i]);
-    }
-    printf("\nNRS ");
-    for (i = 0; i < NOS; i++)
-    {
-        printf("%d ", NRS[i]);
-    }
-    printf("\nDSB ");
-    for (i = 0; i < NOS; i++)
-    {
-        printf("%f ", DSB[i]);
-    }
-    printf("\n");
-
+    // int i = 0;
+    // printf("TNN: %d\n", TNN);
+    // printf("NFIN: %d\n", NFIN);
+    // printf("NOR: %d\n", NOR);
+    // printf("NOL:% d\n", NOL);
+    // printf("NOS: %d\nXCN ", NOS);
+    // for (i = 0; i < TNN; i++)
+    // {
+    //     printf("%f ", XCN[i]);
+    // }
+    // printf("\nYCN ");
+    // for (i = 0; i < TNN; i++)
+    // {
+    //     printf("%f ", YCN[i]);
+    // }
+    // printf("\nZCN ");
+    // for (i = 0; i < TNN; i++)
+    // {
+    //     printf("%f ", ZCN[i]);
+    // }
+    // printf("\nBNR ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%d ", BNR[i]);
+    // }
+    // printf("\nENR ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%d ", ENR[i]);
+    // }
+    // printf("\nELASTIC ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%f ", ELASTIC[i]);
+    // }
+    // printf("\nSHEAR ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%f ", SHEAR[i]);
+    // }
+    // printf("\nAREA ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%f ", AREA[i]);
+    // }
+    // printf("\nIMY ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%.11f ", IMY[i]);
+    // }
+    // printf("\nIMZ ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%.11f ", IMZ[i]);
+    // }
+    // printf("\nTHETA ");
+    // for (i = 0; i < NOR; i++)
+    // {
+    //     printf("%f ", THETA[i]);
+    // }
+    // printf("\nNRL ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%d ", NRL[i]);
+    // }
+    // printf("\nPLI ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%d ", PLI[i]);
+    // }
+    // printf("\nKOL ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%d ", KOL[i]);
+    // }
+    // printf("\nVOL ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%f ", VOL[i]);
+    // }
+    // printf("\nDLB ");
+    // for (i = 0; i < NOL; i++)
+    // {
+    //     printf("%f ", DLB[i]);
+    // }
+    // printf("\nNRS ");
+    // for (i = 0; i < NOS; i++)
+    // {
+    //     printf("%d ", NRS[i]);
+    // }
+    // printf("\nDSB ");
+    // for (i = 0; i < NOS; i++)
+    // {
+    //     printf("%f ", DSB[i]);
+    // }
+    // printf("\n");
 
     int dof = 6 * NFRN;
-    
+
     lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
     memset(lv, 0, dof * sizeof(double));
 
@@ -237,7 +248,7 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    // if (sfCholesky(TS, lv, DON, 6 * NFRN)) //solve matrix equation
+    // if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
     // {
     //     sfPrintError(4);
     //     printf("\nPress any key to exit\n");
@@ -248,7 +259,18 @@ int main()
     // else
     //     printf("Solving equation succeeded!\n");
 
-    if (solve_conjugate_gradient(TS, lv, DON, 6 * NFRN)) //solve matrix equation
+    // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
+    // {
+    //     sfPrintError(4);
+    //     printf("\nPress any key to exit\n");
+    //     value = getchar();
+
+    //     return 1;
+    // }
+    // else
+    //     printf("Solving equation succeeded!\n");
+
+    if (solve_conjugate_gradient_par(TS, lv, DON, 6 * NFRN)) //solve matrix equation
     {
         sfPrintError(4);
         printf("\nPress any key to exit\n");
@@ -259,13 +281,16 @@ int main()
     else
         printf("Solving equation succeeded!\n");
 
-    sfPrintLine2();
-    for (int i = 0; i < 6 * NFRN; i++)
-    {
-        printf("%15.7f", DON[i]);
-        printf("\n");
-    }
-    sfPrintLine2();
+    free(TS);
+    free(lv);
+
+    // sfPrintLine2();
+    // for (int i = 0; i < 6 * NFRN; i++)
+    // {
+    //     printf("%15.7f", DON[i]);
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
 
     for (int i = 0; i < NOS; i++)
         if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
@@ -277,13 +302,19 @@ int main()
             return 1;
         }
     sfOutput(); //output data.
+    sfFree();
 
-    sfPrintLine2();
-    for (int i = 0; i < 6 * NOS; i++)
-    {
-        printf("\t%f\n", IFS[i]);
-    }
-    sfPrintLine2();
+    // sfPrintLine2();
+    // for (int i = 0; i < 6 * NOS; i += 1)
+    // {
+    //     printf("\t%f\n", IFS[i]);
+    // }
+    // sfPrintLine2();
+
+    end1 = clock();
+    printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
+    end = GetTickCount();
+    printf("realtime=%f\n", (double)(end - start) / 1000);
 
     printf("Press any key to exit\n");
     value = getchar(); //pause
@@ -293,29 +324,76 @@ int main()
 
 bool sfInput()
 {
-    FILE *fp = NULL;                           //Define the file point
-    char *line, *data;                         //Define the line string and separated string
-    char temporSpace[1000000];                 //Apply for temporary storage space
-    int rowIndex = 0;                          //Reset the number of rows to zero
-    int columnIndex = 0;                       //Reset the number of columns to zero
-    const char DIVIDE[] = ",";                 //Set the separater as a ','
-    if ((fp = fopen("sf_1.csv", "r")) != NULL) //Start the process when the file opens successfully
+    int temp = 0;
+    for (int i = 0; i < 6; i++)
     {
-        fseek(fp, 0L, SEEK_SET);                                             //Locate file point to the first line
-        while ((line = fgets(temporSpace, sizeof(temporSpace), fp)) != NULL) //The loop continues when the end of the file is not read
+        if (TNNSD[i] > temp)
         {
-            data = strtok(line, DIVIDE); //Split strings with a ',' as a separator
-            while (data != NULL)         //Read the data of each row
+            temp = TNNSD[i];
+        }
+    }
+    MAXTNN = temp;
+    ROU = (double *)malloc(NOR * sizeof(double));
+    NNSD = (int *)malloc(6 * MAXTNN * sizeof(int));
+    VSD = (double *)malloc(6 * MAXTNN * sizeof(double));
+    memset(NNSD, 0, 6 * MAXTNN * sizeof(int));
+    memset(VSD, 0, 6 * MAXTNN * sizeof(double));
+    memset(ROU, 0, NOR* sizeof(double));
+    FILE *fp = NULL;                   //Define the file point
+    char *line = 0, *data = 0;         //Define the line string and separated string
+    char temporSpace[1000000];         //Apply for temporary storage space
+    int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
+    const char DIVIDE[] = ",";         //Set the separater as a ','
+
+    if ((fp = fopen("sf_test.csv", "r")) == NULL) //Start the process when the file opens successfully
+    {
+        return 0;
+    }
+
+    fseek(fp, 0L, SEEK_SET);                                             //Locate file point to the first line
+    while ((line = fgets(temporSpace, sizeof(temporSpace), fp)) != NULL) //The loop continues when the end of the file is not read
+    {
+        data = strtok(line, DIVIDE); //Split strings with a ',' as a separator
+        while (data != NULL)         //Read the data of each row
+        {
+            if (strcmp(data, "END") == 0) //When the keyword 'END' is read, the reading process will be shut down
             {
-                if (strcmp(data, "END") == 0) //When the keyword 'END' is read, the reading process will be shut down
+                fclose(fp); //Close the file
+                fp = NULL;  //Reset the file point
+                return 0;
+            }
+
+            if (columnIndex++ == 0) //Skip the saving of the first column
+            {
+                data = strtok(NULL, DIVIDE); //Reset data
+                continue;
+            }
+
+            switch (rowIndex) //Store variables of each column in different ways
+            {
+            case 0:
+                break;
+            case 1:
+                if (columnIndex == 2)
+                    TNN = atoi(data);
+                break;
+            case 2:
+                if (columnIndex == 2)
+                    NFIN = atoi(data);
+                NFRN = TNN - NFIN;
+                break;
+            case 3:
+                if (columnIndex == 2)
+                    NOR = atoi(data);
+                break;
+            case 4:
+                if (columnIndex == 2)
+                    NOL = atoi(data);
+                break;
+            case 5:
+                if (columnIndex == 2)
                 {
-                    fclose(fp); //Close the file
-                    fp = NULL;  //Reset the file point
-                    return 0;
-                }
-                //----------------分配内存-------------------------------------------------
-                if (rowIndex == 5) //Request space for multiple variable when loops to the 5th line
-                {
+                    NOS = atoi(data);
                     XCN = (double *)malloc(TNN * sizeof(double));
                     memset(XCN, 0, TNN * sizeof(double));
                     YCN = (double *)malloc(TNN * sizeof(double));
@@ -338,15 +416,15 @@ bool sfInput()
                     memset(IMY, 0, NOR * sizeof(double));
                     THETA = (double *)malloc(NOR * sizeof(double));
                     memset(THETA, 0, NOR * sizeof(double));
-                    NRL = (int *)malloc(NOL * sizeof(int));
+                    NRL = (int *)malloc((NOL+NOR) * sizeof(int));
                     memset(NRL, 0, NOL * sizeof(int));
                     PLI = (int *)malloc(NOL * sizeof(int));
                     memset(PLI, 0, NOL * sizeof(int));
-                    KOL = (int *)malloc(NOL * sizeof(int));
+                    KOL = (int *)malloc((NOL+NOR) * sizeof(int));
                     memset(KOL, 0, NOL * sizeof(int));
-                    VOL = (double *)malloc(NOL * sizeof(double));
+                    VOL = (double *)malloc((NOL+NOR) * sizeof(double));
                     memset(VOL, 0, NOL * sizeof(double));
-                    DLB = (double *)malloc(NOL * sizeof(double));
+                    DLB = (double *)malloc((NOL+NOR) * sizeof(double));
                     memset(DLB, 0, NOL * sizeof(double));
                     NRS = (int *)malloc(NOS * sizeof(int));
                     memset(NRS, 0, NOS * sizeof(int));
@@ -354,114 +432,105 @@ bool sfInput()
                     memset(DSB, 0, NOS * sizeof(double));
                     DON = (double *)malloc(6 * NFRN * sizeof(double));
                     memset(DON, 0, 6 * NFRN * sizeof(double));
-                    IFS = (double *)malloc(3 * NOS * sizeof(double));
+                    IFS = (double *)malloc(6 * NOS * sizeof(double));
                     memset(IFS, 0, 3 * NOS * sizeof(double));
                     RFE = (double *)malloc(6 * NOR * sizeof(double));
                     memset(RFE, 0, 6 * NOR * sizeof(double));
                 }
-                //-------------------分配结束-------------------------------------------------
-                if (columnIndex++ != 0) //Skip the saving of the first column
-                {
-                    //--------------------------------数据输入-------------------------------------
-                    switch (rowIndex) //Store variables of each column in different ways
-                    {
-                    case 0:
-                        break;
-                    case 1:
-                        if (columnIndex == 2)
-                            TNN = atoi(data);
-                        break;
-                    case 2:
-                        if (columnIndex == 2)
-                            NFIN = atoi(data);
-                        NFRN = TNN - NFIN;
-                        break;
-                    case 3:
-                        if (columnIndex == 2)
-                            NOR = atoi(data);
-                        break;
-                    case 4:
-                        if (columnIndex == 2)
-                            NOL = atoi(data);
-                        break;
-                    case 5:
-                        if (columnIndex == 2)
-                            NOS = atoi(data);
-                        break;
-                    case 6:
-                        XCN[columnIndex - 2] = atof(data);
-                        break;
-                    case 7:
-                        YCN[columnIndex - 2] = atof(data);
-                        break;
-                    case 8:
-                        ZCN[columnIndex - 2] = atof(data);
-                        break;
-                    case 9:
-                        BNR[columnIndex - 2] = atoi(data);
-                        break;
-                    case 10:
-                        ENR[columnIndex - 2] = atoi(data);
-                        break;
-                    case 11:
-                        ELASTIC[columnIndex - 2] = atof(data);
-                        break;
-                    case 12:
-                        SHEAR[columnIndex - 2] = atof(data);
-                        break;
-                    case 13:
-                        AREA[columnIndex - 2] = atof(data);
-                        break;
-                    case 14:
-                        IMY[columnIndex - 2] = atof(data);
-                        break;
-                    case 15:
-                        IMZ[columnIndex - 2] = atof(data);
-                        break;
-                    case 16:
-                        THETA[columnIndex - 2] = atof(data);
-                        break;
-                    case 17:
-                        NRL[columnIndex - 2] = atoi(data);
-                        break;
-                    case 18:
-                        PLI[columnIndex - 2] = atoi(data);
-                        break;
-                    case 19:
-                        KOL[columnIndex - 2] = atoi(data);
-                        break;
-                    case 20:
-                        VOL[columnIndex - 2] = atof(data);
-                        break;
-                    case 21:
-                        DLB[columnIndex - 2] = atof(data);
-                        break;
-                    case 22:
-                        NRS[columnIndex - 2] = atoi(data);
-                        break;
-                    case 23:
-                        DSB[columnIndex - 2] = atof(data);
-                        break;
-                    }
-                    //--------------------------------录入结束-------------------------------------
-                }
-                data = strtok(NULL, DIVIDE); //Reset data
+                break;
+            case 6:
+                if (columnIndex - 2 < TNN)
+                    XCN[columnIndex - 2] = atof(data);
+                break;
+            case 7:
+                if (columnIndex - 2 < TNN)
+                    YCN[columnIndex - 2] = atof(data);
+                break;
+            case 8:
+                if (columnIndex - 2 < TNN)
+                    ZCN[columnIndex - 2] = atof(data);
+                break;
+            case 9:
+                if (columnIndex - 2 < NOR)
+                    BNR[columnIndex - 2] = atoi(data);
+                break;
+            case 10:
+                if (columnIndex - 2 < NOR)
+                    ENR[columnIndex - 2] = atoi(data);
+                break;
+            case 11:
+                if (columnIndex - 2 < NOR)
+                    ELASTIC[columnIndex - 2] = atof(data);
+                break;
+            case 12:
+                if (columnIndex - 2 < NOR)
+                    SHEAR[columnIndex - 2] = atof(data);
+                break;
+            case 13:
+                if (columnIndex - 2 < NOR)
+                    AREA[columnIndex - 2] = atof(data);
+                break;
+            case 14:
+                if (columnIndex - 2 < NOR)
+                    IMY[columnIndex - 2] = atof(data);
+                break;
+            case 15:
+                if (columnIndex - 2 < NOR)
+                    IMZ[columnIndex - 2] = atof(data);
+                break;
+            case 16:
+                if (columnIndex - 2 < NOR)
+                    THETA[columnIndex - 2] = atof(data);
+                break;
+            case 17:
+                if (columnIndex - 2 < NOL)
+                    NRL[columnIndex - 2] = atoi(data);
+                break;
+            case 18:
+                if (columnIndex - 2 < NOL)
+                    PLI[columnIndex - 2] = atoi(data);
+                break;
+            case 19:
+                if (columnIndex - 2 < NOL)
+                    KOL[columnIndex - 2] = atoi(data);
+                break;
+            case 20:
+                if (columnIndex - 2 < NOL)
+                    VOL[columnIndex - 2] = atof(data);
+                break;
+            case 21:
+                if (columnIndex - 2 < NOL)
+                    DLB[columnIndex - 2] = atof(data);
+                break;
+            case 22:
+                if (columnIndex - 2 < NOS)
+                    NRS[columnIndex - 2] = atoi(data);
+                break;
+            case 23:
+                if (columnIndex - 2 < NOS)
+                    DSB[columnIndex - 2] = atof(data);
+                break;
+                //input finished
             }
-            rowIndex++;      //RowIndex steps forward once
-            columnIndex = 0; //Reset columnIndex
+            data = strtok(NULL, DIVIDE); //Reset data
         }
-        fclose(fp); //Close the file
-        fp = NULL;  //Reset the file point
+        rowIndex++;      //RowIndex steps forward once
+        columnIndex = 0; //Reset columnIndex
     }
+    fclose(fp); //Close the file
+    fp = NULL;  //Reset the file point
 
     return 0;
 }
 
 bool sfBuildTotalStiff() //ts is total stiffness matrix
 {
-     dovidw();
+
+    dovidw();
+
     double us[36] = {0};            //unit stiffness matrix
     int p[2] = {0}; //p is a temperary vector for i0j0, dof is the degree of freedom of nods
+
     TS = (double *)malloc(NSI* sizeof(double)); //allocate memory for total stiffness matrix
     memset(TS, 0, NSI* sizeof(double));
     LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
@@ -472,7 +541,7 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
         sfPrintError(6);
         return 1;
     }
-   
+
     for (int k = 0; k < NOR; k++)
     {
         p[0] = 6 * (BNR[k] - NFIN - 1); // tag: match the displacement with nods
@@ -512,6 +581,67 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
         }
     }
 
+    // sfPrintLine2();
+    // for (int i = 0; i < dof; i++)
+    // {
+    //     for (int j = 0; j < dof; j++)
+    //     {
+    //         printf("%15.2f", ts[i * dof + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
+
+    return 0;
+}
+
+bool dovidw()
+{
+    int it = 0, mm = 0, i, j;
+    int *peribdw; //bandwidth per line
+    MAXIBDW = 0;
+    peribdw = (int *)malloc(TNN * sizeof(int));
+    memset(peribdw, 0, TNN * sizeof(int));
+    IV = (int *)malloc(6 * NFRN * sizeof(int));
+    memset(IV, 0, 6 * NFRN * sizeof(int));
+    for (i = 0; i < NOR; i++)
+    {
+        if (BNR[i] > NFIN)
+        {
+            mm = ENR[i] - BNR[i];
+            if (mm > peribdw[ENR[i] - 1])
+            {
+                peribdw[ENR[i] - 1] = mm;
+                // printf("%d %d\n", ENR[i], peribdw[ENR[i] - 1]);
+            }
+        }
+    }
+    // for (i = 0; i < TNN; i++)
+    // {
+    //     printf("%d %d\n", i, peribdw[i]);
+    // }
+    for (i = NFIN; i < TNN; i++)
+    {
+        if (peribdw[i] > MAXIBDW)
+        {
+            MAXIBDW = peribdw[i];
+        }
+        for (j = 1; j <= 6; j++)
+        {
+            it = it + 1;
+            if (it == 1)
+            {
+                IV[it - 1] = 6 * peribdw[i] + j;
+            }
+            else
+            {
+                IV[it - 1] = IV[it - 2] + 6 * peribdw[i] + j;
+            }
+        }
+    }
+    MAXIBDW = 6 * MAXIBDW + 5;
+    NSI = IV[6 * NFRN - 1];
+    free(peribdw);
     return 0;
 }
 
@@ -539,6 +669,22 @@ bool sfLCosSin()
 
 bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
 {
+    if (k < 0)
+    {
+        sfPrintError(16);
+        return 0;
+    }
+    if (flag < 1 || flag > 4)
+    {
+        sfPrintError(16);
+        return 0;
+    }
+    if (us == NULL)
+    {
+        sfPrintError(16);
+        return 0;
+    }
+
     double rd[36] = {0}, t[36] = {0}, c[36] = {0}, tmp = 0; //rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
     memset(us, 0, 36 * sizeof(double));
 
@@ -581,6 +727,22 @@ bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, fl
 
 bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, flag is the number of matrix
 {
+    if (k < 0)
+    {
+        sfPrintError(17);
+        return 0;
+    }
+    if (flag < 0 || flag > 4)
+    {
+        sfPrintError(17);
+        return 0;
+    }
+    if (rd == NULL)
+    {
+        sfPrintError(17);
+        return 0;
+    }
+
     double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = LCS[0 * NOR + k];
 
     a = ELASTIC[k] * AREA[k] / l;         //EA/1
@@ -648,6 +810,17 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
 
 bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose matrix
 {
+    if (k < 0)
+    {
+        sfPrintError(18);
+        return 0;
+    }
+    if (t == NULL)
+    {
+        sfPrintError(18);
+        return 0;
+    }
+
     double coa = 0, cob = 0, coc = 0, sic = 0, sit = 0, cot = 0, m = 0, n = 0; //co means cosine, si means sine, m and n is temperary variable
 
     memset(t, 0, 36 * sizeof(double));
@@ -694,40 +867,53 @@ bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose ma
 
 bool sfBuildLoadVector(double *lv) //lv is the load vector
 {
-    int rod = 0, p[2] = {0}, IJ;      //rod is the number of rods, dof is the degree of freedom
+    if (lv == 0)
+    {
+        sfPrintError(19);
+        return 0;
+    }
+
+    int rod = 0, p[2] = {0}, IJ = 0;          //rod is the number of rods, dof is the degree of freedom
     double rf[12] = {0}, t[36] = {0}; //rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
 
-    for (int i = 0; i < NOL; i++)
+    for (int i = 0; i < NOR;i++)
     {
-        rod = NRL[i] - 1;                   //the number of rods with load
-        memset(rf, 0, 12 * sizeof(double)); //zero clearing
-
-        if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //calculate reaction force
-        {
-            sfPrintError(11);
-            return 1;
-        }
-        for (int j = 0; j < 6; j++) //add reaction force to RFE
-        {
-            RFE[6 * rod + j] += rf[1 * 6 + j];
-        }
-        if (sfBuildTrans(rod, t)) //build transpose matrix
-        {
-            sfPrintError(10);
-            return 1;
-        }
-
-        p[0] = 6 * (BNR[rod] - NFIN - 1); // tag: match the displacement with nods
-        p[1] = 6 * (ENR[rod] - NFIN - 1);
-
-        for (int j = 0; j < 2; j++) //add reaction force to load vector
-        {
-            if (p[j] >= 0) //determine free node
-                for (int m = 0; m < 6; m++)
-                    for (int n = 0; n < 6; n++)
-                        lv[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
-        }
+        NRL[NOL + i] = i + 1;
+        KOL[NOL + i] = 2;
+        DLB[NOL + i] = LCS[0 * NOR + i];
+        VOL[NOL + i] = AREA[i] * g * ROU[i];
     }
+        for (int i = 0; i < ( NOL + NOR ); i++ )
+        {
+            rod = NRL[i] - 1;                   //the number of rods with load
+            memset(rf, 0, 12 * sizeof(double)); //zero clearing
+
+            if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //calculate reaction force
+            {
+                sfPrintError(11);
+                return 1;
+            }
+            for (int j = 0; j < 6; j++) //add reaction force to RFE
+            {
+                RFE[6 * rod + j] += rf[1 * 6 + j];
+            }
+            if (sfBuildTrans(rod, t)) //build transpose matrix
+            {
+                sfPrintError(10);
+                return 1;
+            }
+
+            p[0] = 6 * (BNR[rod] - NFIN - 1); // tag: match the displacement with nods
+            p[1] = 6 * (ENR[rod] - NFIN - 1);
+
+            for (int j = 0; j < 2; j++) //add reaction force to load vector
+            {
+                if (p[j] >= 0) //determine free node
+                    for (int m = 0; m < 6; m++)
+                        for (int n = 0; n < 6; n++)
+                            lv[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
+            }
+        }
     for (int i = 0; i < 6; i++)
     {
         if (TNNSD[i] <= 0)
@@ -758,11 +944,35 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         
     }
 
+
+    // sfPrintLine2();
+    // for (int i = 0; i < 6 * NFRN; i++)
+    // {
+    //     printf("%20.7f,", lv[i]);
+    //     printf("\n");
+    // }
+    // sfPrintLine2();
+
     return 0;
 }
-
 bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load, rfb and rfe is the reaction force at begining and end of rods
 {
+    if (i < 0)
+    {
+        sfPrintError(20);
+        return 0;
+    }
+    if (rfb == NULL)
+    {
+        sfPrintError(20);
+        return 0;
+    }
+    if (rfe == NULL)
+    {
+        sfPrintError(20);
+        return 0;
+    }
+
     double ra = 0, rb = 0, a = 0, b = 0, q = VOL[i], xq = DLB[i]; //ra, rb, a and b are middle variable
     int rod = NRL[i] - 1, pm = PLI[i], t = 0;                     //rod is the number of rods
 
@@ -953,11 +1163,11 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
         p[i] = r[i];
         gamma += r[i] * r[i];
     }
-    
+
     for (int n = 0; 1; ++n)
     {
         // z = A * p
-        for (int i = 0; i < N; i++)
+for (int i = 0; i < N; i++)
         {
             z[i] = 0.0;
             for (int j = 0; j < N; j++)
@@ -1024,9 +1234,29 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
     return 0;
 }
 
-
 bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
 {
+    if (A == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (b == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (x == NULL)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+    else if (N == 0)
+    {
+        sfPrintError(12);
+        return 1;
+    }
+
     double *r, *p, *z;
     double gamma, gamma_new, alpha, beta;
 
@@ -1036,13 +1266,14 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
     memset(p, 0, sizeof(double));
     z = (double *)malloc(N * sizeof(double));
     memset(z, 0, sizeof(double));
-
+    
     // x = [0 ... 0]
     // r = b - A * x
     // p = r
     // gamma = r' * r
     gamma = 0.0;
-    #pragma omp parallel for reduction(+:gamma)
+#pragma omp parallel for reduction(+ \
+                                   : gamma)
     for (int i = 0; i < N; ++i)
     {
         x[i] = 0.0;
@@ -1050,11 +1281,11 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
         p[i] = r[i];
         gamma += r[i] * r[i];
     }
-    
-    for (int n = 0; 1; ++n)
+
+    for (int n = 0; true; ++n)
     {
-        // z = A * p
-        #pragma omp parallel for
+// z = A * p
+#pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             z[i] = 0.0;
@@ -1087,16 +1318,21 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
 
         // alpha = gamma / (p' * z)
         alpha = 0.0;
-        #pragma omp parallel for reduction(+:alpha)
+#pragma omp parallel for reduction(+ \
+                                   : alpha)
         for (int i = 0; i < N; ++i)
+        {
+            // printf("%d\n", i);
             alpha += p[i] * z[i];
+        }
         alpha = gamma / alpha;
 
         // x = x + alpha * p
         // r = r - alpha * z
         // gamma_new = r' * r
         gamma_new = 0.0;
-        #pragma omp parallel for reduction(+:gamma_new)
+#pragma omp parallel for reduction(+ \
+                                   : gamma_new)
         for (int i = 0; i < N; ++i)
         {
             x[i] += alpha * p[i];
@@ -1109,10 +1345,12 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
 
         beta = gamma_new / gamma;
 
-        // p = r + (gamma_new / gamma) * p;
-        #pragma omp parallel for
+// p = r + (gamma_new / gamma) * p;
+#pragma omp parallel for
         for (int i = 0; i < N; ++i)
+        {
             p[i] = r[i] + beta * p[i];
+        }
 
         // gamma = gamma_new
         gamma = gamma_new;
@@ -1125,9 +1363,19 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
     return 0;
 }
 
-
 bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
 {
+    if (m < 0)
+    {
+        sfPrintError(21);
+        return 0;
+    }
+    if (k < 0)
+    {
+        sfPrintError(21);
+        return 0;
+    }
+
     int n = 6 * (k - 1); //n is the matching place of rods
     double tf[6] = {0};  //tf is temperary variable
 
@@ -1172,6 +1420,17 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
 
 bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load, xp is the distance between the section and the begining of rod, tf is internal force
 {
+    if (i < 0)
+    {
+        sfPrintError(22);
+        return 0;
+    }
+    if (tf == NULL)
+    {
+        sfPrintError(22);
+        return 0;
+    }
+
     double xq = DLB[i], t = xq - xp, r = xp / xq, q = VOL[i]; //t and r are temperary variables
     int e = PLI[i];
     switch (KOL[i]) //calculate section force according to kind of loads
@@ -1229,6 +1488,17 @@ bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load,
 
 bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, tref is the end force of rods
 {
+    if (k < 1)
+    {
+        sfPrintError(23);
+        return 0;
+    }
+    if (tref == NULL)
+    {
+        sfPrintError(23);
+        return 0;
+    }
+
     int p[2] = {0};                                  //p is a temperary vector for i0j0
     double rd[36] = {0}, rdb[36] = {0}, t[36] = {0}; //rd
 
@@ -1289,6 +1559,178 @@ bool sfPrintLine2()
 
 bool sfOutput()
 {
+    // printf("\t\t\tCalculation Of Space Rigid Frame\n");
+    // sfPrintLine();
+
+    // printf("\t\tTNN = %d\t\t\tNFIN = %d\n\t\tNFRN = %d\t\tNOR = %d\n", TNN, NFIN, NFRN, NOR);
+    // printf("\t\tNOL = %d\t\t\tNOS = %d\n", NOL, NOS);
+    // sfPrintLine();
+
+    // printf("NUMBER OF NODES     Coordinate-X    Coordinate-Y    Coordinate-Z\n");
+    // for (int i = 0; i < TNN; i++)
+    //     printf("%15d%15.7f%15.7f%15.7f\n", i + 1, XCN[i], YCN[i], ZCN[i]);
+    // sfPrintLine();
+
+    // printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus  Shear modulus    Area   Inertia moment Y axis  Inertia moment Z axis\n");
+    // for (int i = 0; i < NOR; i++)
+    //     printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f%23.5f\n", i + 1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i], IMY[i], IMZ[i]);
+    // sfPrintLine();
+    // printf("NUMBER OF SECTIONS         PLI            DLB\n");
+    // for (int i = 0; i < NOS; i++)
+    //     printf("%15d%15d%15.7f\n", i + 1, NRS[i], DSB[i]);
+    // sfPrintLine();
+
+    // printf("Calculating......\nThe results are as follows: \n");
+    // sfPrintLine();
+
+    // printf("NUMBER OF NODES   Displacement-X Displacement-Y Displacement-Z   Diversion-X    Diversion-Y    Diversion-Z\n");
+    // for (int i = NFIN; i < TNN; i++)
+    //     printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, DON[6 * (i - NFIN)], DON[6 * (i - NFIN) + 1], DON[6 * (i - NFIN) + 2], DON[6 * (i - NFIN) + 3], DON[6 * (i - NFIN) + 4], DON[6 * (i - NFIN) + 5]);
+    // sfPrintLine();
+
+    // printf("NUMBER OF SECTIONS Axial force-X  Shear force-Y  Shear force-Z    Torque-X   Bending moment-Y  Bending moment-Z\n");
+    // for (int i = 0; i < NOS; i++)
+    //     printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, IFS[6 * i], IFS[6 * i + 1], IFS[6 * i + 2], IFS[6 * i + 3], IFS[6 * i + 4], IFS[6 * i + 5]);
+
+    FILE *fp = NULL;
+    fp = fopen("sfRESULT.csv", "w");
+    fprintf(fp, "TITLE\n");
+    fprintf(fp, "TNN,%d\nNFIN,%d\nNFRN,%d\nNOR,%d\nNOL,%d\nNOS,%d", TNN, NFIN, NFRN, NOR, NOL, NOS);
+
+    //------------NODES-------------------------------------------------
+    fprintf(fp, "\nNODES,");
+    for (int i = 0; i < TNN; i++)
+        fprintf(fp, "%d,", i + 1);
+
+    fprintf(fp, "\nCON,");
+    for (int i = 0; i < TNN; i++)
+        fprintf(fp, "(%f %f %f),", XCN[i], YCN[i], ZCN[i]);
+
+    //------------RODS-------------------------------------------------
+    fprintf(fp, "\nRODS,");
+    for (int i = 0; i < NOR; i++)
+        fprintf(fp, "%d,", i + 1);
+
+    fprintf(fp, "\nBNR->ENR,");
+    for (int i = 0; i < NOR; i++)
+        fprintf(fp, "p%d -> p%d,", BNR[i], ENR[i]);
+
+    fprintf(fp, "\nELASTIC,");
+    for (int i = 0; i < NOR; i++)
+        fprintf(fp, "%f,", ELASTIC[i]);
+
+    fprintf(fp, "\nSHEAR,");
+    for (int i = 0; i < NOR; i++)
+        fprintf(fp, "%f,", SHEAR[i]);
+
+    fprintf(fp, "\nAREA,");
+    for (int i = 0; i < NOR; i++)
+        fprintf(fp, "%f,", AREA[i]);
+
+    fprintf(fp, "\nIMY,");
+    for (int i = 0; i < NOR; i++)
+        fprintf(fp, "%f,", IMY[i]);
+
+    fprintf(fp, "\nIMZ,");
+    for (int i = 0; i < NOR; i++)
+        fprintf(fp, "%f,", IMZ[i]);
+
+    fprintf(fp, "\nTHETA,");
+    for (int i = 0; i < NOR; i++)
+        fprintf(fp, "%f,", THETA[i]);
+
+    //------------LOADS-------------------------------------------------
+    fprintf(fp, "\nLOADS,");
+    for (int i = 0; i < NOL; i++)
+        fprintf(fp, "%d,", i + 1);
+
+    fprintf(fp, "\nPLI,");
+    for (int i = 0; i < NOL; i++)
+        fprintf(fp, "%d,", PLI[i]);
+
+    fprintf(fp, "\nNRL,");
+    for (int i = 0; i < NOL; i++)
+        fprintf(fp, "%d,", NRL[i]);
+
+    fprintf(fp, "\nKOL,");
+    for (int i = 0; i < NOL; i++)
+        fprintf(fp, "%d,", KOL[i]);
+
+    fprintf(fp, "\nVOL,");
+    for (int i = 0; i < NOL; i++)
+        fprintf(fp, "%f,", VOL[i]);
+
+    fprintf(fp, "\nDLB,");
+    for (int i = 0; i < NOL; i++)
+        fprintf(fp, "%f,", DLB[i]);
+
+    //-----------SECTIONS-------------------------------------------------
+    fprintf(fp, "\nNOS,");
+    for (int i = 0; i < NOS; i++)
+        fprintf(fp, "%d,", i + 1);
+
+    fprintf(fp, "\nNRS,");
+    for (int i = 0; i < NOS; i++)
+        fprintf(fp, "%d,", NRS[i]);
+
+    fprintf(fp, "\nDSB,");
+    for (int i = 0; i < NOS; i++)
+        fprintf(fp, "%f,", DSB[i]);
+
+    //-----------RESULTS OF NODES-----------------------------------------
+    fprintf(fp, "\nNORN,");
+    for (int i = 0; i < NFRN; i++)
+        fprintf(fp, "x%d,y%d,z%d,", i + NFIN, i + NFIN, i + NFIN);
+
+    fprintf(fp, "\nDISPLACEMENT,");
+    for (int i = 0; i < NFRN; i++)
+        fprintf(fp, "%f,%f,%f,", DON[6 * i], DON[6 * i + 1], DON[6 * i + 2]);
+
+    fprintf(fp, "\nDIVERSION,");
+    for (int i = 0; i < NFRN; i++)
+        fprintf(fp, "%f,%f,%f,", DON[6 * i + 3], DON[6 * i + 4], DON[6 * i + 5]);
+
+    //-----------RESULTS OF SECTIONS--------------------------------------
+    fprintf(fp, "\nNOS,");
+    for (int i = 0; i < NOS; i++)
+        fprintf(fp, "x%d(AXIAL),y%d(SHEAR),z%d(SHEAR),", i + NOS + 1, i + NOS + 1, i + NOS + 1);
+
+    fprintf(fp, "\nAXIAL&SHEAR FORCE,");
+    for (int i = 0; i < NOS; i++)
+        fprintf(fp, "%f,%f,%f,", IFS[6 * i], IFS[6 * i + 1], IFS[6 * i + 2]);
+
+    fprintf(fp, "\nTORQUE&BENDING MOMENT,");
+    for (int i = 0; i < NOS; i++)
+        fprintf(fp, "%f,%f,%f,", IFS[6 * i + 3], IFS[6 * i + 4], IFS[6 * i + 5]);
+    fclose(fp);
+
+    return 0;
+}
+
+bool sfFree()
+{
+    free(XCN);
+    free(YCN);
+    free(ZCN);
+    free(BNR);
+    free(ENR);
+    free(ELASTIC);
+    free(SHEAR);
+    free(AREA);
+    free(IMY);
+    free(IMZ);
+    free(THETA);
+    free(NRL);
+    free(PLI);
+    free(KOL);
+    free(VOL);
+    free(DLB);
+    free(NRS);
+    free(DSB);
+    free(DON);
+    free(IFS);
+    free(RFE);
+
     return 0;
 }
 
@@ -1339,59 +1781,44 @@ bool sfPrintError(int error)
     case 14:
         printf("Calculating end force failed!\n");
         break;
+    case 15:
+        printf("Allocating total stiffness matrix failed!\n");
+        break;
+    case 16:
+        printf("There is something wrong in building unit stiffness matrix!\n");
+        break;
+    case 17:
+        printf("There is something wrong in building local stiffness matrix!\n");
+        break;
+    case 18:
+        printf("There is something wrong in building transpose matrix failed!\n");
+        break;
+    case 19:
+        printf("There is something wrong in building load vector!\n");
+        break;
+    case 20:
+        printf("There is something wrong in calculating reaction force!\n");
+        break;
+    case 21:
+        printf("There is something wrong in calculating internal force!\n");
+        break;
+    case 22:
+        printf("There is something wrong in calculating internal force of cantilever!\n");
+        break;
+    case 23:
+        printf("There is something wrong in calculating internal force of displacement!\n");
+        break;
+    case 24:
+        printf("!\n");
+        break;
+    case 25:
+        printf("!\n");
+        break;
+
     default:
         break;
     }
     printf("There is at least one error in your file, please check it and try it one more time.\n");
 
-    return 0;
-}
-bool dovidw()
-{
-    int it = 0, mm = 0, i, j;
-    int *peribdw; //bandwidth per line
-    MAXIBDW = 0;
-    peribdw = (int *)malloc(TNN * sizeof(int));
-    memset(peribdw, 0, TNN * sizeof(int));
-    IV = (int *)malloc(6 * NFRN * sizeof(int));
-    memset(IV, 0, 6 * NFRN * sizeof(int));
-    for (i = 0; i < NOR; i++)
-    {
-        if (BNR[i] > NFIN)
-        {
-            mm = ENR[i] - BNR[i];
-            if (mm > peribdw[ENR[i] - 1])
-            {
-                peribdw[ENR[i] - 1] = mm;
-                printf("%d %d\n", ENR[i], peribdw[ENR[i] - 1]);
-            }
-        }
-    }
-    for (i = 0; i < TNN; i++)
-    {
-        printf("%d %d\n", i, peribdw[i]);
-    }
-    for (i = NFIN; i < TNN; i++)
-    {
-        if (peribdw[i] > MAXIBDW)
-        {
-            MAXIBDW = peribdw[i];
-        }
-        for (j = 1; j <= 6; j++)
-        {
-            it = it + 1;
-            if (it == 1)
-            {
-                IV[it - 1] = 6 * peribdw[i] + j;
-            }
-            else
-            {
-                IV[it - 1] = IV[it - 2] + 6 * peribdw[i] + j;
-            }
-        }
-    }
-    MAXIBDW = 6 * MAXIBDW + 5;
-    NSI = IV[6 * NFRN - 1];
-    free(peribdw);
     return 0;
 }

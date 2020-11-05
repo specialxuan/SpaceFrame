@@ -324,28 +324,13 @@ int main()
 
 bool sfInput()
 {
-    int temp = 0;
-    for (int i = 0; i < 6; i++)
-    {
-        if (TNNSD[i] > temp)
-        {
-            temp = TNNSD[i];
-        }
-    }
-    MAXTNN = temp;
-    ROU = (double *)malloc(NOR * sizeof(double));
-    NNSD = (int *)malloc(6 * MAXTNN * sizeof(int));
-    VSD = (double *)malloc(6 * MAXTNN * sizeof(double));
-    memset(NNSD, 0, 6 * MAXTNN * sizeof(int));
-    memset(VSD, 0, 6 * MAXTNN * sizeof(double));
-    memset(ROU, 0, NOR * sizeof(double));
     FILE *fp = NULL;                   //Define the file point
     char *line = 0, *data = 0;         //Define the line string and separated string
     char temporSpace[1000000];         //Apply for temporary storage space
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf_1.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -416,16 +401,16 @@ bool sfInput()
                     memset(IMY, 0, NOR * sizeof(double));
                     THETA = (double *)malloc(NOR * sizeof(double));
                     memset(THETA, 0, NOR * sizeof(double));
-                    NRL = (int *)malloc((NOL + NOR) * sizeof(int));
-                    memset(NRL, 0, (NOL + NOR) * sizeof(int));
-                    PLI = (int *)malloc((NOL + NOR) * sizeof(int));
-                    memset(PLI, 0, (NOL + NOR) * sizeof(int));
-                    KOL = (int *)malloc((NOL + NOR) * sizeof(int));
-                    memset(KOL, 0, (NOL + NOR) * sizeof(int));
-                    VOL = (double *)malloc((NOL + NOR) * sizeof(double));
-                    memset(VOL, 0, (NOL + NOR) * sizeof(double));
-                    DLB = (double *)malloc((NOL + NOR) * sizeof(double));
-                    memset(DLB, 0, (NOL + NOR) * sizeof(double));
+                    NRL = (int *)malloc((NOL + 2 * NOR) * sizeof(int));
+                    memset(NRL, 0, (NOL + 2 * NOR) * sizeof(int));
+                    PLI = (int *)malloc((NOL + 2 * NOR) * sizeof(int));
+                    memset(PLI, 0, (NOL + 2 * NOR) * sizeof(int));
+                    KOL = (int *)malloc((NOL + 2 * NOR) * sizeof(int));
+                    memset(KOL, 0, (NOL + 2 * NOR) * sizeof(int));
+                    VOL = (double *)malloc((NOL + 2 * NOR) * sizeof(double));
+                    memset(VOL, 0, (NOL + 2 * NOR) * sizeof(double));
+                    DLB = (double *)malloc((NOL + 2 * NOR) * sizeof(double));
+                    memset(DLB, 0, (NOL + 2 * NOR) * sizeof(double));
                     NRS = (int *)malloc(NOS * sizeof(int));
                     memset(NRS, 0, NOS * sizeof(int));
                     DSB = (double *)malloc(NOS * sizeof(double));
@@ -436,6 +421,26 @@ bool sfInput()
                     memset(IFS, 0, 3 * NOS * sizeof(double));
                     RFE = (double *)malloc(6 * NOR * sizeof(double));
                     memset(RFE, 0, 6 * NOR * sizeof(double));
+
+                    int temp = 0;
+                    for (int i = 0; i < 6; i++)
+                    {
+                        if (TNNSD[i] > temp)
+                        {
+                            temp = TNNSD[i];
+                        }
+                    }
+                    MAXTNN = temp;
+                    ROU = (double *)malloc(NOR * sizeof(double));
+                    NNSD = (int *)malloc(6 * MAXTNN * sizeof(int));
+                    VSD = (double *)malloc(6 * MAXTNN * sizeof(double));
+
+                    memset(NNSD, 0, 6 * MAXTNN * sizeof(int));
+                    memset(VSD, 0, 6 * MAXTNN * sizeof(double));
+                    memset(ROU, 0.0, NOR * sizeof(double));
+                    // ROU[0] = 10;
+                    // ROU[1] = 10;
+                    // ROU[2] = 10;
                 }
                 break;
             case 6:
@@ -881,10 +886,18 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         NRL[NOL + i] = i + 1;
         KOL[NOL + i] = 2;
         DLB[NOL + i] = LCS[0 * NOR + i];
-        VOL[NOL + i] = -1 * AREA[i] * g * ROU[i];
+        VOL[NOL + i] = -1 * AREA[i] * g * ROU[i] * LCS[3 * NOR + i];
         PLI[NOL + i] = 1;
     }
-    for (int i = 0; i < (NOL + NOR); i++)
+    for (int i = 0; i < NOR; i++)
+    {
+        NRL[NOL + NOR + i] = i + 1;
+        KOL[NOL + NOR + i] = 4;
+        DLB[NOL + NOR + i] = LCS[0 * NOR + i];
+        VOL[NOL + NOR + i] = -1 * AREA[i] * g * ROU[i] * sqrt(1 - LCS[3 * NOR + i] * LCS[3 * NOR + i]);
+        PLI[NOL + NOR + i] = 0;
+    }
+    for (int i = 0; i < (NOL + 2 * NOR); i++)
     {
         rod = NRL[i] - 1;                   //the number of rods with load
         memset(rf, 0, 12 * sizeof(double)); //zero clearing
@@ -944,13 +957,13 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         }
     }
 
-    // sfPrintLine2();
-    // for (int i = 0; i < 6 * NFRN; i++)
-    // {
-    //     printf("%20.7f,", lv[i]);
-    //     printf("\n");
-    // }
-    // sfPrintLine2();
+    sfPrintLine2();
+    for (int i = 0; i < 6 * NFRN; i++)
+    {
+        printf("%20.7f,", lv[i]);
+        printf("\n");
+    }
+    sfPrintLine2();
 
     return 0;
 }
@@ -1163,7 +1176,7 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
         gamma += r[i] * r[i];
     }
 
-    for (int n = 0; 1; ++n)
+    for (int n = 0; TRUE; ++n)
     {
         // z = A * p
         for (int i = 0; i < N; i++)
@@ -1385,7 +1398,7 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
     IFS[m + 4] = -RFE[n + 4] + RFE[n + 2] * (LCS[0 * NOR + k - 1] - xp);
     IFS[m + 5] = RFE[n + 5] + RFE[n + 1] * (LCS[0 * NOR + k - 1] - xp);
 
-    for (int i = 0; i < NOL; i++) //for every rods
+    for (int i = 0; i < (NOL + 2 * NOR); i++) //for every rods
     {
         if (NRL[i] == k) //if load is on rod k
         {

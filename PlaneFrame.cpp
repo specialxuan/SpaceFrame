@@ -23,7 +23,7 @@ double *YCN; //Y coordinate of nodes
 int *BNR;        //the beginning node number of rods
 int *ENR;        //the end node number of rods
 double *ELASTIC; //elastic modulus
-double *SHEAR;   //shear modulus
+// double *SHEAR;   //shear modulus
 double *AREA;    //area
 //double *IMY;     //inertia moment of Y axis
 double *IMZ; //inertia moment of Z axis
@@ -235,8 +235,8 @@ bool plInput()
                     memset(ENR, 0, NOR * sizeof(int));
                     ELASTIC = (double *)malloc(NOR * sizeof(double));
                     memset(ELASTIC, 0, NOR * sizeof(double));
-                    SHEAR = (double *)malloc(NOR * sizeof(double));
-                    memset(SHEAR, 0, NOR * sizeof(double));
+                    // SHEAR = (double *)malloc(NOR * sizeof(double));
+                    // memset(SHEAR, 0, NOR * sizeof(double));
                     AREA = (double *)malloc(NOR * sizeof(double));
                     memset(AREA, 0, NOR * sizeof(double));
                     //IMY = (double *)malloc(NOR * sizeof(double));
@@ -275,53 +275,49 @@ bool plInput()
                 if (columnIndex - 2 < TNN)
                     YCN[columnIndex - 2] = atof(data);
                 break;
-            case 9:
+            case 8:
                 if (columnIndex - 2 < NOR)
                     BNR[columnIndex - 2] = atoi(data);
                 break;
-            case 10:
+            case 9:
                 if (columnIndex - 2 < NOR)
                     ENR[columnIndex - 2] = atoi(data);
                 break;
-            case 11:
+            case 10:
                 if (columnIndex - 2 < NOR)
                     ELASTIC[columnIndex - 2] = atof(data);
                 break;
-            case 12:
-                if (columnIndex - 2 < NOR)
-                    SHEAR[columnIndex - 2] = atof(data);
-                break;
-            case 13:
+            case 11:
                 if (columnIndex - 2 < NOR)
                     AREA[columnIndex - 2] = atof(data);
                 break;
 
-            case 15:
+            case 12:
                 if (columnIndex - 2 < NOR)
                     IMZ[columnIndex - 2] = atof(data);
                 break;
 
-            case 17:
+            case 13:
                 if (columnIndex - 2 < NOL)
                     NRL[columnIndex - 2] = atoi(data);
                 break;
-            case 18:
+            case 14:
                 if (columnIndex - 2 < NOL)
                     KOL[columnIndex - 2] = atoi(data);
                 break;
-            case 19:
+            case 15:
                 if (columnIndex - 2 < NOL)
                     VOL[columnIndex - 2] = atof(data);
                 break;
-            case 20:
+            case 16:
                 if (columnIndex - 2 < NOL)
                     DLB[columnIndex - 2] = atof(data);
                 break;
-            case 21:
+            case 17:
                 if (columnIndex - 2 < NOS)
                     NRS[columnIndex - 2] = atoi(data);
                 break;
-            case 22:
+            case 18:
                 if (columnIndex - 2 < NOS)
                     DSB[columnIndex - 2] = atof(data);
                 break;
@@ -396,6 +392,17 @@ bool plBuildTotalStiff(double *ts) //ts is total stiffness matrix
             }
         }
     }
+
+    // plPrintLine2();
+    // for (int i = 0; i < dof; i++)
+    // {
+    //     for (int j = 0; j < dof; j++)
+    //     {
+    //         printf("%15.2f", ts[i * dof + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // plPrintLine2();
 
     return 0;
 }
@@ -637,7 +644,7 @@ bool plBuildLoadVector(double *lv) //lv is the load vector
     for (int i = 0; i < NOL; i++)
     {
         rod = NRL[i] - 1;                  //the number of rods with load
-        memset(rf, 0, 3 * sizeof(double)); //zero clearing
+        memset(rf, 0, 6 * sizeof(double)); //zero clearing
 
         if (plReactionForce(i, &rf[0 * 3], &rf[1 * 3])) //calculate reaction force
         {
@@ -660,11 +667,21 @@ bool plBuildLoadVector(double *lv) //lv is the load vector
         for (int j = 0; j < 2; j++) //add reaction force to load vector
         {
             if (p[j] >= 0) //determine free node
-                for (int m = 0; m < 3; m++)
-                    for (int n = 0; n < 3; n++)
-                        lv[p[j] + m] -= t[m * 3 + n] * rf[j * 3 + n];
+            {
+                lv[p[j]] -= rf[j * 3 + 0] * LCS[1 * NOR + rod] - rf[j * 3 + 1] * LCS[2 * NOR + rod];
+                lv[p[j] + 1] -= rf[j * 3 + 0] * LCS[2 * NOR + rod] + rf[j * 3 + 1] * LCS[1 * NOR + rod];
+                lv[p[j] + 2] -= rf[j * NOR + 2];
+            }
         }
     }
+
+    plPrintLine2();
+    for (int i = 0; i < 3 * NFRN; i++)
+    {
+        printf("%20.7f,", lv[i]);
+        printf("\n");
+    }
+    plPrintLine2();
 
     return 0;
 }
@@ -698,13 +715,14 @@ bool plReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
     // {
     //     t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
     // }
+
     ra = DLB[i] / LCS[0 * NOR + rod]; //x(q) / L
     rb = 1 - ra;                      //1 - x(q) / L
     switch (KOL[i])
     {
     case 1: //vertical concentrating load
         a = rb * rb;
-        rfb[1] = -q * (1 + 2 * ra);
+        rfb[1] = -q * (1 + 2 * ra) * a;
         rfe[1] = -q - rfb[1];
         rfb[2] = a * q * xq;
         rfe[2] = -q * ra * rb * xq;
@@ -1060,9 +1078,9 @@ bool plOutput()
         printf("%15d%15.7f%15.7f\n", i + 1, XCN[i], YCN[i]);
     plPrintLine();
 
-    printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus  Shear modulus    Area  Inertia moment Z axis\n");
+    printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus    Area  Inertia moment Z axis\n");
     for (int i = 0; i < NOR; i++)
-        printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f\n", i + 1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i], IMZ[i]);
+        printf("%15d%15d%15d%15.0f%11.4f%16.7f\n", i + 1, BNR[i], ENR[i], ELASTIC[i], AREA[i], IMZ[i]);
     plPrintLine();
 
     printf("NUMBER OF SECTIONS         NRS            DSB\n");
@@ -1072,12 +1090,12 @@ bool plOutput()
 
     printf("NUMBER OF NODES   Displacement-X Displacement-Y   Diversion\n");
     for (int i = NFIN; i < TNN; i++)
-        printf("%15d%15.7f%15.7f%15.7f\n", i + 1, DON[3 * (i - NFIN)], DON[3 * (i - NFIN) + 1], DON[3 * (i - NFIN) + 2]);
+        printf("%15d%15.10f%15.10f%15.10f\n", i + 1, DON[3 * (i - NFIN)], DON[3 * (i - NFIN) + 1], DON[3 * (i - NFIN) + 2]);
     plPrintLine();
 
     printf("NUMBER OF SECTIONS Axial force    Shear force    Bending moment\n");
     for (int i = 0; i < NOS; i++)
-        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, IFS[3 * i], IFS[3 * i + 1], IFS[3 * i + 2]);
+        printf("%15d%15.7f%15.7f%15.7f\n", i + 1, IFS[3 * i], IFS[3 * i + 1], IFS[3 * i + 2]);
 
     FILE *fp = NULL;
     fp = fopen("plRESULT.csv", "w");
@@ -1106,9 +1124,9 @@ bool plOutput()
     for (int i = 0; i < NOR; i++)
         fprintf(fp, "%f,", ELASTIC[i]);
 
-    fprintf(fp, "\nSHEAR,");
-    for (int i = 0; i < NOR; i++)
-        fprintf(fp, "%f,", SHEAR[i]);
+    // fprintf(fp, "\nSHEAR,");
+    // for (int i = 0; i < NOR; i++)
+    //     fprintf(fp, "%f,", SHEAR[i]);
 
     fprintf(fp, "\nAREA,");
     for (int i = 0; i < NOR; i++)
@@ -1202,7 +1220,7 @@ bool plFree()
     free(BNR);
     free(ENR);
     free(ELASTIC);
-    free(SHEAR);
+    // free(SHEAR);
     free(AREA);
     //  free(IMY);
     free(IMZ);

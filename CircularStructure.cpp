@@ -20,7 +20,7 @@ int main()
     int nor = ((2 * m + 1) * (2 * n + 1) - m * n) * l;
     fprintf(fp, "NOR,%d,\n", nor);
     fprintf(fp, "NOL,%d,\n", (m + 1) * (n + 1));
-    fprintf(fp, "NOS,%d,\n", 10);
+    fprintf(fp, "NOS,%d,\n", (m + 1) * (n + 1));
     
     fprintf(fp, "XCN,");
     for (int i = 0; i < l + 1; i++)
@@ -147,14 +147,14 @@ int main()
     fprintf(fp, "\n");
 
     fprintf(fp, "NRS,");
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < (m + 1) * (n + 1); i++)
     {
-        fprintf(fp, "%d,", rand() % nor);
+        fprintf(fp, "%d,", i + 1);
     }
     fprintf(fp, "\n");
 
     fprintf(fp, "DSB,");
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < (m + 1) * (n + 1); i++)
     {
         fprintf(fp, "%f,", 0.5);
     }

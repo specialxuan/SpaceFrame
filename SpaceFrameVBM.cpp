@@ -7,7 +7,7 @@
 #include <string.h>
 #include <time.h>
 
-double EPS = 1e-10;
+double EPS = 1e-6;
 double MAXTS;
 double MAXLV;
 
@@ -301,12 +301,12 @@ int main()
             return 1;
         }
 
-    sfPrintLine2();
-    for (int i = 0; i < 6 * NOS; i += 1)
-    {
-        printf("%15.15f\n", IFS[i]);
-    }
-    sfPrintLine2();
+    // sfPrintLine2();
+    // for (int i = 0; i < 6 * NOS; i += 1)
+    // {
+    //     printf("%15.15f\n", IFS[i]);
+    // }
+    // sfPrintLine2();
 
     sfOutput(); //output data.
     sfFree();

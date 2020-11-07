@@ -315,7 +315,7 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -552,16 +552,16 @@ bool sfBuildTotalStiff(double *ts) //ts is total stiffness matrix
         }
     }
 
-    // sfPrintLine2();
-    // for (int i = 0; i < dof; i++)
-    // {
-    //     for (int j = 0; j < dof; j++)
-    //     {
-    //         printf("%15.2f", ts[i * dof + j]);
-    //     }
-    //     printf("\n");
-    // }
-    // sfPrintLine2();
+    sfPrintLine2();
+    for (int i = 0; i < dof; i++)
+    {
+        for (int j = 0; j < dof; j++)
+        {
+            printf("%15.2f", ts[i * dof + j]);
+        }
+        printf("\n");
+    }
+    sfPrintLine2();
 
     return 0;
 }
@@ -829,13 +829,13 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         }
     }
 
-    // sfPrintLine2();
-    // for (int i = 0; i < 6 * NFRN; i++)
-    // {
-    //     printf("%20.7f,", lv[i]);
-    //     printf("\n");
-    // }
-    // sfPrintLine2();
+    sfPrintLine2();
+    for (int i = 0; i < 6 * NFRN; i++)
+    {
+        printf("%20.7f,", lv[i]);
+        printf("\n");
+    }
+    sfPrintLine2();
 
     return 0;
 }

@@ -1,4 +1,5 @@
 #include <iostream>
+using namespace std;
 
 class SpaceFrame
 {
@@ -99,19 +100,20 @@ public:
 
     //input
     bool sfInput();
+    //calculate
+    bool sfCalculate();
     //output
     bool sfOutput();
+    //set solving method
+    bool sfSetSolve(int);
 };
-
-//solve equation of matrix by cholesky
-bool cholesky(double *, double *, double *, int);
-//solve equation of matrix by conjugate gradient
-bool solve_conjugate_gradient(double *A, double *b, double *x, int N);
-//solve equation of matrix by conjugate gradient parallel
-bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N);
 
 int main()
 {
+    SpaceFrame Frame;
+    Frame.sfInput();
+    Frame.sfCalculate();
+    Frame.sfOutput();
 
     return 0;
 }
@@ -155,14 +157,33 @@ bool SpaceFrame::sfInput()
     return 0;
 }
 
+bool SpaceFrame::sfCalculate()
+{
+    return 0;
+}
+
 bool SpaceFrame::sfOutput()
 {
     return 0;
 }
 
+bool SpaceFrame::sfSetSolve(int solve)
+{
+    if (solve == 0 || solve == 1 || solve == 2)
+    {
+        sfSolve = solve;
+    }
+    else
+    {
+        cout << "Seting solving method failed!\n";
+    }
+    
+    return 0;
+}
+
 bool SpaceFrame::sfPrintLine()
 {
-    printf("--------------------------------------------------------------------------\n");
+    cout << "--------------------------------------------------------------------------\n";
     return 0;
     
 }

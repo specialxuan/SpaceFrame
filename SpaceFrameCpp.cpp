@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 using namespace std;
 
 class SpaceFrame
@@ -56,13 +57,71 @@ private:
     double *LoadVector;     //vector of loads
     double *Displacement;   //displacement of nodes
 
-    int sfError; //error type
-    int sfSolve; //0 is conjugate gradient par, 1 is conjugate gradient, 2 is cohlesky
+    int *IV;     //the location of diagonal element
+    int NSI;     //upper limit
+    int MAXIBDW; //half bandwidth
 
+    int sfSolve; //0 is conjugate gradient par, 1 is conjugate gradient, 2 is cohlesky
+    double EPS = 1e-15;
+
+    //calculate the length sine and cosine of rods
+    bool sfLCosSin()
+    {
+        for (int k = 0; k < NOR; k++)
+        {
+            int i = rods[k].BNR - 1, j = rods[k].ENR - 1; //index of beginning and end nodes of rods
+            rods[k].LCS[1] = nodes[j].XCN - nodes[i].XCN;
+            rods[k].LCS[2] = nodes[j].YCN - nodes[i].YCN;
+            rods[k].LCS[3] = nodes[j].ZCN - nodes[i].ZCN;
+            rods[k].LCS[0] = sqrt(rods[k].LCS[1] * rods[k].LCS[1] + rods[k].LCS[2] * rods[k].LCS[2] + rods[k].LCS[3] * rods[k].LCS[3]);
+            if (rods[k].LCS[0] < EPS)
+            {
+                sfPrintError(8);
+                return 1;
+            }
+            rods[k].LCS[1] = rods[k].LCS[1] / rods[k].LCS[0];
+            rods[k].LCS[2] = rods[k].LCS[2] / rods[k].LCS[0];
+            rods[k].LCS[3] = rods[k].LCS[3] / rods[k].LCS[0];
+        }
+
+        return 0;
+    }
+    //build variable bandwith matrix
+    bool sfVarBandwith()
+    {
+        int it = 0, mm = 0;
+        int *peribdw = new int[TNN] ();
+        IV = new int[6 * NFRN] ();
+        for (int i = 0; i < NOR; i++)
+        {
+            if (rods[i].BNR > NFIN)
+            {
+                mm = rods[i].ENR - rods[i].BNR;
+                if (mm > peribdw[rods[i].ENR - 1])
+                    peribdw[rods[i].ENR - 1] = mm;
+            }
+        }
+        for (int i = NFIN; i < TNN; i++)
+        {
+            if (peribdw[i] > MAXIBDW)
+                MAXIBDW = peribdw[i];
+            for (int j = 1; j <= 6; j++)
+            {
+                it = it + 1;
+                if (it == 1)
+                    IV[it - 1] = 6 * peribdw[i] + j;
+                else
+                    IV[it - 1] = IV[it - 2] + 6 * peribdw[i] + j;
+            }
+        }
+        MAXIBDW = 6 * MAXIBDW + 5;
+        NSI = IV[6 * NFRN - 1];
+        delete [] peribdw;
+        
+        return 0;
+    }
     //build total stiffness matrix
     bool sfBuildTotalStiff();
-    //calculate the length sine and cosine of rods
-    bool sfLCosSin();
     //build unit stiffness matrix
     bool sfBuildUnitStiff();
     //build local stiffness matrix
@@ -86,11 +145,19 @@ private:
     //calculate internal force of displacement
     bool sfDisplacementForce();
     //print"----------------------------------------"
-    bool sfPrintLine();
+    bool sfPrintLine()
+    {
+        cout << "--------------------------------------------------------------------------\n";
+        return 0;
+    }
     //print"****************************************"
-    bool sfPrintLine2();
+    bool sfPrintLine2()
+    {
+        cout << "**************************************************************************\n";
+        return 0;
+    }
     //print error
-    bool sfPrintError();
+    bool sfPrintError(int error);
 
 public:
     //initialize SpaceFrame
@@ -136,20 +203,27 @@ SpaceFrame::SpaceFrame()
     LoadVector = NULL;
     Displacement = NULL;
 
-    sfError = 0;
+    IV = NULL;
+    NSI = 0;    
+    MAXIBDW = 0;
+
     sfSolve = 0;
 }
 
+//-------------------------------------
+//--------- public funcitons ----------
+//-------------------------------------
+
 SpaceFrame::~SpaceFrame()
 {
-    delete nodes;
-    delete rods;
-    delete loads;
-    delete sections;
+    delete [] nodes;
+    delete [] rods;
+    delete [] loads;
+    delete [] sections;
 
-    delete TotalStiffness;
-    delete LoadVector;
-    delete Displacement;
+    delete [] TotalStiffness;
+    delete [] LoadVector;
+    delete [] Displacement;
 }
 
 bool SpaceFrame::sfInput()
@@ -178,23 +252,5 @@ bool SpaceFrame::sfSetSolve(int solve)
         cout << "Seting solving method failed!\n";
     }
     
-    return 0;
-}
-
-bool SpaceFrame::sfPrintLine()
-{
-    cout << "--------------------------------------------------------------------------\n";
-    return 0;
-    
-}
-
-bool SpaceFrame::sfPrintLine2()
-{
-    cout << "**************************************************************************\n";
-    return 0;
-}
-
-bool SpaceFrame::sfPrintError()
-{
     return 0;
 }

@@ -55,6 +55,42 @@ private:
     double *LoadVector;     //vector of loads
     double *Displacement;   //displacement of nodes
 
+    int sfError; //error type
+    int sfSolve; //0 is conjugate gradient par, 1 is conjugate gradient, 2 is cohlesky
+
+    //build total stiffness matrix
+    bool sfBuildTotalStiff();
+    //calculate the length sine and cosine of rods
+    bool sfLCosSin();
+    //build unit stiffness matrix
+    bool sfBuildUnitStiff();
+    //build local stiffness matrix
+    bool sfBuildLocalStiff();
+    //build transpose matrix
+    bool sfBuildTrans();
+    //build load vector
+    bool sfBuildLoadVector();
+    //calculate reaction force
+    bool sfReactionForce();
+    //solve equation of matrix by cholesky
+    bool sfCholesky();
+    //solve equation of matrix by conjugate gradient
+    bool sfConjugateGradient();
+    //solve equation of matrix by conjugate gradient parallel
+    bool sfConjugateGradientPar();
+    //calculate internal force of rods
+    bool sfInternalForce();
+    //calculate internal force of cantilever beam
+    bool sfCtlInternalForce();
+    //calculate internal force of displacement
+    bool sfDisplacementForce();
+    //print"----------------------------------------"
+    bool sfPrintLine();
+    //print"****************************************"
+    bool sfPrintLine2();
+    //print error
+    bool sfPrintError();
+
 public:
     //initialize SpaceFrame
     SpaceFrame();
@@ -66,6 +102,13 @@ public:
     //output
     bool sfOutput();
 };
+
+//solve equation of matrix by cholesky
+bool cholesky(double *, double *, double *, int);
+//solve equation of matrix by conjugate gradient
+bool solve_conjugate_gradient(double *A, double *b, double *x, int N);
+//solve equation of matrix by conjugate gradient parallel
+bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N);
 
 int main()
 {
@@ -90,6 +133,9 @@ SpaceFrame::SpaceFrame()
     TotalStiffness = NULL;
     LoadVector = NULL;
     Displacement = NULL;
+
+    sfError = 0;
+    sfSolve = 0;
 }
 
 SpaceFrame::~SpaceFrame()
@@ -98,6 +144,7 @@ SpaceFrame::~SpaceFrame()
     delete rods;
     delete loads;
     delete sections;
+
     delete TotalStiffness;
     delete LoadVector;
     delete Displacement;
@@ -109,6 +156,24 @@ bool SpaceFrame::sfInput()
 }
 
 bool SpaceFrame::sfOutput()
+{
+    return 0;
+}
+
+bool SpaceFrame::sfPrintLine()
+{
+    printf("--------------------------------------------------------------------------\n");
+    return 0;
+    
+}
+
+bool SpaceFrame::sfPrintLine2()
+{
+    cout << "**************************************************************************\n";
+    return 0;
+}
+
+bool SpaceFrame::sfPrintError()
 {
     return 0;
 }

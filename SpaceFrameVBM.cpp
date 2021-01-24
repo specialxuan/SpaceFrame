@@ -956,7 +956,7 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         PLI[NOL + NOR + i] = 0;
     }
 
-    printf("%f\n", LCS[3]);
+    // printf("%f\n", LCS[3]);
 
     // for (int i = 0; i < NOL + 2 * NOR; i++)
     // {

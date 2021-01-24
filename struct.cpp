@@ -44,7 +44,6 @@ Rod *rods; //parameters of nodes
 // double *XCN; //X coordinate of nodes
 // double *YCN; //Y coordinate of nodes
 // double *ZCN; //Z coordinate of nodes
-
 // int *BNR;        //the beginning node number of rods
 // int *ENR;        //the end node number of rods
 // double *ELASTIC; //elastic modulus
@@ -584,7 +583,7 @@ bool sfInput()
                     VSD[columnIndex - 2] = atof(data);
                 break;
             case 30:
-                if (columnIndex == 2 )
+                if (columnIndex == 2)
                     EPS = atof(data);
                 break;
 
@@ -814,14 +813,14 @@ bool sfBuildLocalStiff(int k, int flag, double *rd) //k is the number of rods, f
 
     double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = rods[k].LCS[0];
 
-    a = rods[k].ELASTIC * rods[k].AREA / l;         //EA/1
+    a = rods[k].ELASTIC * rods[k].AREA / l;              //EA/1
     b = rods[k].SHEAR * (rods[k].IMY + rods[k].IMZ) / l; //GJ(p)/1
-    c = 4 * rods[k].ELASTIC * rods[k].IMY / l;      //4EJ(y)/1
-    d = c / 2 * 3 / l;                    //6EJ(z)/l/l
-    e = 2 * d / l;                        //12EJ(y)/l/l/l
-    f = 4 * rods[k].ELASTIC * rods[k].IMZ / l;      //4EJ(z)/l
-    g = f / 2 * 3 / l;                    //6EJ(Z)/l/l
-    h = 2 * g / l;                        //12EJ(z)/l/l/l
+    c = 4 * rods[k].ELASTIC * rods[k].IMY / l;           //4EJ(y)/1
+    d = c / 2 * 3 / l;                                   //6EJ(z)/l/l
+    e = 2 * d / l;                                       //12EJ(y)/l/l/l
+    f = 4 * rods[k].ELASTIC * rods[k].IMZ / l;           //4EJ(z)/l
+    g = f / 2 * 3 / l;                                   //6EJ(Z)/l/l
+    h = 2 * g / l;                                       //12EJ(z)/l/l/l
 
     switch (flag)
     {
@@ -894,11 +893,11 @@ bool sfBuildTrans(int k, double *t) //k is the number of rods, t is transpose ma
 
     memset(t, 0, 36 * sizeof(double));
 
-    coa = rods[k].LCS[1]; //cosine alpha
-    cob = rods[k].LCS[2]; //cosine beta
-    coc = rods[k].LCS[3]; //cosine gama
-    sit = sin(rods[k].THETA);    //sine theta
-    cot = cos(rods[k].THETA);    //cosine theta
+    coa = rods[k].LCS[1];     //cosine alpha
+    cob = rods[k].LCS[2];     //cosine beta
+    coc = rods[k].LCS[3];     //cosine gama
+    sit = sin(rods[k].THETA); //sine theta
+    cot = cos(rods[k].THETA); //cosine theta
 
     if (fabs(coc - 1) < EPS) //vertical(z axis positive direction) rods' transpose matrix
     {
@@ -967,7 +966,6 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
     // {
     //     printf("%f\n", VOL[i]);
     // }
-    
 
     for (int i = 0; i < (NOL + 2 * NOR); i++)
     {
@@ -1074,7 +1072,7 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
         t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
     }
     ra = DLB[i] / rods[rod].LCS[0]; //x(q) / L
-    rb = 1 - ra;                      //1 - x(q) / L
+    rb = 1 - ra;                    //1 - x(q) / L
     switch (KOL[i])
     {
     case 1: //vertical concentrating load
@@ -1480,7 +1478,7 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
     }
 
     // int n = 6 * (k - 1); //n is the matching place of rods
-    double tf[6] = {0};  //tf is temperary variable
+    double tf[6] = {0}; //tf is temperary variable
 
     IFS[m] = rods[k - 1].RFE[0]; //calculate internal force cause by reaction force at the end of rods
     IFS[m + 1] = -rods[k - 1].RFE[1];

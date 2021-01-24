@@ -366,7 +366,7 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf_1.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -981,7 +981,7 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         }
         for (int j = 0; j < 6; j++) //add reaction force to RFE
         {
-            rods[j].RFE[6] += rf[1 * 6 + j];
+            rods[rod].RFE[j] += rf[1 * 6 + j];
         }
         if (sfBuildTrans(rod, t)) //build transpose matrix
         {
@@ -1479,15 +1479,15 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
         return 0;
     }
 
-    int n = 6 * (k - 1); //n is the matching place of rods
+    // int n = 6 * (k - 1); //n is the matching place of rods
     double tf[6] = {0};  //tf is temperary variable
 
     IFS[m] = rods[k - 1].RFE[0]; //calculate internal force cause by reaction force at the end of rods
     IFS[m + 1] = -rods[k - 1].RFE[1];
     IFS[m + 2] = -rods[k - 1].RFE[2];
     IFS[m + 3] = rods[k - 1].RFE[3];
-    IFS[m + 4] = -rods[k - 1].RFE[4] + rods[k - 1].RFE[2] * (LCS[0 * NOR + k - 1] - xp);
-    IFS[m + 5] = rods[k - 1].RFE[5] + rods[k - 1].RFE[1] * (LCS[0 * NOR + k - 1] - xp);
+    IFS[m + 4] = -rods[k - 1].RFE[4] + rods[k - 1].RFE[2] * (rods[k - 1].LCS[0] - xp);
+    IFS[m + 5] = rods[k - 1].RFE[5] + rods[k - 1].RFE[1] * (rods[k - 1].LCS[0] - xp);
 
     for (int i = 0; i < (NOL + 2 * NOR); i++) //for every rods
     {
@@ -1519,8 +1519,8 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
     IFS[m + 5] += -tf[5] + tf[1] * xp;
 
     double moment = sqrt(IFS[m + 4] * IFS[m + 4] + IFS[m + 5] * IFS[m + 5]);
-    double sigma_1 = moment * sqrt(AREA[k - 1] / 3.1415926) / IMZ[k - 1] + IFS[m] / ELASTIC[k - 1] / AREA[k - 1];
-    double sigma_2 = -moment * sqrt(AREA[k - 1] / 3.1415926) / IMZ[k - 1] + IFS[m] / ELASTIC[k - 1] / AREA[k - 1];
+    double sigma_1 = moment * sqrt(rods[k - 1].AREA / 3.1415926) / rods[k - 1].IMZ + IFS[m] / rods[k - 1].ELASTIC / rods[k - 1].AREA;
+    double sigma_2 = -moment * sqrt(rods[k - 1].AREA / 3.1415926) / rods[k - 1].IMZ + IFS[m] / rods[k - 1].ELASTIC / rods[k - 1].AREA;
 
     if (sigma_1 > SIGMA_1[m / 6] || sigma_2 < SIGMA_2[m / 6])
         DANGER[m / 6] = 1;
@@ -1620,8 +1620,8 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
         return 1;
     }
 
-    p[0] = 6 * (BNR[k - 1] - NFIN - 1); // tag: match the displacement with nods
-    p[1] = 6 * (ENR[k - 1] - NFIN - 1);
+    p[0] = 6 * (rods[k - 1].BNR - NFIN - 1); // tag: match the displacement with nods
+    p[1] = 6 * (rods[k - 1].ENR - NFIN - 1);
 
     for (int i = 0; i < 2; i++)
     {
@@ -1683,7 +1683,7 @@ bool sfOutput()
 
     printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus  Shear modulus    Area   Inertia moment Y axis  Inertia moment Z axis\n");
     for (int i = 0; i < NOR; i++)
-        printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f%23.5f\n", i + 1, BNR[i], ENR[i], ELASTIC[i], SHEAR[i], AREA[i], IMY[i], IMZ[i]);
+        printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f%23.5f\n", i + 1, rods[i].BNR, rods[i].ENR, rods[i].ELASTIC, rods[i].SHEAR, rods[i].AREA, rods[i].IMY, rods[i].IMZ);
     sfPrintLine();
     printf("NUMBER OF SECTIONS         PLI            DLB\n");
     for (int i = 0; i < NOS; i++)
@@ -1723,7 +1723,7 @@ bool sfOutput()
     }
 
     FILE *fp = NULL;
-    fp = fopen("sfRESULT.csv", "w");
+    fp = fopen("sfResultStruct.csv", "w");
     fprintf(fp, "TITLE\n");
     fprintf(fp, "TNN,%d\nNFIN,%d\nNFRN,%d\nNOR,%d\nNOL,%d\nNOS,%d", TNN, NFIN, NFRN, NOR, NOL, NOS);
 
@@ -1743,31 +1743,31 @@ bool sfOutput()
 
     fprintf(fp, "\nBNR->ENR,");
     for (int i = 0; i < NOR; i++)
-        fprintf(fp, "p%d -> p%d,", BNR[i], ENR[i]);
+        fprintf(fp, "p%d -> p%d,", rods[i].BNR, rods[i].ENR);
 
     fprintf(fp, "\nELASTIC,");
     for (int i = 0; i < NOR; i++)
-        fprintf(fp, "%f,", ELASTIC[i]);
+        fprintf(fp, "%f,", rods[i].ELASTIC);
 
     fprintf(fp, "\nSHEAR,");
     for (int i = 0; i < NOR; i++)
-        fprintf(fp, "%f,", SHEAR[i]);
+        fprintf(fp, "%f,", rods[i].SHEAR);
 
     fprintf(fp, "\nAREA,");
     for (int i = 0; i < NOR; i++)
-        fprintf(fp, "%f,", AREA[i]);
+        fprintf(fp, "%f,", rods[i].AREA);
 
     fprintf(fp, "\nIMY,");
     for (int i = 0; i < NOR; i++)
-        fprintf(fp, "%f,", IMY[i]);
+        fprintf(fp, "%f,", rods[i].IMY);
 
     fprintf(fp, "\nIMZ,");
     for (int i = 0; i < NOR; i++)
-        fprintf(fp, "%f,", IMZ[i]);
+        fprintf(fp, "%f,", rods[i].IMZ);
 
     fprintf(fp, "\nTHETA,");
     for (int i = 0; i < NOR; i++)
-        fprintf(fp, "%f,", THETA[i]);
+        fprintf(fp, "%f,", rods[i].THETA);
 
     //------------LOADS-------------------------------------------------
     fprintf(fp, "\nLOADS,");
@@ -1840,17 +1840,19 @@ bool sfOutput()
 bool sfFree()
 {
     delete[] nodes;
+    delete[] rods;
     // free(XCN);
     // free(YCN);
     // free(ZCN);
-    free(BNR);
-    free(ENR);
-    free(ELASTIC);
-    free(SHEAR);
-    free(AREA);
-    free(IMY);
-    free(IMZ);
-    free(THETA);
+    // free(BNR);
+    // free(ENR);
+    // free(ELASTIC);
+    // free(SHEAR);
+    // free(AREA);
+    // free(IMY);
+    // free(IMZ);
+    // free(THETA);
+    // free(RFE);
     free(NRL);
     free(PLI);
     free(KOL);
@@ -1860,7 +1862,6 @@ bool sfFree()
     free(DSB);
     free(DON);
     free(IFS);
-    free(RFE);
 
     return 0;
 }

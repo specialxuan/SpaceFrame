@@ -346,7 +346,7 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf_1.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }

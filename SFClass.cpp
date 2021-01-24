@@ -1341,7 +1341,7 @@ bool SpaceFrame::sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("source&result/sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -1630,7 +1630,7 @@ bool SpaceFrame::sfOutput()
     }
 
     FILE *fp = NULL;
-    fp = fopen("sfResultClass.csv", "w");
+    fp = fopen("source&result/sfResultClass.csv", "w");
     fprintf(fp, "TITLE\n");
     fprintf(fp, "TNN,%d\nNFIN,%d\nNFRN,%d\nNOR,%d\nNOL,%d\nNOS,%d", TNN, NFIN, NFRN, NOR, NOL, NOS);
 

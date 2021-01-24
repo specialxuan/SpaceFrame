@@ -1,15 +1,2 @@
-.vscode/c_cpp_properties.json
-.vscode/launch.json
-.vscode/settings.json
-.vscode/tasks.json
-test.exe
-Xuan.exe
-SpaceFrame.exe
-CircularStructure.exe
-SpaceFrameVBM.exe
+exe/
 .vscode/
-SFClass.exe
-sfRESULT.csv
-sfResultClass.csv
-struct.exe
-sfResultStruct.csv

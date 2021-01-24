@@ -41,20 +41,6 @@ struct Rod //parameters of nodes
 };
 Rod *rods; //parameters of nodes
 
-// double *XCN; //X coordinate of nodes
-// double *YCN; //Y coordinate of nodes
-// double *ZCN; //Z coordinate of nodes
-// int *BNR;        //the beginning node number of rods
-// int *ENR;        //the end node number of rods
-// double *ELASTIC; //elastic modulus
-// double *SHEAR;   //shear modulus
-// double *AREA;    //area
-// double *IMY;     //inertia moment of Y axis
-// double *IMZ;     //inertia moment of Z axis
-// double *THETA;   //theta the deflection angle of main inertia axis
-// double *LCS; //the length, sine and cosine of rods
-// double *RFE; //the reaction force of the end node
-
 int *NRL;    //the number of rods with load
 int *PLI;    //the plane of the load's in
 int *KOL;    //the kind of load
@@ -151,113 +137,6 @@ int main()
     else
         printf("Data input succeeded!\n");
 
-    // int i = 0;
-    // printf("TNN: %d\n", TNN);
-    // printf("NFIN: %d\n", NFIN);
-    // printf("NOR: %d\n", NOR);
-    // printf("NOL:% d\n", NOL);
-    // printf("NOS: %d\nXCN ", NOS);
-    // for (i = 0; i < TNN; i++)
-    // {
-    //     printf("%f ", XCN[i]);
-    // }
-    // printf("\nYCN ");
-    // for (i = 0; i < TNN; i++)
-    // {
-    //     printf("%f ", YCN[i]);
-    // }
-    // printf("\nZCN ");
-    // for (i = 0; i < TNN; i++)
-    // {
-    //     printf("%f ", ZCN[i]);
-    // }
-    // printf("\nBNR ");
-    // for (i = 0; i < NOR; i++)
-    // {
-    //     printf("%d ", BNR[i]);
-    // }
-    // printf("\nENR ");
-    // for (i = 0; i < NOR; i++)
-    // {
-    //     printf("%d ", ENR[i]);
-    // }
-    // printf("\nELASTIC ");
-    // for (i = 0; i < NOR; i++)
-    // {
-    //     printf("%f ", ELASTIC[i]);
-    // }
-    // printf("\nSHEAR ");
-    // for (i = 0; i < NOR; i++)
-    // {
-    //     printf("%f ", SHEAR[i]);
-    // }
-    // printf("\nAREA ");
-    // for (i = 0; i < NOR; i++)
-    // {
-    //     printf("%f ", AREA[i]);
-    // }
-    // printf("\nIMY ");
-    // for (i = 0; i < NOR; i++)
-    // {
-    //     printf("%.11f ", IMY[i]);
-    // }
-    // printf("\nIMZ ");
-    // for (i = 0; i < NOR; i++)
-    // {
-    //     printf("%.11f ", IMZ[i]);
-    // }
-    // printf("\nTHETA ");
-    // for (i = 0; i < NOR; i++)
-    // {
-    //     printf("%f ", THETA[i]);
-    // }
-    // printf("\nNRL ");
-    // for (i = 0; i < NOL; i++)
-    // {
-    //     printf("%d ", NRL[i]);
-    // }
-    // printf("\nPLI ");
-    // for (i = 0; i < NOL; i++)
-    // {
-    //     printf("%d ", PLI[i]);
-    // }
-    // printf("\nKOL ");
-    // for (i = 0; i < NOL; i++)
-    // {
-    //     printf("%d ", KOL[i]);
-    // }
-    // printf("\nVOL ");
-    // for (i = 0; i < NOL; i++)
-    // {
-    //     printf("%f ", VOL[i]);
-    // }
-    // printf("\nDLB ");
-    // for (i = 0; i < NOL; i++)
-    // {
-    //     printf("%f ", DLB[i]);
-    // }
-    // printf("\nNRS ");
-    // for (i = 0; i < NOS; i++)
-    // {
-    //     printf("%d ", NRS[i]);
-    // }
-    // printf("\nDSB ");
-    // for (i = 0; i < NOS; i++)
-    // {
-    //     printf("%f ", DSB[i]);
-    // }
-    // printf("\nSIGMA_1");
-    // for (i = 0; i < NOS; i++)
-    // {
-    //     printf("%f ", SIGMA_1[i]);
-    // }
-    // printf("\nSIGMA_2");
-    // for (i = 0; i < NOS; i++)
-    // {
-    //     printf("%f ", SIGMA_2[i]);
-    // }
-    // printf("\n");
-
     int dof = 6 * NFRN;
 
     lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
@@ -285,25 +164,6 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    // if (sfCholesky(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    // {
-    //     sfPrintError(4);
-    //     printf("\nPress any key to exit\n");
-    //     value = getchar();
-    //     return 1;
-    // }
-    // else
-    //     printf("Solving equation succeeded!\n");
-    // if (solve_conjugate_gradient(ts, lv, DON, 6 * NFRN)) //solve matrix equation
-    // {
-    //     sfPrintError(4);
-    //     printf("\nPress any key to exit\n");
-    //     value = getchar();
-    //     return 1;
-    // }
-    // else
-    //     printf("Solving equation succeeded!\n");
-
     if (solve_conjugate_gradient_par(TS, lv, DON, 6 * NFRN)) //solve matrix equation
     {
         sfPrintError(4);
@@ -318,14 +178,6 @@ int main()
     free(TS);
     free(lv);
 
-    // sfPrintLine2();
-    // for (int i = 0; i < 6 * NFRN; i++)
-    // {
-    //     printf("%15.15f", DON[i]);
-    //     printf("\n");
-    // }
-    // sfPrintLine2();
-
     for (int i = 0; i < NOS; i++)
         if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
         {
@@ -335,13 +187,6 @@ int main()
 
             return 1;
         }
-
-    // sfPrintLine2();
-    // for (int i = 0; i < 6 * NOS; i += 1)
-    // {
-    //     printf("%15.15f\n", IFS[i]);
-    // }
-    // sfPrintLine2();
 
     sfOutput(); //output data.
     sfFree();
@@ -416,30 +261,7 @@ bool sfInput()
                     NOS = atoi(data);
                     nodes = new Node[TNN]();
                     rods = new Rod[NOR]();
-                    // XCN = (double *)malloc(TNN * sizeof(double));
-                    // memset(XCN, 0, TNN * sizeof(double));
-                    // YCN = (double *)malloc(TNN * sizeof(double));
-                    // memset(YCN, 0, TNN * sizeof(double));
-                    // ZCN = (double *)malloc(TNN * sizeof(double));
-                    // memset(ZCN, 0, TNN * sizeof(double));
-                    // BNR = (int *)malloc(NOR * sizeof(int));
-                    // memset(BNR, 0, NOR * sizeof(int));
-                    // ENR = (int *)malloc(NOR * sizeof(int));
-                    // memset(ENR, 0, NOR * sizeof(int));
-                    // ELASTIC = (double *)malloc(NOR * sizeof(double));
-                    // memset(ELASTIC, 0, NOR * sizeof(double));
-                    // SHEAR = (double *)malloc(NOR * sizeof(double));
-                    // memset(SHEAR, 0, NOR * sizeof(double));
-                    // AREA = (double *)malloc(NOR * sizeof(double));
-                    // memset(AREA, 0, NOR * sizeof(double));
-                    // IMY = (double *)malloc(NOR * sizeof(double));
-                    // memset(IMY, 0, NOR * sizeof(double));
-                    // IMZ = (double *)malloc(NOR * sizeof(double));
-                    // memset(IMY, 0, NOR * sizeof(double));
-                    // THETA = (double *)malloc(NOR * sizeof(double));
-                    // memset(THETA, 0, NOR * sizeof(double));
-                    // RFE = (double *)malloc(6 * NOR * sizeof(double));
-                    // memset(RFE, 0, 6 * NOR * sizeof(double));
+
                     ROU = (double *)malloc(NOR * sizeof(double));
                     memset(ROU, 0.0, NOR * sizeof(double));
                     NRL = (int *)malloc((NOL + 2 * NOR) * sizeof(int));
@@ -504,7 +326,6 @@ bool sfInput()
                 if (columnIndex - 2 < NOR)
                 {
                     ROU[columnIndex - 2] = atof(data);
-                    // printf("%f\n", ROU[columnIndex - 2]);
                 }
                 break;
             case 15:
@@ -559,7 +380,6 @@ bool sfInput()
                 if (columnIndex - 2 < 6)
                 {
                     TNNSD[columnIndex - 2] = atoi(data);
-                    // printf("%d\n", TNNSD[columnIndex - 2]);
                     if (TNNSD[columnIndex - 2] > MAXTNN)
                         MAXTNN = TNNSD[columnIndex - 2];
                 }
@@ -610,8 +430,6 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
 
     TS = (double *)malloc(NSI * sizeof(double)); //allocate memory for total stiffness matrix
     memset(TS, 0, NSI * sizeof(double));
-    // LCS = (double *)malloc(4 * NOR * sizeof(double)); //allocate memory for rods' parameter
-    // memset(LCS, 0, 4 * NOR * sizeof(double));
 
     if (sfLCosSin()) //calculate the length, cosine and sine of all rods
     {
@@ -664,17 +482,6 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
         if (fabs(TS[i]) > MAXTS)
             MAXTS = TS[i];
     }
-
-    // sfPrintLine2();
-    // for (int i = 0; i < dof; i++)
-    // {
-    //     for (int j = 0; j < dof; j++)
-    //     {
-    //         printf("%15.2f", ts[i * dof + j]);
-    //     }
-    //     printf("\n");
-    // }
-    // sfPrintLine2();
 
     return 0;
 }
@@ -961,12 +768,6 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
         PLI[NOL + NOR + i] = 0;
     }
 
-    // printf("%f\n", LCS[3]);
-    // for (int i = 0; i < NOL + 2 * NOR; i++)
-    // {
-    //     printf("%f\n", VOL[i]);
-    // }
-
     for (int i = 0; i < (NOL + 2 * NOR); i++)
     {
         rod = NRL[i] - 1;                   //the number of rods with load
@@ -1026,14 +827,6 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
             }
         }
     }
-
-    // sfPrintLine2();
-    // for (int i = 0; i < 6 * NFRN; i++)
-    // {
-    //     printf("%20.7f,", lv[i]);
-    //     printf("\n");
-    // }
-    // sfPrintLine2();
 
     for (int i = 0; i < 6 * NFRN; i++)
         if (fabs(lv[i]) > MAXLV)
@@ -1477,7 +1270,6 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
         return 0;
     }
 
-    // int n = 6 * (k - 1); //n is the matching place of rods
     double tf[6] = {0}; //tf is temperary variable
 
     IFS[m] = rods[k - 1].RFE[0]; //calculate internal force cause by reaction force at the end of rods
@@ -1704,7 +1496,6 @@ bool sfOutput()
     printf("DANGEROUS SECTIONS:");
     for (int i = 0; i < NOS; i++)
     {
-        // printf("&&%d&&", DANGER[i]);
         if (DANGER[i])
         {
             printf("%15d", i + 1);
@@ -1839,18 +1630,6 @@ bool sfFree()
 {
     delete[] nodes;
     delete[] rods;
-    // free(XCN);
-    // free(YCN);
-    // free(ZCN);
-    // free(BNR);
-    // free(ENR);
-    // free(ELASTIC);
-    // free(SHEAR);
-    // free(AREA);
-    // free(IMY);
-    // free(IMZ);
-    // free(THETA);
-    // free(RFE);
     free(NRL);
     free(PLI);
     free(KOL);

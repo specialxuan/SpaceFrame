@@ -61,7 +61,7 @@ private:
     int NSI;     //upper limit
     int MAXIBDW; //half bandwidth
 
-    int sfSolve; //0 is conjugate gradient par, 1 is conjugate gradient, 2 is cohlesky
+    int sfSolve; //0 is conjugate gradient par, 1 is conjugate gradient, 2 is cholesky
     double EPS = 1e-15;
 
     //calculate the length sine and cosine of rods
@@ -74,7 +74,7 @@ private:
             rods[k].LCS[2] = nodes[j].YCN - nodes[i].YCN;
             rods[k].LCS[3] = nodes[j].ZCN - nodes[i].ZCN;
             rods[k].LCS[0] = sqrt(rods[k].LCS[1] * rods[k].LCS[1] + rods[k].LCS[2] * rods[k].LCS[2] + rods[k].LCS[3] * rods[k].LCS[3]);
-            if (rods[k].LCS[0] < EPS)
+            if (rods[k].LCS[0] < EPS) //if the length of rod is too small, then return error
             {
                 sfPrintError(8);
                 return 1;
@@ -90,20 +90,20 @@ private:
     bool sfVarBandwith()
     {
         int it = 0, mm = 0;
-        int *peribdw = new int[TNN] ();
-        IV = new int[6 * NFRN] ();
-        for (int i = 0; i < NOR; i++)
+        int *peribdw = new int[TNN](); //bandwidth per line in total stiffness matrix
+        IV = new int[6 * NFRN]();
+        for (int i = 0; i < NOR; i++) //for each rod
         {
             if (rods[i].BNR > NFIN)
             {
-                mm = rods[i].ENR - rods[i].BNR;
+                mm = rods[i].ENR - rods[i].BNR; //bandwidth is end number minus begin number
                 if (mm > peribdw[rods[i].ENR - 1])
-                    peribdw[rods[i].ENR - 1] = mm;
+                    peribdw[rods[i].ENR - 1] = mm; //find the maximum bandwith per line
             }
         }
-        for (int i = NFIN; i < TNN; i++)
+        for (int i = NFIN; i < TNN; i++) //for each line in total stiffness matrix
         {
-            if (peribdw[i] > MAXIBDW)
+            if (peribdw[i] > MAXIBDW) //find maxim 
                 MAXIBDW = peribdw[i];
             for (int j = 1; j <= 6; j++)
             {
@@ -116,12 +116,24 @@ private:
         }
         MAXIBDW = 6 * MAXIBDW + 5;
         NSI = IV[6 * NFRN - 1];
-        delete [] peribdw;
-        
+        delete[] peribdw;
+        TotalStiffness = new double[NSI];
+
         return 0;
     }
+    //total stiffness matrix
+    inline double& sfTotalStiff(int i, int j)
+    {
+        double &tmp = TotalStiffness[IV[i] - i + j - 1];
+        return tmp;
+    }
     //build total stiffness matrix
-    bool sfBuildTotalStiff();
+    bool sfBuildTotalStiff()
+    {
+        sfVarBandwith();
+
+
+    }
     //build unit stiffness matrix
     bool sfBuildUnitStiff();
     //build local stiffness matrix
@@ -204,26 +216,26 @@ SpaceFrame::SpaceFrame()
     Displacement = NULL;
 
     IV = NULL;
-    NSI = 0;    
+    NSI = 0;
     MAXIBDW = 0;
 
     sfSolve = 0;
 }
 
 //-------------------------------------
-//--------- public funcitons ----------
+//--------- public functions ----------
 //-------------------------------------
 
 SpaceFrame::~SpaceFrame()
 {
-    delete [] nodes;
-    delete [] rods;
-    delete [] loads;
-    delete [] sections;
+    delete[] nodes;
+    delete[] rods;
+    delete[] loads;
+    delete[] sections;
 
-    delete [] TotalStiffness;
-    delete [] LoadVector;
-    delete [] Displacement;
+    delete[] TotalStiffness;
+    delete[] LoadVector;
+    delete[] Displacement;
 }
 
 bool SpaceFrame::sfInput()
@@ -251,6 +263,6 @@ bool SpaceFrame::sfSetSolve(int solve)
     {
         cout << "Seting solving method failed!\n";
     }
-    
+
     return 0;
 }

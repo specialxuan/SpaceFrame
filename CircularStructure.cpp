@@ -9,7 +9,7 @@
 int main()
 {
     FILE *fp = 0;
-    fp = fopen("sf_test.csv", "w");
+    fp = fopen("source&result/sf_test.csv", "w");
 
     int n = 0, m = 0, l = 0;
     scanf("%d %d %d", &m, &n, &l);

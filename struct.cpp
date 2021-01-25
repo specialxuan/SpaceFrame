@@ -60,7 +60,10 @@ struct Section //parameters of sections
 };
 Section *sections; //parameters of sections
 
-double *DON; //the displacement of nodes
+double *TotalStiffness; //total stiffness
+double *Displacement;   //the displacement of nodes
+double *LoadVector;
+
 double *SIGMA_1;
 double *SIGMA_2;
 int *DANGER;
@@ -68,8 +71,6 @@ int *DANGER;
 int *IV;     //the location of diagonal element
 int NSI;     //upper limit
 int MAXIBDW; //half bandwidth
-
-double *TS; //total stiffness
 
 int MAXTNN;   //the max total number of nodes with specify displacement
 int TNNSD[6]; //the total number of nodes with specify displacement.
@@ -116,14 +117,12 @@ bool sfOutput();
 //print error
 bool sfPrintError(int);
 //prepare to build variable bandwidth matrix
-bool dovidw();
+bool sfAllocate();
 //free memories
 bool sfFree();
 
 int main()
 {
-    double *lv = 0; //declare total stiffness and load vector
-
     clock_t start1 = 0, end1 = 0;
     DWORD start, end;
 
@@ -145,10 +144,16 @@ int main()
     else
         printf("Data input succeeded!\n");
 
-    int dof = 6 * NFRN;
-
-    lv = (double *)malloc(dof * sizeof(double)); //allocate memory for load vector
-    memset(lv, 0, dof * sizeof(double));
+    if (sfAllocate())
+    {
+        sfPrintError(15);
+        printf("\nPress any key to exit\n");
+        value = getchar();
+        
+        return 0;
+    }
+    else
+        printf("Allocating Variable Bandwith Matrix succeed!");
 
     if (sfBuildTotalStiff()) //build total stiffness matrix
     {
@@ -161,7 +166,7 @@ int main()
     else
         printf("Building total stiffness matrix succeeded!\n");
 
-    if (sfBuildLoadVector(lv)) //build load stiffness vector
+    if (sfBuildLoadVector(LoadVector)) //build load stiffness vector
     {
         sfPrintError(3);
         printf("\nPress any key to exit\n");
@@ -172,7 +177,7 @@ int main()
     else
         printf("Building load vector succeeded!\n");
 
-    if (solve_conjugate_gradient_par(TS, lv, DON, 6 * NFRN)) //solve matrix equation
+    if (solve_conjugate_gradient_par(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) //solve matrix equation
     {
         sfPrintError(4);
         printf("\nPress any key to exit\n");
@@ -182,9 +187,6 @@ int main()
     }
     else
         printf("Solving equation succeeded!\n");
-
-    free(TS);
-    free(lv);
 
     for (int i = 0; i < NOS; i++)
         if (sfInternalForce(i, sections[i].NRS, sections[i].DSB)) //calculate the internal force of each rods
@@ -273,14 +275,10 @@ bool sfInput()
                     loads = new Load[NOL + 2 * NOR]();
                     sections = new Section[NOS]();
 
-                    SIGMA_1 = (double *)malloc(NOS * sizeof(double));
-                    memset(SIGMA_1, 0, NOS * sizeof(double));
-                    SIGMA_2 = (double *)malloc(NOS * sizeof(double));
-                    memset(SIGMA_2, 0, NOS * sizeof(double));
-                    DANGER = (int *)malloc(NOS * sizeof(double));
-                    memset(DANGER, 0, NOS * sizeof(int));
-                    DON = (double *)malloc(6 * NFRN * sizeof(double));
-                    memset(DON, 0, 6 * NFRN * sizeof(double));
+                    SIGMA_1 = new double[NOS]();
+                    SIGMA_2 = new double[NOS]();
+                    DANGER = new int[NOS]();
+
                 }
                 break;
             case 6:
@@ -377,19 +375,13 @@ bool sfInput()
                 break;
             case 28:
                 if (NNSD == NULL)
-                {
-                    NNSD = (int *)malloc(6 * MAXTNN * sizeof(int));
-                    memset(NNSD, 0, 6 * MAXTNN * sizeof(int));
-                }
+                    NNSD = new int[6 * MAXTNN]();
                 if (columnIndex - 2 < 6 * MAXTNN)
                     NNSD[columnIndex - 2] = atoi(data);
                 break;
             case 29:
                 if (VSD == NULL)
-                {
-                    VSD = (double *)malloc(6 * MAXTNN * sizeof(double));
-                    memset(VSD, 0, 6 * MAXTNN * sizeof(double));
-                }
+                    VSD = new double[6 * MAXTNN]();
                 if (columnIndex - 2 < MAXTNN)
                     VSD[columnIndex - 2] = atof(data);
                 break;
@@ -412,14 +404,8 @@ bool sfInput()
 
 bool sfBuildTotalStiff() //ts is total stiffness matrix
 {
-
-    dovidw();
-
     double us[36] = {0}; //unit stiffness matrix
     int p[2] = {0};      //p is a temperary vector for i0j0, dof is the degree of freedom of nods
-
-    TS = (double *)malloc(NSI * sizeof(double)); //allocate memory for total stiffness matrix
-    memset(TS, 0, NSI * sizeof(double));
 
     if (sfLCosSin()) //calculate the length, cosine and sine of all rods
     {
@@ -443,7 +429,7 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
                 }
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n <= m; n++)
-                        TS[IV[(p[i] + m)] + (p[i] + n) - (p[i] + m) - 1] += us[m * 6 + n]; //superpose
+                        TotalStiffness[IV[(p[i] + m)] + (p[i] + n) - (p[i] + m) - 1] += us[m * 6 + n]; //superpose
             }
         }
         if (p[0] >= 0 && p[1] >= 0)
@@ -455,18 +441,18 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
             }
             for (int m = 0; m < 6; m++)
                 for (int n = 0; n < 6; n++)
-                    TS[IV[(p[1] + m)] + (p[0] + n) - (p[1] + m) - 1] += us[m * 6 + n]; //superpose
+                    TotalStiffness[IV[(p[1] + m)] + (p[0] + n) - (p[1] + m) - 1] += us[m * 6 + n]; //superpose
         }
     }
 
     for (int i = 0; i < NSI; i++)
-        if (fabs(TS[i]) > MAXTS)
-            MAXTS = TS[i];
+        if (fabs(TotalStiffness[i]) > MAXTS)
+            MAXTS = TotalStiffness[i];
 
     return 0;
 }
 
-bool dovidw()
+bool sfAllocate()
 {
     int it = 0, mm = 0;
     int *peribdw = new int[TNN](); //bandwidth per line in total stiffness matrix
@@ -496,6 +482,11 @@ bool dovidw()
     MAXIBDW = 6 * MAXIBDW + 5;
     NSI = IV[6 * NFRN - 1];
     delete[] peribdw;
+
+    int dof = 6 * NFRN;
+    LoadVector = new double[dof]();     //allocate memory for load vector
+    Displacement = new double[dof]();   //allocate memory for displacement vector
+    TotalStiffness = new double[NSI](); //allocate memory for total stiffness matrix
 
     return 0;
 }
@@ -780,10 +771,10 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
             {
 
                 if (VSD[i * MAXTNN + j] == 0)
-                    TS[IV[IJ + i] - 1] += 10000000000;
+                    TotalStiffness[IV[IJ + i] - 1] += 10000000000;
                 else
                 {
-                    TS[IV[IJ + i] - 1] = 10000000000;
+                    TotalStiffness[IV[IJ + i] - 1] = 10000000000;
                     lv[IJ + i] = 10000000000 * VSD[i * MAXTNN + j];
                 }
             }
@@ -1202,7 +1193,7 @@ bool sfInternalForce(int mm, int k, double xp) //m is the number of sections, k 
     sections[mm].IFS[5] = rods[k - 1].RFE[5] + rods[k - 1].RFE[1] * (rods[k - 1].LCS[0] - xp);
 
     for (int i = 0; i < (NOL + 2 * NOR); i++) //for every rods
-        if (loads[i].NRL == k) //if load is on rod k
+        if (loads[i].NRL == k)                //if load is on rod k
         {
             memset(tf, 0, 6 * sizeof(double)); //zero clear tf
             if (sfCtlInternalForce(i, xp, tf)) // calculate internal force of cantilever beam
@@ -1213,7 +1204,7 @@ bool sfInternalForce(int mm, int k, double xp) //m is the number of sections, k 
             for (int j = 0; j < 6; j++) //add internal force of cantilever into IFR
                 sections[mm].IFS[j] += tf[j];
         }
-    
+
     if (sfDisplacementForce(k, tf)) //calculate end force
     {
         sfPrintError(14);
@@ -1344,7 +1335,7 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
                         rdb[j * 6 + m] += rd[j * 6 + n] * t[m * 6 + n];
             for (int j = 0; j < 6; j++) //rdb times DON
                 for (int m = 0; m < 6; m++)
-                    tref[j] += rdb[j * 6 + m] * DON[p[i] + m];
+                    tref[j] += rdb[j * 6 + m] * Displacement[p[i] + m];
         }
         else //fixed node
             for (int j = 0; j < 3; j++)
@@ -1394,7 +1385,7 @@ bool sfOutput()
 
     printf("NUMBER OF NODES   Displacement-X Displacement-Y Displacement-Z   Diversion-X    Diversion-Y    Diversion-Z\n");
     for (int i = NFIN; i < TNN; i++)
-        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, DON[6 * (i - NFIN)], DON[6 * (i - NFIN) + 1], DON[6 * (i - NFIN) + 2], DON[6 * (i - NFIN) + 3], DON[6 * (i - NFIN) + 4], DON[6 * (i - NFIN) + 5]);
+        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, Displacement[6 * (i - NFIN)], Displacement[6 * (i - NFIN) + 1], Displacement[6 * (i - NFIN) + 2], Displacement[6 * (i - NFIN) + 3], Displacement[6 * (i - NFIN) + 4], Displacement[6 * (i - NFIN) + 5]);
     sfPrintLine();
 
     printf("NUMBER OF SECTIONS Axial force-X  Shear force-Y  Shear force-Z    Torque-X   Bending moment-Y  Bending moment-Z\n");
@@ -1506,11 +1497,11 @@ bool sfOutput()
 
     fprintf(fp, "\nDISPLACEMENT,");
     for (int i = 0; i < NFRN; i++)
-        fprintf(fp, "%f,%f,%f,", DON[6 * i], DON[6 * i + 1], DON[6 * i + 2]);
+        fprintf(fp, "%f,%f,%f,", Displacement[6 * i], Displacement[6 * i + 1], Displacement[6 * i + 2]);
 
     fprintf(fp, "\nDIVERSION,");
     for (int i = 0; i < NFRN; i++)
-        fprintf(fp, "%f,%f,%f,", DON[6 * i + 3], DON[6 * i + 4], DON[6 * i + 5]);
+        fprintf(fp, "%f,%f,%f,", Displacement[6 * i + 3], Displacement[6 * i + 4], Displacement[6 * i + 5]);
 
     //-----------RESULTS OF SECTIONS--------------------------------------
     fprintf(fp, "\nNOS,");
@@ -1535,8 +1526,15 @@ bool sfFree()
     delete[] rods;
     delete[] loads;
     delete[] sections;
+    delete[] SIGMA_1;
+    delete[] SIGMA_2;
+    delete[] DANGER;
+    delete[] NNSD;
+    delete[] VSD;
 
-    free(DON);
+    delete[] TotalStiffness;
+    delete[] LoadVector;
+    delete[] Displacement;
 
     return 0;
 }

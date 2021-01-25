@@ -36,16 +36,21 @@ struct Rod //parameters of nodes
     double IMY;     //inertia moment of Y axis
     double IMZ;     //inertia moment of Z axis
     double THETA;   //theta the deflection angle of main inertia axis
+    double ROU;     //the density of rods
     double LCS[4];  //the length, sine and cosine of rods
     double RFE[6];  //the reaction force of the end node
 };
 Rod *rods; //parameters of nodes
 
-int *NRL;    //the number of rods with load
-int *PLI;    //the plane of the load's in
-int *KOL;    //the kind of load
-double *VOL; //the value of load
-double *DLB; //the distance between load and the beginning node
+struct Load //parameters of loads
+{
+    int NRL;    //the number of rods with load
+    int PLI;    //the plane of the load's in
+    int KOL;    //the kind of load
+    double VOL; //the value of load
+    double DLB; //the distance between load and the beginning node
+};
+Load *loads; //parameters of loads
 
 int *NRS;    //the number of rod with section
 double *DSB; //the distance between section and the beginning node
@@ -68,7 +73,6 @@ int TNNSD[6]; //the total number of nodes with specify displacement.
 int *NNSD;    //the number of nodes with specify displacement
 double *VSD;  //the value of specify displacement
 
-double *ROU;     //the density of rods
 double g = 9.81; //acceleration of gravity
 
 //read data from .csv
@@ -210,7 +214,7 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("source&result/sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("source&result/sf_1.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -261,19 +265,8 @@ bool sfInput()
                     NOS = atoi(data);
                     nodes = new Node[TNN]();
                     rods = new Rod[NOR]();
+                    loads = new Load[NOL + 2 * NOR]();
 
-                    ROU = (double *)malloc(NOR * sizeof(double));
-                    memset(ROU, 0.0, NOR * sizeof(double));
-                    NRL = (int *)malloc((NOL + 2 * NOR) * sizeof(int));
-                    memset(NRL, 0, (NOL + 2 * NOR) * sizeof(int));
-                    PLI = (int *)malloc((NOL + 2 * NOR) * sizeof(int));
-                    memset(PLI, 0, (NOL + 2 * NOR) * sizeof(int));
-                    KOL = (int *)malloc((NOL + 2 * NOR) * sizeof(int));
-                    memset(KOL, 0, (NOL + 2 * NOR) * sizeof(int));
-                    VOL = (double *)malloc((NOL + 2 * NOR) * sizeof(double));
-                    memset(VOL, 0, (NOL + 2 * NOR) * sizeof(double));
-                    DLB = (double *)malloc((NOL + 2 * NOR) * sizeof(double));
-                    memset(DLB, 0, (NOL + 2 * NOR) * sizeof(double));
                     NRS = (int *)malloc(NOS * sizeof(int));
                     memset(NRS, 0, NOS * sizeof(int));
                     DSB = (double *)malloc(NOS * sizeof(double));
@@ -324,9 +317,7 @@ bool sfInput()
                 break;
             case 14:
                 if (columnIndex - 2 < NOR)
-                {
-                    ROU[columnIndex - 2] = atof(data);
-                }
+                    rods[columnIndex - 2].ROU = atof(data);
                 break;
             case 15:
                 if (columnIndex - 2 < NOR)
@@ -342,23 +333,23 @@ bool sfInput()
                 break;
             case 18:
                 if (columnIndex - 2 < NOL)
-                    NRL[columnIndex - 2] = atoi(data);
+                    loads[columnIndex - 2].NRL = atoi(data);
                 break;
             case 19:
                 if (columnIndex - 2 < NOL)
-                    PLI[columnIndex - 2] = atoi(data);
+                    loads[columnIndex - 2].PLI = atoi(data);
                 break;
             case 20:
                 if (columnIndex - 2 < NOL)
-                    KOL[columnIndex - 2] = atoi(data);
+                    loads[columnIndex - 2].KOL = atoi(data);
                 break;
             case 21:
                 if (columnIndex - 2 < NOL)
-                    VOL[columnIndex - 2] = atof(data);
+                    loads[columnIndex - 2].VOL = atof(data);
                 break;
             case 22:
                 if (columnIndex - 2 < NOL)
-                    DLB[columnIndex - 2] = atof(data);
+                    loads[columnIndex - 2].DLB = atof(data);
                 break;
             case 23:
                 if (columnIndex - 2 < NOS)
@@ -753,24 +744,24 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
 
     for (int i = 0; i < NOR; i++)
     {
-        NRL[NOL + i] = i + 1;
-        KOL[NOL + i] = 2;
-        DLB[NOL + i] = rods[i].LCS[0];
-        VOL[NOL + i] = -1 * rods[i].AREA * g * ROU[i] * sqrt(1 - rods[i].LCS[3] * rods[i].LCS[3]);
-        PLI[NOL + i] = 0;
+        loads[NOL + i].NRL = i + 1;
+        loads[NOL + i].KOL = 2;
+        loads[NOL + i].DLB = rods[i].LCS[0];
+        loads[NOL + i].VOL = -1 * rods[i].AREA * g * rods[i].ROU * sqrt(1 - rods[i].LCS[3] * rods[i].LCS[3]);
+        loads[NOL + i].PLI = 0;
     }
     for (int i = 0; i < NOR; i++)
     {
-        NRL[NOL + NOR + i] = i + 1;
-        KOL[NOL + NOR + i] = 4;
-        DLB[NOL + NOR + i] = rods[i].LCS[0];
-        VOL[NOL + NOR + i] = -1 * rods[i].AREA * g * ROU[i] * rods[i].LCS[3];
-        PLI[NOL + NOR + i] = 0;
+        loads[NOL + NOR + i].NRL = i + 1;
+        loads[NOL + NOR + i].KOL = 4;
+        loads[NOL + NOR + i].DLB = rods[i].LCS[0];
+        loads[NOL + NOR + i].VOL = -1 * rods[i].AREA * g * rods[i].ROU * rods[i].LCS[3];
+        loads[NOL + NOR + i].PLI = 0;
     }
 
     for (int i = 0; i < (NOL + 2 * NOR); i++)
     {
-        rod = NRL[i] - 1;                   //the number of rods with load
+        rod = loads[i].NRL - 1;                   //the number of rods with load
         memset(rf, 0, 12 * sizeof(double)); //zero clearing
 
         if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //calculate reaction force
@@ -853,8 +844,8 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
         return 0;
     }
 
-    double ra = 0, rb = 0, a = 0, b = 0, q = VOL[i], xq = DLB[i]; //ra, rb, a and b are middle variable
-    int rod = NRL[i] - 1, pm = PLI[i], t = 0;                     //rod is the number of rods
+    double ra = 0, rb = 0, a = 0, b = 0, q = loads[i].VOL, xq = loads[i].DLB; //ra, rb, a and b are middle variable
+    int rod = loads[i].NRL - 1, pm = loads[i].PLI, t = 0;                     //rod is the number of rods
 
     if (pm == 0) //load is in XY plane
     {
@@ -864,9 +855,9 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
     {
         t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
     }
-    ra = DLB[i] / rods[rod].LCS[0]; //x(q) / L
+    ra = loads[i].DLB / rods[rod].LCS[0]; //x(q) / L
     rb = 1 - ra;                    //1 - x(q) / L
-    switch (KOL[i])
+    switch (loads[i].KOL)
     {
     case 1: //vertical concentrating load
         a = rb * rb;
@@ -1281,7 +1272,7 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
 
     for (int i = 0; i < (NOL + 2 * NOR); i++) //for every rods
     {
-        if (NRL[i] == k) //if load is on rod k
+        if (loads[i].NRL == k) //if load is on rod k
         {
             memset(tf, 0, 6 * sizeof(double)); //zero clear tf
             if (sfCtlInternalForce(i, xp, tf)) // calculate internal force of cantilever beam
@@ -1331,9 +1322,9 @@ bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load,
         return 0;
     }
 
-    double xq = DLB[i], t = xq - xp, r = xp / xq, q = VOL[i]; //t and r are temperary variables
-    int e = PLI[i];
-    switch (KOL[i]) //calculate section force according to kind of loads
+    double xq = loads[i].DLB, t = xq - xp, r = xp / xq, q = loads[i].VOL; //t and r are temperary variables
+    int e = loads[i].PLI;
+    switch (loads[i].KOL) //calculate section force according to kind of loads
     {
     case 1:
         if (xp < xq)
@@ -1565,23 +1556,23 @@ bool sfOutput()
 
     fprintf(fp, "\nPLI,");
     for (int i = 0; i < NOL; i++)
-        fprintf(fp, "%d,", PLI[i]);
+        fprintf(fp, "%d,", loads[i].PLI);
 
     fprintf(fp, "\nNRL,");
     for (int i = 0; i < NOL; i++)
-        fprintf(fp, "%d,", NRL[i]);
+        fprintf(fp, "%d,", loads[i].NRL);
 
     fprintf(fp, "\nKOL,");
     for (int i = 0; i < NOL; i++)
-        fprintf(fp, "%d,", KOL[i]);
+        fprintf(fp, "%d,", loads[i].KOL);
 
     fprintf(fp, "\nVOL,");
     for (int i = 0; i < NOL; i++)
-        fprintf(fp, "%f,", VOL[i]);
+        fprintf(fp, "%f,", loads[i].VOL);
 
     fprintf(fp, "\nDLB,");
     for (int i = 0; i < NOL; i++)
-        fprintf(fp, "%f,", DLB[i]);
+        fprintf(fp, "%f,", loads[i].DLB);
 
     //-----------SECTIONS-------------------------------------------------
     fprintf(fp, "\nNOS,");
@@ -1630,11 +1621,8 @@ bool sfFree()
 {
     delete[] nodes;
     delete[] rods;
-    free(NRL);
-    free(PLI);
-    free(KOL);
-    free(VOL);
-    free(DLB);
+    delete[] loads;
+
     free(NRS);
     free(DSB);
     free(DON);

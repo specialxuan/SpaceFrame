@@ -437,7 +437,7 @@ bool sfInput()
                     memset(SIGMA_1, 0, NOS * sizeof(double));
                     SIGMA_2 = (double *)malloc(NOS * sizeof(double));
                     memset(SIGMA_2, 0, NOS * sizeof(double));
-                    DANGER = (int *)malloc(NOS * sizeof(double));
+                    DANGER = (int *)malloc(NOS * sizeof(int));
                     memset(DANGER, 0, NOS * sizeof(int));
                     DON = (double *)malloc(6 * NFRN * sizeof(double));
                     memset(DON, 0, 6 * NFRN * sizeof(double));

@@ -220,6 +220,7 @@ bool sfInput()
 
     if ((fp = fopen("source&result/sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
+        printf("There is no such file!");
         return 0;
     }
 
@@ -396,9 +397,8 @@ bool sfInput()
                 if (columnIndex == 2)
                     EPS = atof(data);
                 break;
+            } //input finished
 
-                //input finished
-            }
             data = strtok(NULL, DIVIDE); //Reset data
         }
         rowIndex++;      //RowIndex steps forward once
@@ -443,10 +443,7 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
                 }
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n <= m; n++)
-                    {
                         TS[IV[(p[i] + m)] + (p[i] + n) - (p[i] + m) - 1] += us[m * 6 + n]; //superpose
-                        //printf("%d, %f\n", iv[(p[i] + m)] + (p[i] + n) - (p[i] + m), ts[iv[(p[i] + m)] + (p[i] + n) - (p[i] + m)]);
-                    }
             }
         }
         if (p[0] >= 0 && p[1] >= 0)
@@ -457,21 +454,14 @@ bool sfBuildTotalStiff() //ts is total stiffness matrix
                 return 1;
             }
             for (int m = 0; m < 6; m++)
-            {
                 for (int n = 0; n < 6; n++)
-                {
                     TS[IV[(p[1] + m)] + (p[0] + n) - (p[1] + m) - 1] += us[m * 6 + n]; //superpose
-                }
-            }
         }
     }
 
     for (int i = 0; i < NSI; i++)
-    {
-        // printf("%f\n", TS[i]);
         if (fabs(TS[i]) > MAXTS)
             MAXTS = TS[i];
-    }
 
     return 0;
 }
@@ -565,27 +555,17 @@ bool sfBuildUnitStiff(int k, int flag, double *us) //k is the number of rods, fl
     }
 
     for (int i = 0; i < 6; i++) //transpose matrix times local stiffness matrix, store the result in c
-    {
         for (int m = 0; m < 6; m++)
         {
             tmp = t[i * 6 + m];
             for (int j = 0; j < 6; j++)
-            {
                 c[i * 6 + j] += tmp * rd[m * 6 + j];
-            }
         }
-    }
 
     for (int i = 0; i < 6; i++) //c times the transposition of transpose matrix, store the result in unit stiff
-    {
         for (int j = 0; j < 6; j++)
-        {
             for (int m = 0; m < 6; m++)
-            {
                 us[i * 6 + j] += c[i * 6 + m] * t[j * 6 + m];
-            }
-        }
-    }
 
     return 0;
 }
@@ -769,9 +749,7 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
             return 1;
         }
         for (int j = 0; j < 6; j++) //add reaction force to RFE
-        {
             rods[rod].RFE[j] += rf[1 * 6 + j];
-        }
         if (sfBuildTrans(rod, t)) //build transpose matrix
         {
             sfPrintError(10);
@@ -792,23 +770,17 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
     for (int i = 0; i < 6; i++)
     {
         if (TNNSD[i] <= 0)
-        {
             continue;
-        }
         for (int j = 0; j < MAXTNN; j++)
         {
             if (NNSD[i * MAXTNN + j] == 0)
-            {
                 continue;
-            }
             IJ = 6 * (NNSD[i * MAXTNN + j] - NFIN) - 6;
             if (IJ >= 0)
             {
 
                 if (VSD[i * MAXTNN + j] == 0)
-                {
                     TS[IV[IJ + i] - 1] += 10000000000;
-                }
                 else
                 {
                     TS[IV[IJ + i] - 1] = 10000000000;
@@ -846,14 +818,11 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
     double ra = 0, rb = 0, a = 0, b = 0, q = loads[i].VOL, xq = loads[i].DLB; //ra, rb, a and b are middle variable
     int rod = loads[i].NRL - 1, pm = loads[i].PLI, t = 0;                     //rod is the number of rods
 
-    if (pm == 0) //load is in XY plane
-    {
-        t = -1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
-    }
+    if (pm == 0)      //load is in XY plane
+        t = -1;       //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
     else if (pm == 1) //load is in XZ plane
-    {
-        t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
-    }
+        t = 1;        //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
+
     ra = loads[i].DLB / rods[rod].LCS[0]; //x(q) / L
     rb = 1 - ra;                          //1 - x(q) / L
     switch (loads[i].KOL)
@@ -902,13 +871,9 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
         break;
     case 8: //different temperature rise
         if (pm == 0)
-        {
             a = rods[rod].IMZ;
-        }
         else if (pm == 1)
-        {
             a = rods[rod].IMY;
-        }
         rfb[5 - pm] = t * q * 2 * rods[rod].ELASTIC * a * xq;
         rfe[5 - pm] = -rfb[5 - pm];
         break;
@@ -948,9 +913,7 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
     if (L != NULL)
         memset(L, 0, n * n * sizeof(double));
     for (int i = 0; i < n; i++)
-    {
         L[i * n + i] = 1;
-    }
     D = (double *)malloc(n * sizeof(double));
     memset(D, 0, n * sizeof(double));
     y = (double *)malloc(n * sizeof(double));
@@ -965,16 +928,12 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
         {
             sum = 0;
             for (int k = 0; k < j; k++)
-            {
                 sum = sum + L[i * n + k] * D[k] * L[j * n + k];
-            }
             L[i * n + j] = (A[i * n + j] - sum) / D[j];
         }
         sum = 0;
         for (int k = 0; k < i; k++)
-        {
             sum = sum + L[i * n + k] * L[i * n + k] * D[k];
-        }
         D[i] = A[i * n + i] - sum;
     }
 
@@ -984,9 +943,7 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
     {
         sum = 0;
         for (int j = 0; j < i; j++)
-        {
             sum = sum + L[i * n + j] * y[j];
-        }
         y[i] = b[i] - sum;
     }
 
@@ -996,9 +953,7 @@ bool sfCholesky(double *A, double *b, double *x, int n) //Ax=b, n=size(A)
     {
         sum = 0;
         for (int j = i + 1; j < n; j++)
-        {
             sum = sum + L[j * n + i] * x[j];
-        }
         x[i] = y[i] / D[i] - sum;
     }
 
@@ -1043,19 +998,13 @@ bool solve_conjugate_gradient(double *A, double *b, double *x, int N)
             for (int j = 0; j < N; j++)
             {
                 if (i == j)
-                {
                     z[i] += A[IV[i] - 1] * p[j];
-                }
                 else if (j > i)
                 {
                     if ((IV[j] - j + i) > IV[j - 1])
-                    {
                         z[i] += A[IV[j] - j + i - 1] * p[j];
-                    }
                     else
-                    {
                         z[i] += 0;
-                    }
                 }
                 else if (i > j)
                 {
@@ -1138,13 +1087,9 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
     memset(z, 0, sizeof(double));
 
     for (int i = 0; i < NSI; i++)
-    {
         A[i] = A[i] / MAXTS;
-    }
     for (int i = 0; i < N; i++)
-    {
         b[i] = b[i] / MAXLV;
-    }
 
     // x = [0 ... 0]
     // r = b - A * x
@@ -1171,19 +1116,13 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
             for (int j = 0; j < N; j++)
             {
                 if (i == j)
-                {
                     z[i] += A[IV[i] - 1] * p[j];
-                }
                 else if (j > i)
                 {
                     if ((IV[j] - j + i) > IV[j - 1])
-                    {
                         z[i] += A[IV[j] - j + i - 1] * p[j];
-                    }
                     else
-                    {
                         z[i] += 0;
-                    }
                 }
                 else if (i > j)
                 {
@@ -1200,10 +1139,7 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
 #pragma omp parallel for reduction(+ \
                                    : alpha)
         for (int i = 0; i < N; ++i)
-        {
-            // printf("%d\n", i);
             alpha += p[i] * z[i];
-        }
         alpha = gamma / alpha;
 
         // x = x + alpha * p
@@ -1227,18 +1163,14 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
 // p = r + (gamma_new / gamma) * p;
 #pragma omp parallel for
         for (int i = 0; i < N; ++i)
-        {
             p[i] = r[i] + beta * p[i];
-        }
 
         // gamma = gamma_new
         gamma = gamma_new;
     }
 
     for (int i = 0; i < N; i++)
-    {
         x[i] = x[i] * MAXLV / MAXTS;
-    }
 
     free(r);
     free(p);
@@ -1262,7 +1194,7 @@ bool sfInternalForce(int mm, int k, double xp) //m is the number of sections, k 
 
     double tf[6] = {0}; //tf is temperary variable
 
-    sections[mm].IFS[0]= rods[k - 1].RFE[0]; //calculate internal force cause by reaction force at the end of rods
+    sections[mm].IFS[0] = rods[k - 1].RFE[0]; //calculate internal force cause by reaction force at the end of rods
     sections[mm].IFS[1] = -rods[k - 1].RFE[1];
     sections[mm].IFS[2] = -rods[k - 1].RFE[2];
     sections[mm].IFS[3] = rods[k - 1].RFE[3];
@@ -1270,7 +1202,6 @@ bool sfInternalForce(int mm, int k, double xp) //m is the number of sections, k 
     sections[mm].IFS[5] = rods[k - 1].RFE[5] + rods[k - 1].RFE[1] * (rods[k - 1].LCS[0] - xp);
 
     for (int i = 0; i < (NOL + 2 * NOR); i++) //for every rods
-    {
         if (loads[i].NRL == k) //if load is on rod k
         {
             memset(tf, 0, 6 * sizeof(double)); //zero clear tf
@@ -1280,11 +1211,9 @@ bool sfInternalForce(int mm, int k, double xp) //m is the number of sections, k 
                 return 1;
             }
             for (int j = 0; j < 6; j++) //add internal force of cantilever into IFR
-            {
                 sections[mm].IFS[j] += tf[j];
-            }
         }
-    }
+    
     if (sfDisplacementForce(k, tf)) //calculate end force
     {
         sfPrintError(14);
@@ -1341,15 +1270,11 @@ bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load,
         break;
     case 3:
         if (xp < xq)
-        {
             tf[3 * e] = q;
-        }
         break;
     case 4:
         if (xp < xq)
-        {
             tf[3 * e] = q * t;
-        }
         break;
     case 5:
         if (xp < xq)
@@ -1360,9 +1285,7 @@ bool sfCtlInternalForce(int i, double xp, double *tf) //i is the number of load,
         break;
     case 6:
         if (xp < xq)
-        {
             tf[e + 4] = (2 * e - 1) * q;
-        }
         break;
     case 7: //temperature change don't generate internal force on cantilever beam
         break;
@@ -1424,12 +1347,8 @@ bool sfDisplacementForce(int k, double *tref) //k is the actual number of rods, 
                     tref[j] += rdb[j * 6 + m] * DON[p[i] + m];
         }
         else //fixed node
-        {
             for (int j = 0; j < 3; j++)
-            {
                 tref[j] += 0;
-            }
-        }
     }
 
     return 0;
@@ -1485,21 +1404,15 @@ bool sfOutput()
     int cnt = 0;
     printf("DANGEROUS SECTIONS:");
     for (int i = 0; i < NOS; i++)
-    {
         if (DANGER[i])
         {
             printf("%15d", i + 1);
             cnt++;
         }
-    }
     if (cnt)
-    {
         printf("\n");
-    }
     else
-    {
         printf("NONE\n");
-    }
 
     FILE *fp = NULL;
     fp = fopen("source&result/sfResultStruct.csv", "w");

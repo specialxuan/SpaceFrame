@@ -152,7 +152,7 @@ private:
 
         for (int k = 0; k < NOR; k++)
         {
-            p[0] = 6 * (rods[k].BNR - NFIN - 1); // tag: match the displacement with nods
+            p[0] = 6 * (rods[k].BNR - NFIN - 1); //match the displacement with nods
             p[1] = 6 * (rods[k].ENR - NFIN - 1);
 
             for (int i = 0; i < 2; i++)
@@ -423,7 +423,7 @@ private:
                 return 1;
             }
 
-            p[0] = 6 * (rods[rod].BNR - NFIN - 1); // tag: match the displacement with nods
+            p[0] = 6 * (rods[rod].BNR - NFIN - 1); //match the displacement with nods
             p[1] = 6 * (rods[rod].ENR - NFIN - 1);
 
             for (int j = 0; j < 2; j++) //add reaction force to load vector
@@ -838,7 +838,7 @@ private:
             return 1;
         }
 
-        p[0] = 6 * (rods[k - 1].BNR - NFIN - 1); // tag: match the displacement with nods
+        p[0] = 6 * (rods[k - 1].BNR - NFIN - 1); //match the displacement with nods
         p[1] = 6 * (rods[k - 1].ENR - NFIN - 1);
 
         for (int i = 0; i < 2; i++)
@@ -1361,7 +1361,7 @@ bool SpaceFrame::sfOutput()
         fprintf(fp, "%f,", sections[i].DSB);
 
     //-----------RESULTS OF NODES-----------------------------------------
-    fprintf(fp, "\nNORN,");
+    fprintf(fp, "\nNFRN,");
     for (int i = 0; i < NFRN; i++)
         fprintf(fp, "x%d,y%d,z%d,", i + NFIN, i + NFIN, i + NFIN);
 

@@ -26,7 +26,7 @@ struct Node //parameters of nodes
 };
 Node *nodes; //parameters of nodes
 
-struct Rod //parameters of nodes
+struct Rod //parameters of rods
 {
     int ENR;        //the end node number of rods
     int BNR;        //the beginning node number of rods
@@ -40,7 +40,7 @@ struct Rod //parameters of nodes
     double LCS[4];  //the length, sine and cosine of rods
     double RFE[6];  //the reaction force of the end node
 };
-Rod *rods; //parameters of nodes
+Rod *rods; //parameters of rods
 
 struct Load //parameters of loads
 {
@@ -61,8 +61,8 @@ struct Section //parameters of sections
 Section *sections; //parameters of sections
 
 double *TotalStiffness; //total stiffness
-double *Displacement;   //the displacement of nodes
-double *LoadVector;
+double *Displacement;   //displacement of nodes
+double *LoadVector;     //load vector
 
 double *SIGMA_1;
 double *SIGMA_2;
@@ -149,7 +149,7 @@ int main()
         sfPrintError(15);
         printf("\nPress any key to exit\n");
         value = getchar();
-        
+
         return 0;
     }
     else
@@ -278,7 +278,6 @@ bool sfInput()
                     SIGMA_1 = new double[NOS]();
                     SIGMA_2 = new double[NOS]();
                     DANGER = new int[NOS]();
-
                 }
                 break;
             case 6:

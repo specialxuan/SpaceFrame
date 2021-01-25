@@ -52,11 +52,15 @@ struct Load //parameters of loads
 };
 Load *loads; //parameters of loads
 
-int *NRS;    //the number of rod with section
-double *DSB; //the distance between section and the beginning node
+struct Section //parameters of sections
+{
+    int NRS;       //the number of rod with section
+    double DSB;    //the distance between section and the beginning node
+    double IFS[6]; //the internal force in the section
+};
+Section *sections; //parameters of sections
 
 double *DON; //the displacement of nodes
-double *IFS; //the internal force in the section
 double *SIGMA_1;
 double *SIGMA_2;
 int *DANGER;
@@ -183,7 +187,7 @@ int main()
     free(lv);
 
     for (int i = 0; i < NOS; i++)
-        if (sfInternalForce(6 * i, NRS[i], DSB[i])) //calculate the internal force of each rods
+        if (sfInternalForce(i, sections[i].NRS, sections[i].DSB)) //calculate the internal force of each rods
         {
             sfPrintError(5);
             printf("\nPress any key to exit\n");
@@ -214,7 +218,7 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("source&result/sf_1.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("source&result/sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -266,11 +270,8 @@ bool sfInput()
                     nodes = new Node[TNN]();
                     rods = new Rod[NOR]();
                     loads = new Load[NOL + 2 * NOR]();
+                    sections = new Section[NOS]();
 
-                    NRS = (int *)malloc(NOS * sizeof(int));
-                    memset(NRS, 0, NOS * sizeof(int));
-                    DSB = (double *)malloc(NOS * sizeof(double));
-                    memset(DSB, 0, NOS * sizeof(double));
                     SIGMA_1 = (double *)malloc(NOS * sizeof(double));
                     memset(SIGMA_1, 0, NOS * sizeof(double));
                     SIGMA_2 = (double *)malloc(NOS * sizeof(double));
@@ -279,8 +280,6 @@ bool sfInput()
                     memset(DANGER, 0, NOS * sizeof(int));
                     DON = (double *)malloc(6 * NFRN * sizeof(double));
                     memset(DON, 0, 6 * NFRN * sizeof(double));
-                    IFS = (double *)malloc(6 * NOS * sizeof(double));
-                    memset(IFS, 0, 3 * NOS * sizeof(double));
                 }
                 break;
             case 6:
@@ -353,11 +352,11 @@ bool sfInput()
                 break;
             case 23:
                 if (columnIndex - 2 < NOS)
-                    NRS[columnIndex - 2] = atoi(data);
+                    sections[columnIndex - 2].NRS = atoi(data);
                 break;
             case 24:
                 if (columnIndex - 2 < NOS)
-                    DSB[columnIndex - 2] = atof(data);
+                    sections[columnIndex - 2].DSB = atof(data);
                 break;
             case 25:
                 if (columnIndex - 2 < NOS)
@@ -761,7 +760,7 @@ bool sfBuildLoadVector(double *lv) //lv is the load vector
 
     for (int i = 0; i < (NOL + 2 * NOR); i++)
     {
-        rod = loads[i].NRL - 1;                   //the number of rods with load
+        rod = loads[i].NRL - 1;             //the number of rods with load
         memset(rf, 0, 12 * sizeof(double)); //zero clearing
 
         if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) //calculate reaction force
@@ -856,7 +855,7 @@ bool sfReactionForce(int i, double *rfb, double *rfe) //i is the number of load,
         t = 1; //The bending moment in the support-reaction equation is positive clockwise, convert it to positive to the coordinate axis
     }
     ra = loads[i].DLB / rods[rod].LCS[0]; //x(q) / L
-    rb = 1 - ra;                    //1 - x(q) / L
+    rb = 1 - ra;                          //1 - x(q) / L
     switch (loads[i].KOL)
     {
     case 1: //vertical concentrating load
@@ -1248,9 +1247,9 @@ bool solve_conjugate_gradient_par(double *A, double *b, double *x, int N)
     return 0;
 }
 
-bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
+bool sfInternalForce(int mm, int k, double xp) //m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
 {
-    if (m < 0)
+    if (mm < 0)
     {
         sfPrintError(21);
         return 0;
@@ -1263,12 +1262,12 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
 
     double tf[6] = {0}; //tf is temperary variable
 
-    IFS[m] = rods[k - 1].RFE[0]; //calculate internal force cause by reaction force at the end of rods
-    IFS[m + 1] = -rods[k - 1].RFE[1];
-    IFS[m + 2] = -rods[k - 1].RFE[2];
-    IFS[m + 3] = rods[k - 1].RFE[3];
-    IFS[m + 4] = -rods[k - 1].RFE[4] + rods[k - 1].RFE[2] * (rods[k - 1].LCS[0] - xp);
-    IFS[m + 5] = rods[k - 1].RFE[5] + rods[k - 1].RFE[1] * (rods[k - 1].LCS[0] - xp);
+    sections[mm].IFS[0]= rods[k - 1].RFE[0]; //calculate internal force cause by reaction force at the end of rods
+    sections[mm].IFS[1] = -rods[k - 1].RFE[1];
+    sections[mm].IFS[2] = -rods[k - 1].RFE[2];
+    sections[mm].IFS[3] = rods[k - 1].RFE[3];
+    sections[mm].IFS[4] = -rods[k - 1].RFE[4] + rods[k - 1].RFE[2] * (rods[k - 1].LCS[0] - xp);
+    sections[mm].IFS[5] = rods[k - 1].RFE[5] + rods[k - 1].RFE[1] * (rods[k - 1].LCS[0] - xp);
 
     for (int i = 0; i < (NOL + 2 * NOR); i++) //for every rods
     {
@@ -1282,7 +1281,7 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
             }
             for (int j = 0; j < 6; j++) //add internal force of cantilever into IFR
             {
-                IFS[m + j] += tf[j];
+                sections[mm].IFS[j] += tf[j];
             }
         }
     }
@@ -1292,19 +1291,19 @@ bool sfInternalForce(int m, int k, double xp) //m is the number of sections, k i
         return 1;
     }
 
-    IFS[m] -= tf[0]; //calculate section force cause by end force
-    IFS[m + 1] += tf[1];
-    IFS[m + 2] += tf[2];
-    IFS[m + 3] -= tf[3];
-    IFS[m + 4] += tf[4] + tf[2] * xp;
-    IFS[m + 5] += -tf[5] + tf[1] * xp;
+    sections[mm].IFS[0] -= tf[0]; //calculate section force cause by end force
+    sections[mm].IFS[1] += tf[1];
+    sections[mm].IFS[2] += tf[2];
+    sections[mm].IFS[3] -= tf[3];
+    sections[mm].IFS[4] += tf[4] + tf[2] * xp;
+    sections[mm].IFS[5] += -tf[5] + tf[1] * xp;
 
-    double moment = sqrt(IFS[m + 4] * IFS[m + 4] + IFS[m + 5] * IFS[m + 5]);
-    double sigma_1 = moment * sqrt(rods[k - 1].AREA / 3.1415926) / rods[k - 1].IMZ + IFS[m] / rods[k - 1].ELASTIC / rods[k - 1].AREA;
-    double sigma_2 = -moment * sqrt(rods[k - 1].AREA / 3.1415926) / rods[k - 1].IMZ + IFS[m] / rods[k - 1].ELASTIC / rods[k - 1].AREA;
+    double moment = sqrt(sections[mm].IFS[4] * sections[mm].IFS[4] + sections[mm].IFS[5] * sections[mm].IFS[5]);
+    double sigma_1 = moment * sqrt(rods[k - 1].AREA / 3.1415926) / rods[k - 1].IMZ + sections[mm].IFS[0] / rods[k - 1].ELASTIC / rods[k - 1].AREA;
+    double sigma_2 = -moment * sqrt(rods[k - 1].AREA / 3.1415926) / rods[k - 1].IMZ + sections[mm].IFS[0] / rods[k - 1].ELASTIC / rods[k - 1].AREA;
 
-    if (sigma_1 > SIGMA_1[m / 6] || sigma_2 < SIGMA_2[m / 6])
-        DANGER[m / 6] = 1;
+    if (sigma_1 > SIGMA_1[mm / 6] || sigma_2 < SIGMA_2[mm / 6])
+        DANGER[mm / 6] = 1;
 
     return 0;
 }
@@ -1468,7 +1467,7 @@ bool sfOutput()
     sfPrintLine();
     printf("NUMBER OF SECTIONS         PLI            DLB\n");
     for (int i = 0; i < NOS; i++)
-        printf("%15d%15d%15.7f\n", i + 1, NRS[i], DSB[i]);
+        printf("%15d%15d%15.7f\n", i + 1, sections[i].NRS, sections[i].DSB);
     sfPrintLine();
 
     printf("Calculating......\nThe results are as follows: \n");
@@ -1481,7 +1480,7 @@ bool sfOutput()
 
     printf("NUMBER OF SECTIONS Axial force-X  Shear force-Y  Shear force-Z    Torque-X   Bending moment-Y  Bending moment-Z\n");
     for (int i = 0; i < NOS; i++)
-        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, IFS[6 * i], IFS[6 * i + 1], IFS[6 * i + 2], IFS[6 * i + 3], IFS[6 * i + 4], IFS[6 * i + 5]);
+        printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, sections[i].IFS[0], sections[i].IFS[1], sections[i].IFS[2], sections[i].IFS[3], sections[i].IFS[4], sections[i].IFS[5]);
 
     int cnt = 0;
     printf("DANGEROUS SECTIONS:");
@@ -1581,11 +1580,11 @@ bool sfOutput()
 
     fprintf(fp, "\nNRS,");
     for (int i = 0; i < NOS; i++)
-        fprintf(fp, "%d,", NRS[i]);
+        fprintf(fp, "%d,", sections[i].NRS);
 
     fprintf(fp, "\nDSB,");
     for (int i = 0; i < NOS; i++)
-        fprintf(fp, "%f,", DSB[i]);
+        fprintf(fp, "%f,", sections[i].DSB);
 
     //-----------RESULTS OF NODES-----------------------------------------
     fprintf(fp, "\nNORN,");
@@ -1607,11 +1606,11 @@ bool sfOutput()
 
     fprintf(fp, "\nAXIAL&SHEAR FORCE,");
     for (int i = 0; i < NOS; i++)
-        fprintf(fp, "%f,%f,%f,", IFS[6 * i], IFS[6 * i + 1], IFS[6 * i + 2]);
+        fprintf(fp, "%f,%f,%f,", sections[i].IFS[0], sections[i].IFS[1], sections[i].IFS[2]);
 
     fprintf(fp, "\nTORQUE&BENDING MOMENT,");
     for (int i = 0; i < NOS; i++)
-        fprintf(fp, "%f,%f,%f,", IFS[6 * i + 3], IFS[6 * i + 4], IFS[6 * i + 5]);
+        fprintf(fp, "%f,%f,%f,", sections[i].IFS[3], sections[i].IFS[4], sections[i].IFS[5]);
     fclose(fp);
 
     return 0;
@@ -1622,11 +1621,9 @@ bool sfFree()
     delete[] nodes;
     delete[] rods;
     delete[] loads;
+    delete[] sections;
 
-    free(NRS);
-    free(DSB);
     free(DON);
-    free(IFS);
 
     return 0;
 }

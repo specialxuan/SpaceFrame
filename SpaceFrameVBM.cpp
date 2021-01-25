@@ -346,7 +346,7 @@ bool sfInput()
     int rowIndex = 0, columnIndex = 0; //Reset the number of rows to zero, reset the number of columns to zero
     const char DIVIDE[] = ",";         //Set the separater as a ','
 
-    if ((fp = fopen("source&result/sf_1.csv", "r")) == NULL) //Start the process when the file opens successfully
+    if ((fp = fopen("source&result/sf_2.csv", "r")) == NULL) //Start the process when the file opens successfully
     {
         return 0;
     }
@@ -442,7 +442,7 @@ bool sfInput()
                     DON = (double *)malloc(6 * NFRN * sizeof(double));
                     memset(DON, 0, 6 * NFRN * sizeof(double));
                     IFS = (double *)malloc(6 * NOS * sizeof(double));
-                    memset(IFS, 0, 3 * NOS * sizeof(double));
+                    memset(IFS, 0, 6 * NOS * sizeof(double));
                     RFE = (double *)malloc(6 * NOR * sizeof(double));
                     memset(RFE, 0, 6 * NOR * sizeof(double));
                 }

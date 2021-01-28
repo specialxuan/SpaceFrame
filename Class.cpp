@@ -1341,11 +1341,9 @@ bool SpaceFrame::sfCalculate()
 int main()
 {
     SpaceFrame Frame;
-    // system("pause");
     Frame.sfInput();
     Frame.sfCalculate();
     Frame.sfOutput();
-    // system("pause");
 
     return 0;
 }

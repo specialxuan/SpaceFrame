@@ -972,9 +972,6 @@ SpaceFrame::~SpaceFrame()
     delete[] rods;
     delete[] loads;
     delete[] sections;
-    // delete[] SIGMA_1;
-    // delete[] SIGMA_2;
-    // delete[] DANGER;
     delete[] NNSD;
     delete[] VSD;
 

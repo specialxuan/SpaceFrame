@@ -657,12 +657,12 @@ private:
 
         double tf[6] = {0}; // tf is temperary variable
 
-        sections[mm].IFS[0] = rods[k - 1].RFE[0]; // calculate internal force cause by reaction force at the end of rods
+        sections[mm].IFS[0] = +rods[k - 1].RFE[0]; // calculate internal force cause by reaction force at the end of rods
         sections[mm].IFS[1] = -rods[k - 1].RFE[1];
         sections[mm].IFS[2] = -rods[k - 1].RFE[2];
-        sections[mm].IFS[3] = rods[k - 1].RFE[3];
+        sections[mm].IFS[3] = +rods[k - 1].RFE[3];
         sections[mm].IFS[4] = -rods[k - 1].RFE[4] + rods[k - 1].RFE[2] * (rods[k - 1].LCS[0] - xp);
-        sections[mm].IFS[5] = rods[k - 1].RFE[5] + rods[k - 1].RFE[1] * (rods[k - 1].LCS[0] - xp);
+        sections[mm].IFS[5] = +rods[k - 1].RFE[5] + rods[k - 1].RFE[1] * (rods[k - 1].LCS[0] - xp);
 
         for (int i = 0; i < NOL; i++) // for every rods
             if (loads[i].NRL == k)    // if load is on rod k
@@ -688,7 +688,7 @@ private:
         sections[mm].IFS[2] += tf[2];
         sections[mm].IFS[3] -= tf[3];
         sections[mm].IFS[4] += tf[4] + tf[2] * xp;
-        sections[mm].IFS[5] += -tf[5] + tf[1] * xp;
+        sections[mm].IFS[5] -= tf[5] - tf[1] * xp;
 
         return 0;
     }

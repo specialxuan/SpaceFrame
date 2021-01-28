@@ -70,14 +70,6 @@ private:
     int NSI;     //upper limit
     int MAXIBDW; //half bandwidth
 
-    int MAXTNN;   //the max total number of nodes with specify displacement
-    int TNNSD[6]; //the total number of nodes with specify displacement.
-                  //for example 4,0,0,0,1,0 means that there are four nodes with delta x and one node with theta y
-    int *NNSD;    //the number of nodes with specify displacement
-    double *VSD;  //the value of specify displacement
-
-    double g; //acceleration of gravity
-
     //calculate the length sine and cosine of rods
     bool sfLCosSin()
     {
@@ -956,14 +948,6 @@ SpaceFrame::SpaceFrame()
     IV = NULL;   //the location of diagonal element
     NSI = 0;     //upper limit
     MAXIBDW = 0; //half bandwidth
-
-    MAXTNN = 0;     //the max total number of nodes with specify displacement
-    TNNSD[6] = {0}; //the total number of nodes with specify displacement.
-                    //for example 4,0,0,0,1,0 means that there are four nodes with delta x and one node with theta y
-    NNSD = NULL;    //the number of nodes with specify displacement
-    VSD = NULL;     //the value of specify displacement
-
-    g = 9.81; //acceleration of gravity
 }
 
 SpaceFrame::~SpaceFrame()
@@ -972,9 +956,6 @@ SpaceFrame::~SpaceFrame()
     delete[] rods;
     delete[] loads;
     delete[] sections;
-    delete[] NNSD;
-    delete[] VSD;
-
     delete[] TotalStiffness;
     delete[] LoadVector;
     delete[] Displacement;

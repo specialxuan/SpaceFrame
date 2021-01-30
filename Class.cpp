@@ -1,11 +1,14 @@
 #include <Windows.h>
 #include <ctype.h>
+#include <iostream>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+using namespace std;
 
 class SpaceFrame
 {
@@ -63,8 +66,8 @@ private:
     Section *sections; // parameters of sections
 
     double *TotalStiffness; // total stiffness
-    double *Displacement;   // displacement of nodes
     double *LoadVector;     // load vector
+    double *Displacement;   // displacement of nodes
 
     int *IV;     // the location of diagonal element
     int NSI;     // upper limit
@@ -95,9 +98,9 @@ private:
     // allocate total stiffness matrix, load vector and displacement vector
     bool sfAllocate()
     {
-        int it = 0, mm = 0;
+        int it = 0, mm = 0, dof = 6 * NFRN;
         int *peribdw = new int[TNN](); // bandwidth per line in total stiffness matrix
-        IV = new int[6 * NFRN]();
+        IV = new int[dof]();
         for (int i = 0; i < NOR; i++) // for each rod
         {
             if (rods[i].BNR > NFIN)
@@ -121,13 +124,12 @@ private:
             }
         }
         MAXIBDW = 6 * MAXIBDW + 5;
-        NSI = IV[6 * NFRN - 1];
+        NSI = IV[dof - 1];
         delete[] peribdw;
 
-        int dof = 6 * NFRN;
+        TotalStiffness = new double[NSI](); // allocate memory for total stiffness matrix
         LoadVector = new double[dof]();     // allocate memory for load vector
         Displacement = new double[dof]();   // allocate memory for displacement vector
-        TotalStiffness = new double[NSI](); // allocate memory for total stiffness matrix
 
         return 0;
     }
@@ -913,6 +915,7 @@ private:
 
 public:
     SpaceFrame();
+    SpaceFrame(SpaceFrame &);
     ~SpaceFrame();
 
     // read data from .csv
@@ -942,23 +945,118 @@ SpaceFrame::SpaceFrame()
     sections = NULL; // parameters of sections
 
     TotalStiffness = NULL; // total stiffness
-    Displacement = NULL;   // the displacement of nodes
     LoadVector = NULL;     // load vector
+    Displacement = NULL;   // the displacement of nodes
 
     IV = NULL;   // the location of diagonal element
     NSI = 0;     // upper limit
     MAXIBDW = 0; // half bandwidth
 }
 
+SpaceFrame::SpaceFrame(SpaceFrame &Frame)
+{
+    EPS = Frame.EPS;
+    MAXTS = Frame.MAXTS;
+    MAXLV = Frame.MAXLV;
+
+    TNN = Frame.TNN;
+    NFIN = Frame.NFIN;
+    NFRN = Frame.NFRN;
+    NOR = Frame.NOR;
+    NOL = Frame.NOL;
+    NOS = Frame.NOS;
+
+    nodes = new Node[TNN]();
+    if (Frame.nodes != NULL)
+        for (int i = 0; i < TNN; i++)
+        {
+            nodes[i].XCN = Frame.nodes[i].XCN;
+            nodes[i].YCN = Frame.nodes[i].YCN;
+            nodes[i].ZCN = Frame.nodes[i].ZCN;
+        }
+
+    rods = new Rod[NOR]();
+    if (Frame.rods != NULL)
+        for (int i = 0; i < NOR; i++)
+        {
+            rods[i].ENR = Frame.rods[i].ENR;
+            rods[i].BNR = Frame.rods[i].BNR;
+            rods[i].ELASTIC = Frame.rods[i].ELASTIC;
+            rods[i].SHEAR = Frame.rods[i].SHEAR;
+            rods[i].AREA = Frame.rods[i].AREA;
+            rods[i].IMY = Frame.rods[i].IMY;
+            rods[i].IMZ = Frame.rods[i].IMZ;
+            rods[i].THETA = Frame.rods[i].THETA;
+            for (int j = 0; j < 4; j++)
+                rods[i].LCS[j] = Frame.rods[i].LCS[j];
+            for (int j = 0; j < 6; j++)
+                rods[i].RFE[j] = Frame.rods[i].RFE[j];
+        }
+
+    loads = new Load[NOL]();
+    if (Frame.loads != NULL)
+        for (int i = 0; i < NOL; i++)
+        {
+            loads[i].NRL = Frame.loads[i].NRL;
+            loads[i].PLI = Frame.loads[i].PLI;
+            loads[i].KOL = Frame.loads[i].KOL;
+            loads[i].VOL = Frame.loads[i].VOL;
+            loads[i].DLB = Frame.loads[i].DLB;
+        }
+
+    sections = new Section[NOS]();
+    if (Frame.sections != NULL)
+        for (int i = 0; i < NOS; i++)
+        {
+            sections[i].NRS = Frame.sections[i].NRS;
+            sections[i].DSB = Frame.sections[i].DSB;
+            for (int j = 0; j < 6; j++)
+                sections[i].IFS[j] = Frame.sections[i].IFS[j];
+        }
+
+    int dof = 6 * NFRN;
+    IV = new int[dof]();
+    if (Frame.IV != NULL)
+        for (int i = 0; i < dof; i++)
+            IV[i] = Frame.IV[i];
+
+    NSI = Frame.NSI;
+    MAXIBDW = Frame.MAXIBDW;
+
+    TotalStiffness = new double[NSI]();
+    if (Frame.TotalStiffness != NULL)
+        for (int i = 0; i < NSI; i++)
+            TotalStiffness[i] = Frame.TotalStiffness[i];
+
+    LoadVector = new double[dof]();
+    if (Frame.LoadVector != NULL)
+        for (int i = 0; i < dof; i++)
+            LoadVector[i] = Frame.LoadVector[i];
+
+    Displacement = new double[dof]();
+    if (Frame.Displacement != NULL)
+        for (int i = 0; i < dof; i++)
+            Displacement[i] = Frame.Displacement[i];
+}
+
 SpaceFrame::~SpaceFrame()
 {
     delete[] nodes;
+    nodes = NULL;
     delete[] rods;
+    rods = NULL;
     delete[] loads;
+    loads = NULL;
     delete[] sections;
+    sections = NULL;
     delete[] TotalStiffness;
+    TotalStiffness = NULL;
     delete[] LoadVector;
+    LoadVector = NULL;
     delete[] Displacement;
+    Displacement = NULL;
+    delete[] IV;
+    IV = NULL;
 }
 
 bool SpaceFrame::sfInput()
@@ -985,6 +1083,8 @@ bool SpaceFrame::sfInput()
             {
                 fclose(fp); // Close the file
                 fp = NULL;  // Reset the file point
+                cout << "Inputing data succeed!\n";
+
                 return 0;
             }
 
@@ -1019,6 +1119,10 @@ bool SpaceFrame::sfInput()
                 if (columnIndex == 2)
                 {
                     NOS = atoi(data);
+
+                    if (nodes != NULL)
+                        this->~SpaceFrame();
+
                     nodes = new Node[TNN]();
                     rods = new Rod[NOR]();
                     loads = new Load[NOL]();
@@ -1316,6 +1420,8 @@ bool SpaceFrame::sfCalculate()
             return 1;
         }
 
+    cout << "Outputing data succeed!\n";
+
     return 0;
 }
 
@@ -1323,8 +1429,14 @@ int main()
 {
     SpaceFrame Frame;
     Frame.sfInput();
+    Frame.~SpaceFrame();
+    Frame.sfInput();
     Frame.sfCalculate();
     Frame.sfOutput();
+    SpaceFrame Frame2(Frame);
+    Frame2.sfInput();
+    Frame2.sfCalculate();
+    Frame2.sfOutput();
 
     return 0;
 }

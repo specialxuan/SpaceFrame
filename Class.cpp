@@ -968,75 +968,39 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
 
     nodes = new Node[TNN]();
     if (Frame.nodes != NULL)
-        for (int i = 0; i < TNN; i++)
-        {
-            nodes[i].XCN = Frame.nodes[i].XCN;
-            nodes[i].YCN = Frame.nodes[i].YCN;
-            nodes[i].ZCN = Frame.nodes[i].ZCN;
-        }
+        memcpy(nodes, Frame.nodes, TNN * sizeof(Node));
 
     rods = new Rod[NOR]();
     if (Frame.rods != NULL)
-        for (int i = 0; i < NOR; i++)
-        {
-            rods[i].ENR = Frame.rods[i].ENR;
-            rods[i].BNR = Frame.rods[i].BNR;
-            rods[i].ELASTIC = Frame.rods[i].ELASTIC;
-            rods[i].SHEAR = Frame.rods[i].SHEAR;
-            rods[i].AREA = Frame.rods[i].AREA;
-            rods[i].IMY = Frame.rods[i].IMY;
-            rods[i].IMZ = Frame.rods[i].IMZ;
-            rods[i].THETA = Frame.rods[i].THETA;
-            for (int j = 0; j < 4; j++)
-                rods[i].LCS[j] = Frame.rods[i].LCS[j];
-            for (int j = 0; j < 6; j++)
-                rods[i].RFE[j] = Frame.rods[i].RFE[j];
-        }
+        memcpy(rods, Frame.rods, NOR * sizeof(Rod));
 
     loads = new Load[NOL]();
     if (Frame.loads != NULL)
-        for (int i = 0; i < NOL; i++)
-        {
-            loads[i].NRL = Frame.loads[i].NRL;
-            loads[i].PLI = Frame.loads[i].PLI;
-            loads[i].KOL = Frame.loads[i].KOL;
-            loads[i].VOL = Frame.loads[i].VOL;
-            loads[i].DLB = Frame.loads[i].DLB;
-        }
+        memcpy(loads, Frame.loads, NOL * sizeof(Load));
 
     sections = new Section[NOS]();
     if (Frame.sections != NULL)
-        for (int i = 0; i < NOS; i++)
-        {
-            sections[i].NRS = Frame.sections[i].NRS;
-            sections[i].DSB = Frame.sections[i].DSB;
-            for (int j = 0; j < 6; j++)
-                sections[i].IFS[j] = Frame.sections[i].IFS[j];
-        }
+        memcpy(sections, Frame.sections, NOS * sizeof(Section));
 
     int dof = 6 * NFRN;
     IV = new int[dof]();
     if (Frame.IV != NULL)
-        for (int i = 0; i < dof; i++)
-            IV[i] = Frame.IV[i];
+        memcpy(IV, Frame.IV, dof * sizeof(int));
 
     NSI = Frame.NSI;
     MAXIBDW = Frame.MAXIBDW;
 
     TotalStiffness = new double[NSI]();
     if (Frame.TotalStiffness != NULL)
-        for (int i = 0; i < NSI; i++)
-            TotalStiffness[i] = Frame.TotalStiffness[i];
+        memcpy(TotalStiffness, Frame.TotalStiffness, NSI * sizeof(double));
 
     LoadVector = new double[dof]();
     if (Frame.LoadVector != NULL)
-        for (int i = 0; i < dof; i++)
-            LoadVector[i] = Frame.LoadVector[i];
+        memcpy(LoadVector, Frame.LoadVector, dof * sizeof(double));
 
     Displacement = new double[dof]();
     if (Frame.Displacement != NULL)
-        for (int i = 0; i < dof; i++)
-            Displacement[i] = Frame.Displacement[i];
+        memcpy(Displacement, Frame.Displacement, dof * sizeof(double));
 }
 
 SpaceFrame::~SpaceFrame()
@@ -1434,7 +1398,7 @@ int main()
     Frame.sfCalculate();
     Frame.sfOutput();
     SpaceFrame Frame2(Frame);
-    Frame2.sfInput();
+    // Frame2.sfInput();
     Frame2.sfCalculate();
     Frame2.sfOutput();
 

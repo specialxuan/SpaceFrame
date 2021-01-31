@@ -535,13 +535,9 @@ private:
         memset(z, 0, sizeof(double));
 
         for (int i = 0; i < NSI; i++)
-        {
             A[i] = A[i] / MAXTS;
-        }
         for (int i = 0; i < N; i++)
-        {
             b[i] = b[i] / MAXLV;
-        }
 
         //  x = [0 ... 0]
         //  r = b - A * x
@@ -574,13 +570,9 @@ private:
                     else if (j > i)
                     {
                         if ((IV[j] - j + i) > IV[j - 1])
-                        {
                             z[i] += A[IV[j] - j + i - 1] * p[j];
-                        }
                         else
-                        {
                             z[i] += 0;
-                        }
                     }
                     else if (i > j)
                     {
@@ -597,10 +589,7 @@ private:
 #pragma omp parallel for reduction(+ \
                                    : alpha)
             for (int i = 0; i < N; ++i)
-            {
-                //  printf("%d\n", i);
                 alpha += p[i] * z[i];
-            }
             alpha = gamma / alpha;
 
             //  x = x + alpha * p
@@ -624,18 +613,18 @@ private:
 //  p = r + (gamma_new / gamma) * p;
 #pragma omp parallel for
             for (int i = 0; i < N; ++i)
-            {
                 p[i] = r[i] + beta * p[i];
-            }
 
             //  gamma = gamma_new
             gamma = gamma_new;
         }
 
+        for (int i = 0; i < NSI; i++)
+            A[i] = A[i] * MAXTS;
         for (int i = 0; i < N; i++)
-        {
+            b[i] = b[i] * MAXLV;
+        for (int i = 0; i < N; i++)
             x[i] = x[i] * MAXLV / MAXTS;
-        }
 
         free(r);
         free(p);

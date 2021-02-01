@@ -524,8 +524,9 @@ private:
             return 1;
         }
 
-        double *r, *p, *z;
-        double gamma, gamma_new, alpha, beta;
+        double *r = NULL, *p = NULL, *z = NULL;
+        double gamma = 0, gamma_new = 0, gamma_new_sqrt = 0, alpha = 0, beta = 0;
+        int percent = 0, percent_new = 0;
 
         r = (double *)malloc(N * sizeof(double));
         memset(r, 0, sizeof(double));
@@ -605,9 +606,39 @@ private:
                 gamma_new += r[i] * r[i];
             }
 
-            if (sqrt(gamma_new) < EPS)
+            gamma_new_sqrt = sqrt(gamma_new);
+            if (gamma_new_sqrt < EPS)
                 break;
-
+            
+            percent_new = (int)((1 - log10(gamma_new_sqrt * 1e15) / 16) * 100);
+            if (percent_new > percent)
+            {
+                percent = percent_new;
+                printf("\rSolving equation ");
+                for (int i = 0; i <= 4; i++)
+                    if (i <= n % 4)
+                        printf(".");
+                    else
+                        printf(" ");
+                printf("[ %d%% ]", percent_new);
+                printf("[");
+                for (int i = 0; i < 49; i++)
+                    if (i < percent / 2)
+                        printf("=");
+                    else
+                        printf(" ");
+                printf("]");
+            }
+            else
+            {
+                printf("\rSolving equation ");
+                for (int i = 0; i <= 4; i++)
+                    if (i <= n % 4)
+                        printf(".");
+                    else
+                        printf(" ");
+            }
+            
             beta = gamma_new / gamma;
 
 //  p = r + (gamma_new / gamma) * p;
@@ -618,6 +649,8 @@ private:
             //  gamma = gamma_new
             gamma = gamma_new;
         }
+
+        printf("\rSolving equation done [ 100%% ][=================================================]\n");
 
         for (int i = 0; i < NSI; i++)
             A[i] = A[i] * MAXTS;
@@ -1380,16 +1413,27 @@ bool SpaceFrame::sfCalculate()
 
 int main()
 {
+    clock_t start1 = 0, end1 = 0;
+    DWORD start, end;
+    start1 = clock();
+    start = GetTickCount();
+    
     SpaceFrame Frame;
     Frame.sfInput();
+    // Frame.sfCalculate();
+    // Frame.sfOutput();
     Frame.~SpaceFrame();
     Frame.sfInput();
     Frame.sfCalculate();
     Frame.sfOutput();
-    SpaceFrame Frame2(Frame);
+    // SpaceFrame Frame2(Frame);
     // Frame2.sfInput();
-    Frame2.sfCalculate();
-    Frame2.sfOutput();
+    // Frame2.sfCalculate();
+    // Frame2.sfOutput();
+    end1 = clock();
+    printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
+    end = GetTickCount();
+    printf("realtime=%f\n", (double)(end - start) / 1000);
 
     return 0;
 }

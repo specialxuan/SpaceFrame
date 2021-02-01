@@ -160,5 +160,8 @@ int main()
     }
     fprintf(fp, "\nEND,");
 
+    fclose(fp);
+    fp = NULL;
+
     return 0;
 }

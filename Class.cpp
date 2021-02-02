@@ -73,6 +73,8 @@ private:
     int NSI;     // upper limit
     int MAXIBDW; // half bandwidth
 
+    bool ProgressBar = 0;
+
     // calculate the length sine and cosine of rods
     bool sfLCosSin()
     {
@@ -528,6 +530,11 @@ private:
         double gamma = 0, gamma_new = 0, gamma_new_sqrt = 0, alpha = 0, beta = 0;
         int percent = 0, percent_new = 0;
 
+        if (ProgressBar)
+        {
+            printf("\rSolving equation      [ 0%% ][                                                 ]");
+        }
+
         r = (double *)malloc(N * sizeof(double));
         memset(r, 0, sizeof(double));
         p = (double *)malloc(N * sizeof(double));
@@ -609,36 +616,39 @@ private:
             gamma_new_sqrt = sqrt(gamma_new);
             if (gamma_new_sqrt < EPS)
                 break;
-            
-            percent_new = (int)((1 - log10(gamma_new_sqrt * 1e15) / 16) * 100);
-            if (percent_new > percent)
+
+            if (ProgressBar)
             {
-                percent = percent_new;
-                printf("\rSolving equation ");
-                for (int i = 0; i <= 4; i++)
-                    if (i <= n % 4)
-                        printf(".");
-                    else
-                        printf(" ");
-                printf("[ %d%% ]", percent_new);
-                printf("[");
-                for (int i = 0; i < 49; i++)
-                    if (i < percent / 2)
-                        printf("=");
-                    else
-                        printf(" ");
-                printf("]");
+                percent_new = (int)((1 - log10(gamma_new_sqrt * 1e15) / 16) * 100);
+                if (percent_new > percent)
+                {
+                    percent = percent_new;
+                    printf("\rSolving equation ");
+                    for (int i = 0; i <= 4; i++)
+                        if (i <= n % 4)
+                            printf(".");
+                        else
+                            printf(" ");
+                    printf("[ %d%% ]", percent_new);
+                    printf("[");
+                    for (int i = 0; i < 49; i++)
+                        if (i < percent / 2)
+                            printf("=");
+                        else
+                            printf(" ");
+                    printf("]");
+                }
+                else
+                {
+                    printf("\rSolving equation ");
+                    for (int i = 0; i <= 4; i++)
+                        if (i <= n % 4)
+                            printf(".");
+                        else
+                            printf(" ");
+                }
             }
-            else
-            {
-                printf("\rSolving equation ");
-                for (int i = 0; i <= 4; i++)
-                    if (i <= n % 4)
-                        printf(".");
-                    else
-                        printf(" ");
-            }
-            
+
             beta = gamma_new / gamma;
 
 //  p = r + (gamma_new / gamma) * p;
@@ -650,7 +660,10 @@ private:
             gamma = gamma_new;
         }
 
-        printf("\rSolving equation done [ 100%% ][=================================================]\n");
+        if (ProgressBar)
+        {
+            printf("\rSolving equation done [ 100%% ][=================================================]\n");
+        }
 
         for (int i = 0; i < NSI; i++)
             A[i] = A[i] * MAXTS;
@@ -943,7 +956,7 @@ public:
     // read data from .csv
     bool sfInput();
     // calculate
-    bool sfCalculate();
+    bool sfCalculate(bool);
     // output data
     bool sfOutput();
 };
@@ -1356,8 +1369,9 @@ bool SpaceFrame::sfOutput()
     return 0;
 }
 
-bool SpaceFrame::sfCalculate()
+bool SpaceFrame::sfCalculate(bool progress_bar = false)
 {
+    ProgressBar = progress_bar;
 
     if (sfLCosSin()) // calculate the length, cosine and sine of all rods
     {
@@ -1417,13 +1431,13 @@ int main()
     DWORD start, end;
     start1 = clock();
     start = GetTickCount();
-    
+
     SpaceFrame Frame;
     Frame.sfInput();
     // Frame.sfCalculate();
     // Frame.sfOutput();
-    Frame.~SpaceFrame();
-    Frame.sfInput();
+    // Frame.~SpaceFrame();
+    // Frame.sfInput();
     Frame.sfCalculate();
     Frame.sfOutput();
     // SpaceFrame Frame2(Frame);

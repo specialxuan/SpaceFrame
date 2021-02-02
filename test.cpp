@@ -1782,7 +1782,6 @@ int main()
         Frame.sfOutput();
         end = GetTickCount();
         fprintf(fp, "%9.2f ,", (double)(end - start) / 1000);
-        Frame.~SpaceFrame();
 
         start = GetTickCount();
         Frame.sfInput();
@@ -1790,7 +1789,6 @@ int main()
         Frame.sfOutput();
         end = GetTickCount();
         fprintf(fp, "%9.2f ,\n", (double)(end - start) / 1000);
-        Frame.~SpaceFrame();
     }
 
     fclose(fp);

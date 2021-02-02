@@ -230,8 +230,8 @@ private:
     int NSI;     // upper limit
     int MAXIBDW; // half bandwidth
 
-    bool ProgressBar = 0; // open progress bar
-    bool Parallel = 0;    // open parallel
+    bool ProgressBar; // open progress bar
+    bool Parallel;    // open parallel
 
     // calculate the length sine and cosine of rods
     bool sfLCosSin()
@@ -1312,6 +1312,9 @@ SpaceFrame::SpaceFrame()
     IV = NULL;   // the location of diagonal element
     NSI = 0;     // upper limit
     MAXIBDW = 0; // half bandwidth
+
+    bool ProgressBar = 1; // open progress bar
+    bool Parallel = 1;    // open parallel
 }
 
 SpaceFrame::SpaceFrame(SpaceFrame &Frame)
@@ -1362,6 +1365,9 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
     Displacement = new double[dof]();
     if (Frame.Displacement != NULL)
         memcpy(Displacement, Frame.Displacement, dof * sizeof(double));
+
+    ProgressBar = Frame.ProgressBar;
+    Parallel = Frame.Parallel;
 }
 
 SpaceFrame::~SpaceFrame()
@@ -1730,7 +1736,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true)
     }
     else
         printf("Building load vector succeeded!\n");
-        
+
     if (Parallel)
     {
         if (sfConjugateGradientPar(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation

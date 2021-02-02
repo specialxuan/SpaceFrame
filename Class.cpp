@@ -73,7 +73,8 @@ private:
     int NSI;     // upper limit
     int MAXIBDW; // half bandwidth
 
-    bool ProgressBar = 0;
+    bool ProgressBar = 0; // open progress bar
+    bool Parallel = 0;    // open parallel
 
     // calculate the length sine and cosine of rods
     bool sfLCosSin()
@@ -502,6 +503,174 @@ private:
 
         return 0;
     }
+    // solve equation of matrix by conjugate gradient
+    bool sfConjugateGradient(double *A, double *b, double *x, int N)
+    {
+        if (A == NULL)
+        {
+            sfPrintError(12);
+            return 1;
+        }
+        else if (b == NULL)
+        {
+            sfPrintError(12);
+            return 1;
+        }
+        else if (x == NULL)
+        {
+            sfPrintError(12);
+            return 1;
+        }
+        else if (N == 0)
+        {
+            sfPrintError(12);
+            return 1;
+        }
+
+        double *r = NULL, *p = NULL, *z = NULL;
+        double gamma = 0, gamma_new = 0, gamma_new_sqrt = 0, alpha = 0, beta = 0;
+        int percent = 0, percent_new = 0;
+
+        if (ProgressBar)
+        {
+            printf("\rSolving equation      [ 0%% ][                                                 ]");
+        }
+
+        r = (double *)malloc(N * sizeof(double));
+        memset(r, 0, sizeof(double));
+        p = (double *)malloc(N * sizeof(double));
+        memset(p, 0, sizeof(double));
+        z = (double *)malloc(N * sizeof(double));
+        memset(z, 0, sizeof(double));
+
+        for (int i = 0; i < NSI; i++)
+            A[i] = A[i] / MAXTS;
+        for (int i = 0; i < N; i++)
+            b[i] = b[i] / MAXLV;
+
+        // x = [0 ... 0]
+        // r = b - A * x
+        // p = r
+        // gamma = r' * r
+        gamma = 0.0;
+        for (int i = 0; i < N; ++i)
+        {
+            x[i] = 0.0;
+            r[i] = b[i];
+            p[i] = r[i];
+            gamma += r[i] * r[i];
+        }
+
+        for (int n = 0; 1; ++n)
+        {
+            // z = A * p
+            for (int i = 0; i < N; i++)
+            {
+                z[i] = 0.0;
+                for (int j = 0; j < N; j++)
+                {
+                    if (i == j)
+                    {
+                        z[i] += A[IV[i] - 1] * p[j];
+                    }
+                    else if (j > i)
+                    {
+                        if ((IV[j] - j + i) > IV[j - 1])
+                            z[i] += A[IV[j] - j + i - 1] * p[j];
+                        else
+                            z[i] += 0;
+                    }
+                    else if (i > j)
+                    {
+                        if ((IV[i] - i + j) > IV[i - 1])
+                            z[i] += A[IV[i] - i + j - 1] * p[j];
+                        else
+                            z[i] += 0;
+                    }
+                }
+            }
+
+            // alpha = gamma / (p' * z)
+            alpha = 0.0;
+            for (int i = 0; i < N; ++i)
+                alpha += p[i] * z[i];
+            alpha = gamma / alpha;
+
+            // x = x + alpha * p
+            // r = r - alpha * z
+            // gamma_new = r' * r
+            gamma_new = 0.0;
+            for (int i = 0; i < N; ++i)
+            {
+                x[i] += alpha * p[i];
+                r[i] -= alpha * z[i];
+                gamma_new += r[i] * r[i];
+            }
+
+            gamma_new_sqrt = sqrt(gamma_new);
+            if (gamma_new_sqrt < EPS)
+                break;
+
+            if (ProgressBar)
+            {
+                percent_new = (int)((1 - log10(gamma_new_sqrt * 1e15) / 16) * 100);
+                if (percent_new > percent)
+                {
+                    percent = percent_new;
+                    printf("\rSolving equation ");
+                    for (int i = 0; i <= 4; i++)
+                        if (i <= n % 4)
+                            printf(".");
+                        else
+                            printf(" ");
+                    printf("[ %d%% ]", percent_new);
+                    printf("[");
+                    for (int i = 0; i < 49; i++)
+                        if (i < percent / 2)
+                            printf("=");
+                        else
+                            printf(" ");
+                    printf("]");
+                }
+                else
+                {
+                    printf("\rSolving equation ");
+                    for (int i = 0; i <= 4; i++)
+                        if (i <= n % 4)
+                            printf(".");
+                        else
+                            printf(" ");
+                }
+            }
+
+            beta = gamma_new / gamma;
+
+            // p = r + (gamma_new / gamma) * p;
+            for (int i = 0; i < N; ++i)
+                p[i] = r[i] + beta * p[i];
+
+            // gamma = gamma_new
+            gamma = gamma_new;
+        }
+
+        for (int i = 0; i < NSI; i++)
+            A[i] = A[i] * MAXTS;
+        for (int i = 0; i < N; i++)
+            b[i] = b[i] * MAXLV;
+        for (int i = 0; i < N; i++)
+            x[i] = x[i] * MAXLV / MAXTS;
+
+        if (ProgressBar)
+        {
+            printf("\rSolving equation done [ 100%% ][=================================================]\n");
+        }
+
+        free(r);
+        free(p);
+        free(z);
+
+        return 0;
+    }
     // solve equation of matrix by conjugate gradient parallel
     bool sfConjugateGradientPar(double *A, double *b, double *x, int N)
     {
@@ -660,17 +829,17 @@ private:
             gamma = gamma_new;
         }
 
-        if (ProgressBar)
-        {
-            printf("\rSolving equation done [ 100%% ][=================================================]\n");
-        }
-
         for (int i = 0; i < NSI; i++)
             A[i] = A[i] * MAXTS;
         for (int i = 0; i < N; i++)
             b[i] = b[i] * MAXLV;
         for (int i = 0; i < N; i++)
             x[i] = x[i] * MAXLV / MAXTS;
+
+        if (ProgressBar)
+        {
+            printf("\rSolving equation done [ 100%% ][=================================================]\n");
+        }
 
         free(r);
         free(p);
@@ -956,7 +1125,7 @@ public:
     // read data from .csv
     bool sfInput();
     // calculate
-    bool sfCalculate(bool);
+    bool sfCalculate(bool, bool);
     // output data
     bool sfOutput();
 };
@@ -1369,9 +1538,9 @@ bool SpaceFrame::sfOutput()
     return 0;
 }
 
-bool SpaceFrame::sfCalculate(bool progress_bar = false)
+bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true)
 {
-    ProgressBar = progress_bar;
+    ProgressBar = progress_bar, Parallel = parallel;
 
     if (sfLCosSin()) // calculate the length, cosine and sine of all rods
     {
@@ -1404,14 +1573,26 @@ bool SpaceFrame::sfCalculate(bool progress_bar = false)
     }
     else
         printf("Building load vector succeeded!\n");
-
-    if (sfConjugateGradientPar(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation
+    if (Parallel)
     {
-        sfPrintError(4);
-        return 1;
+        if (sfConjugateGradientPar(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation
+        {
+            sfPrintError(4);
+            return 1;
+        }
+        else
+            printf("Solving equation succeeded!\n");
     }
     else
-        printf("Solving equation succeeded!\n");
+    {
+        if (sfConjugateGradient(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation
+        {
+            sfPrintError(4);
+            return 1;
+        }
+        else
+            printf("Solving equation succeeded!\n");
+    }
 
     for (int i = 0; i < NOS; i++)
         if (sfInternalForce(i, sections[i].NRS, sections[i].DSB)) // calculate the internal force of each rods

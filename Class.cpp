@@ -1573,6 +1573,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true)
     }
     else
         printf("Building load vector succeeded!\n");
+        
     if (Parallel)
     {
         if (sfConjugateGradientPar(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation

@@ -1,5 +1,7 @@
 #include <Windows.h>
 #include <ctype.h>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <math.h>
 #include <stdbool.h>
@@ -7,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
 using namespace std;
 
 class SpaceFrame
@@ -532,9 +533,7 @@ private:
         int percent = 0, percent_new = 0;
 
         if (ProgressBar)
-        {
-            printf("\rSolving equation      [ 0%% ][                                                 ]");
-        }
+            cout << "\rSolving equation      [ 0%% ][                                                 ]";
 
         r = (double *)malloc(N * sizeof(double));
         memset(r, 0, sizeof(double));
@@ -617,29 +616,29 @@ private:
                 if (percent_new > percent)
                 {
                     percent = percent_new;
-                    printf("\rSolving equation ");
+                    cout << "\rSolving equation ";
                     for (int i = 0; i <= 4; i++)
                         if (i <= n % 4)
-                            printf(".");
+                            cout << ".";
                         else
-                            printf(" ");
-                    printf("[ %d%% ]", percent_new);
-                    printf("[");
+                            cout << " ";
+                    cout << "[ " << percent << "%% ]";
+                    cout << "[";
                     for (int i = 0; i < 49; i++)
                         if (i < percent / 2)
-                            printf("=");
+                            cout << "=";
                         else
-                            printf(" ");
-                    printf("]");
+                            cout << " ";
+                    cout << "]";
                 }
                 else
                 {
-                    printf("\rSolving equation ");
+                    cout << "\rSolving equation ";
                     for (int i = 0; i <= 4; i++)
                         if (i <= n % 4)
-                            printf(".");
+                            cout << ".";
                         else
-                            printf(" ");
+                            cout << " ";
                 }
             }
 
@@ -661,9 +660,7 @@ private:
             x[i] = x[i] * MAXLV / MAXTS;
 
         if (ProgressBar)
-        {
-            printf("\rSolving equation done [ 100%% ][=================================================]\n");
-        }
+            cout << "\rSolving equation done [ 100%% ][=================================================]\n";
 
         free(r);
         free(p);
@@ -701,7 +698,7 @@ private:
 
         if (ProgressBar)
         {
-            printf("\rSolving equation      [ 0%% ][                                                 ]");
+            cout << "\rSolving equation      [ 0%% ][                                                 ]";
         }
 
         r = (double *)malloc(N * sizeof(double));
@@ -792,29 +789,29 @@ private:
                 if (percent_new > percent)
                 {
                     percent = percent_new;
-                    printf("\rSolving equation ");
+                    cout << "\rSolving equation ";
                     for (int i = 0; i <= 4; i++)
                         if (i <= n % 4)
-                            printf(".");
+                            cout << ".";
                         else
-                            printf(" ");
-                    printf("[ %d%% ]", percent_new);
-                    printf("[");
+                            cout << " ";
+                    cout << "[ " << percent << "%% ]";
+                    cout << "[";
                     for (int i = 0; i < 49; i++)
                         if (i < percent / 2)
-                            printf("=");
+                            cout << "=";
                         else
-                            printf(" ");
-                    printf("]");
+                            cout << " ";
+                    cout << "]";
                 }
                 else
                 {
-                    printf("\rSolving equation ");
+                    cout << "\rSolving equation ";
                     for (int i = 0; i <= 4; i++)
                         if (i <= n % 4)
-                            printf(".");
+                            cout << ".";
                         else
-                            printf(" ");
+                            cout << " ";
                 }
             }
 
@@ -838,7 +835,7 @@ private:
 
         if (ProgressBar)
         {
-            printf("\rSolving equation done [ 100%% ][=================================================]\n");
+            cout << "\rSolving equation done [ 100%% ][=================================================]\n";
         }
 
         free(r);
@@ -1018,101 +1015,101 @@ private:
     // print"----------------------------------------"
     bool sfPrintLine()
     {
-        printf("--------------------------------------------------------------------------\n");
+        cout << "-------------------------------------------------------------------------------------------------------------------------------\n";
         return 0;
     }
     // print"****************************************"
     bool sfPrintLine2()
     {
-        printf("**************************************************************************\n");
+        cout << "**************************************************************************\n";
         return 0;
     }
     // print error
     bool sfPrintError(int error)
     {
-        printf("ERROR:\t");
+        cout << "ERROR:\t";
         switch (error)
         {
         case 1:
-            printf("Data input failed!\n");
+            cout << "Data input failed!\n";
             break;
         case 2:
-            printf("Building total stiffness matrix failed!\n");
+            cout << "Building total stiffness matrix failed!\n";
             break;
         case 3:
-            printf("Building load vector failed!\n");
+            cout << "Building load vector failed!\n";
             break;
         case 4:
-            printf("Solving equation failed!\n");
+            cout << "Solving equation failed!\n";
             break;
         case 5:
-            printf("Calculating internal force failed!\n");
+            cout << "Calculating internal force failed!\n";
             break;
         case 6:
-            printf("Calculating length, cosine and sine failed!\n");
+            cout << "Calculating length, cosine and sine failed!\n";
             break;
         case 7:
-            printf("Building unit stiffness matrix failed!\n");
+            cout << "Building unit stiffness matrix failed!\n";
             break;
         case 8:
-            printf("The length of a rod is too small!\n");
+            cout << "The length of a rod is too small!\n";
             break;
         case 9:
-            printf("Building local stiffness matrix filed!\n");
+            cout << "Building local stiffness matrix filed!\n";
             break;
         case 10:
-            printf("Building transpose matrix failed!\n");
+            cout << "Building transpose matrix failed!\n";
             break;
         case 11:
-            printf("Calculating reaction force failed!\n");
+            cout << "Calculating reaction force failed!\n";
             break;
         case 12:
-            printf("There is something wrong in the equation!\n");
+            cout << "There is something wrong in the equation!\n";
             break;
         case 13:
-            printf("calculating internal force of cantilever beam failed!\n");
+            cout << "calculating internal force of cantilever beam failed!\n";
             break;
         case 14:
-            printf("Calculating end force failed!\n");
+            cout << "Calculating end force failed!\n";
             break;
         case 15:
-            printf("Allocating total stiffness matrix failed!\n");
+            cout << "Allocating total stiffness matrix failed!\n";
             break;
         case 16:
-            printf("There is something wrong in building unit stiffness matrix!\n");
+            cout << "There is something wrong in building unit stiffness matrix!\n";
             break;
         case 17:
-            printf("There is something wrong in building local stiffness matrix!\n");
+            cout << "There is something wrong in building local stiffness matrix!\n";
             break;
         case 18:
-            printf("There is something wrong in building transpose matrix failed!\n");
+            cout << "There is something wrong in building transpose matrix failed!\n";
             break;
         case 19:
-            printf("There is something wrong in building load vector!\n");
+            cout << "There is something wrong in building load vector!\n";
             break;
         case 20:
-            printf("There is something wrong in calculating reaction force!\n");
+            cout << "There is something wrong in calculating reaction force!\n";
             break;
         case 21:
-            printf("There is something wrong in calculating internal force!\n");
+            cout << "There is something wrong in calculating internal force!\n";
             break;
         case 22:
-            printf("There is something wrong in calculating internal force of cantilever!\n");
+            cout << "There is something wrong in calculating internal force of cantilever!\n";
             break;
         case 23:
-            printf("There is something wrong in calculating internal force of displacement!\n");
+            cout << "There is something wrong in calculating internal force of displacement!\n";
             break;
         case 24:
-            printf("!\n");
+            cout << "!\n";
             break;
         case 25:
-            printf("!\n");
+            cout << "!\n";
             break;
 
         default:
             break;
         }
-        printf("There is at least one error in your file, please check it and try it one more time.\n");
+        cout << "There is at least one error in your file, please check it and try it one more time.\n";
 
         return 0;
     }
@@ -1246,7 +1243,7 @@ bool SpaceFrame::sfInput()
 
     if ((fp = fopen("source&result/sf_test.csv", "r")) == NULL) // Start the process when the file opens successfully
     {
-        printf("There is no such file!");
+        cout << "There is no such file!";
         return 0;
     }
 
@@ -1393,155 +1390,69 @@ bool SpaceFrame::sfInput()
 
 bool SpaceFrame::sfOutput()
 {
-    if (false) // console
+    if (true) // console
     {
-        printf("\t\t\tCalculation Of Space Rigid Frame\n");
+        sfPrintLine();
+        cout << setw(80) << "Calculation Of Space Rigid Frame\n";
         sfPrintLine();
 
-        printf("\t\tTNN = %d\t\t\tNFIN = %d\n\t\tNFRN = %d\t\tNOR = %d\n", TNN, NFIN, NFRN, NOR);
-        printf("\t\tNOL = %d\t\t\tNOS = %d\n", NOL, NOS);
+        cout << "| TNN = " << setw(9) << TNN << " | NFIN = " << setw(8) << NFIN << " | NFRN = " << setw(8) << NFRN << " | NOR = " << setw(9) << NOR << " | NOL = " << setw(9) << NOL << " | NOS = " << setw(9) << NOS << " |                 |\n";
         sfPrintLine();
 
-        printf("NUMBER OF NODES     Coordinate-X    Coordinate-Y    Coordinate-Z\n");
+        cout << "| Nodes           | Coordinate-X    | Coordinate-Y    | Coordinate-Z    |                 |                 |\n";
         for (int i = 0; i < TNN; i++)
-            printf("%15d%15.7f%15.7f%15.7f\n", i + 1, nodes[i].XCN, nodes[i].YCN, nodes[i].ZCN);
+            cout << "| " << setw(15) << i + 1 << " | " << setw(15) << nodes[i].XCN << " | " << setw(15) << nodes[i].YCN << " | " << setw(15) << nodes[i].ZCN << " |                 |                 |                 |\n";
         sfPrintLine();
 
-        printf("NUMBER OF NODES     LEFT NODES    RIGHT NODES  Elastic modulus  Shear modulus    Area   Inertia moment Y axis  Inertia moment Z axis\n");
+        cout << "| Rods            | Left - Right    | Elastic Modulus | Shear modulus   | Area            | Inertia Y Axis  | Inertia Z Axis  |\n";
         for (int i = 0; i < NOR; i++)
-            printf("%15d%15d%15d%15.0f%15.0f%11.4f%16.5f%23.5f\n", i + 1, rods[i].BNR, rods[i].ENR, rods[i].ELASTIC, rods[i].SHEAR, rods[i].AREA, rods[i].IMY, rods[i].IMZ);
+            cout << "| " << setw(15) << i + 1 << " | " << setw(6) << rods[i].BNR << " - " << left << setw(6) << rods[i].ENR << " | " << right << setw(15) << rods[i].ELASTIC << " | " << setw(15) << rods[i].SHEAR << " | " << setw(15) << rods[i].AREA << " | " << setw(15) << rods[i].IMY << " | " << setw(15) << rods[i].IMZ << " |\n";
         sfPrintLine();
-        printf("NUMBER OF SECTIONS         PLI            DLB\n");
+
+        cout << "| Sections        | Rods            | Distance        |                 |                 |                 |\n";
         for (int i = 0; i < NOS; i++)
-            printf("%15d%15d%15.7f\n", i + 1, sections[i].NRS, sections[i].DSB);
+            cout << "| " << setw(15) << i + 1 << " | " << setw(15) << sections[i].NRS << " | " << setw(15) << sections[i].DSB << " |                 |                 |                 |                 |\n";
         sfPrintLine();
 
-        printf("Calculating......\nThe results are as follows: \n");
-        sfPrintLine();
-
-        printf("NUMBER OF NODES   Displacement-X Displacement-Y Displacement-Z   Diversion-X    Diversion-Y    Diversion-Z\n");
+        cout << "| Nodes           | Displacement-X  | Displacement-Y  | Displacement-Z  | Diversion-X     | Diversion-Y     | Diversion-Z     |\n";
         for (int i = NFIN; i < TNN; i++)
-            printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, Displacement[6 * (i - NFIN)], Displacement[6 * (i - NFIN) + 1], Displacement[6 * (i - NFIN) + 2], Displacement[6 * (i - NFIN) + 3], Displacement[6 * (i - NFIN) + 4], Displacement[6 * (i - NFIN) + 5]);
+            cout << "| " << setw(15) << i + 1 << " | " << setw(15) << Displacement[6 * (i - NFIN)] << " | " << setw(15) << Displacement[6 * (i - NFIN) + 1] << " | " << setw(15) << Displacement[6 * (i - NFIN) + 2] << " | " << setw(15) << Displacement[6 * (i - NFIN) + 3] << " | " << setw(15) << Displacement[6 * (i - NFIN) + 4] << " | " << setw(15) << Displacement[6 * (i - NFIN) + 5] << " |\n";
         sfPrintLine();
 
-        printf("NUMBER OF SECTIONS Axial force-X  Shear force-Y  Shear force-Z    Torque-X   Bending moment-Y  Bending moment-Z\n");
+        cout << "| Sections        | Axial force-X   | Shear force-Y   | Shear force-Z   | Torque-X        | Bending-Y       | Bending-Z       |\n";
         for (int i = 0; i < NOS; i++)
-            printf("%15d%15.7f%15.7f%15.7f%15.7f%15.7f%15.7f\n", i + 1, sections[i].IFS[0], sections[i].IFS[1], sections[i].IFS[2], sections[i].IFS[3], sections[i].IFS[4], sections[i].IFS[5]);
+            cout << "| " << setw(15) << i + 1 << " | " << setw(15) << sections[i].IFS[0] << " | " << setw(15) << sections[i].IFS[1] << " | " << setw(15) << sections[i].IFS[2] << " | " << setw(15) << sections[i].IFS[3] << " | " << setw(15) << sections[i].IFS[4] << " | " << setw(15) << sections[i].IFS[5] << " |\n";
+        sfPrintLine();
     }
 
     if (true) // file
     {
-        FILE *fp = NULL;
-        fp = fopen("source&result/sfResultClass.csv", "w");
-        fprintf(fp, "TITLE\n");
-        fprintf(fp, "TNN,%d\nNFIN,%d\nNFRN,%d\nNOR,%d\nNOL,%d\nNOS,%d", TNN, NFIN, NFRN, NOR, NOL, NOS);
+        ofstream fout("source&result/sfResultClass.csv", ios::out);
+        fout << setw(80) << "Calculation Of Space Rigid Frame,\n";
 
-        // ------------NODES-------------------------------------------------
-        fprintf(fp, "\nNODES,");
+        fout << "TNN = " << setw(9) << TNN << " , NFIN = " << setw(8) << NFIN << " , NFRN = " << setw(8) << NFRN << " , NOR = " << setw(9) << NOR << " , NOL = " << setw(9) << NOL << " , NOS = " << setw(9) << NOS << " ,                 ,\n";
+
+        fout << "Nodes           , Coordinate-X    , Coordinate-Y    , Coordinate-Z    ,                 ,                 ,\n";
         for (int i = 0; i < TNN; i++)
-            fprintf(fp, "%d,", i + 1);
+            fout << setw(15) << i + 1 << " , " << setw(15) << nodes[i].XCN << " , " << setw(15) << nodes[i].YCN << " , " << setw(15) << nodes[i].ZCN << " ,                 ,                 ,                 ,\n";
 
-        fprintf(fp, "\nCON,");
-        for (int i = 0; i < TNN; i++)
-            fprintf(fp, "(%f %f %f),", nodes[i].XCN, nodes[i].YCN, nodes[i].ZCN);
-
-        // ------------RODS-------------------------------------------------
-        fprintf(fp, "\nRODS,");
+        fout << "Rods            , Left - Right    , Elastic Modulus , Shear modulus   , Area            , Inertia Y Axis  , Inertia Z Axis  ,\n";
         for (int i = 0; i < NOR; i++)
-            fprintf(fp, "%d,", i + 1);
+            fout << setw(15) << i + 1 << " , " << setw(6) << rods[i].BNR << " - " << left << setw(6) << rods[i].ENR << " , " << right << setw(15) << rods[i].ELASTIC << " , " << setw(15) << rods[i].SHEAR << " , " << setw(15) << rods[i].AREA << " , " << setw(15) << rods[i].IMY << " , " << setw(15) << rods[i].IMZ << " ,\n";
 
-        fprintf(fp, "\nBNR->ENR,");
-        for (int i = 0; i < NOR; i++)
-            fprintf(fp, "p%d -> p%d,", rods[i].BNR, rods[i].ENR);
-
-        fprintf(fp, "\nELASTIC,");
-        for (int i = 0; i < NOR; i++)
-            fprintf(fp, "%f,", rods[i].ELASTIC);
-
-        fprintf(fp, "\nSHEAR,");
-        for (int i = 0; i < NOR; i++)
-            fprintf(fp, "%f,", rods[i].SHEAR);
-
-        fprintf(fp, "\nAREA,");
-        for (int i = 0; i < NOR; i++)
-            fprintf(fp, "%f,", rods[i].AREA);
-
-        fprintf(fp, "\nIMY,");
-        for (int i = 0; i < NOR; i++)
-            fprintf(fp, "%f,", rods[i].IMY);
-
-        fprintf(fp, "\nIMZ,");
-        for (int i = 0; i < NOR; i++)
-            fprintf(fp, "%f,", rods[i].IMZ);
-
-        fprintf(fp, "\nTHETA,");
-        for (int i = 0; i < NOR; i++)
-            fprintf(fp, "%f,", rods[i].THETA);
-
-        // ------------LOADS-------------------------------------------------
-        fprintf(fp, "\nLOADS,");
-        for (int i = 0; i < NOL; i++)
-            fprintf(fp, "%d,", i + 1);
-
-        fprintf(fp, "\nPLI,");
-        for (int i = 0; i < NOL; i++)
-            fprintf(fp, "%d,", loads[i].PLI);
-
-        fprintf(fp, "\nNRL,");
-        for (int i = 0; i < NOL; i++)
-            fprintf(fp, "%d,", loads[i].NRL);
-
-        fprintf(fp, "\nKOL,");
-        for (int i = 0; i < NOL; i++)
-            fprintf(fp, "%d,", loads[i].KOL);
-
-        fprintf(fp, "\nVOL,");
-        for (int i = 0; i < NOL; i++)
-            fprintf(fp, "%f,", loads[i].VOL);
-
-        fprintf(fp, "\nDLB,");
-        for (int i = 0; i < NOL; i++)
-            fprintf(fp, "%f,", loads[i].DLB);
-
-        // -----------SECTIONS-------------------------------------------------
-        fprintf(fp, "\nNOS,");
+        fout << "Sections        , Rods            , Distance        ,                 ,                 ,                 ,\n";
         for (int i = 0; i < NOS; i++)
-            fprintf(fp, "%d,", i + 1);
+            fout << setw(15) << i + 1 << " , " << setw(15) << sections[i].NRS << " , " << setw(15) << sections[i].DSB << " ,                 ,                 ,                 ,                 ,\n";
 
-        fprintf(fp, "\nNRS,");
+        fout << "Nodes           , Displacement-X  , Displacement-Y  , Displacement-Z  , Diversion-X     , Diversion-Y     , Diversion-Z     ,\n";
+        for (int i = NFIN; i < TNN; i++)
+            fout << setw(15) << i + 1 << " , " << setw(15) << Displacement[6 * (i - NFIN)] << " , " << setw(15) << Displacement[6 * (i - NFIN) + 1] << " , " << setw(15) << Displacement[6 * (i - NFIN) + 2] << " , " << setw(15) << Displacement[6 * (i - NFIN) + 3] << " , " << setw(15) << Displacement[6 * (i - NFIN) + 4] << " , " << setw(15) << Displacement[6 * (i - NFIN) + 5] << " ,\n";
+
+        fout << "Sections        , Axial force-X   , Shear force-Y   , Shear force-Z   , Torque-X        , Bending-Y       , Bending-Z       ,\n";
         for (int i = 0; i < NOS; i++)
-            fprintf(fp, "%d,", sections[i].NRS);
+            fout << setw(15) << i + 1 << " , " << setw(15) << sections[i].IFS[0] << " , " << setw(15) << sections[i].IFS[1] << " , " << setw(15) << sections[i].IFS[2] << " , " << setw(15) << sections[i].IFS[3] << " , " << setw(15) << sections[i].IFS[4] << " , " << setw(15) << sections[i].IFS[5] << " ,\n";
 
-        fprintf(fp, "\nDSB,");
-        for (int i = 0; i < NOS; i++)
-            fprintf(fp, "%f,", sections[i].DSB);
-
-        // -----------RESULTS OF NODES-----------------------------------------
-        fprintf(fp, "\nNFRN,");
-        for (int i = 0; i < NFRN; i++)
-            fprintf(fp, "x%d,y%d,z%d,", i + NFIN, i + NFIN, i + NFIN);
-
-        fprintf(fp, "\nDISPLACEMENT,");
-        for (int i = 0; i < NFRN; i++)
-            fprintf(fp, "%f,%f,%f,", Displacement[6 * i], Displacement[6 * i + 1], Displacement[6 * i + 2]);
-
-        fprintf(fp, "\nDIVERSION,");
-        for (int i = 0; i < NFRN; i++)
-            fprintf(fp, "%f,%f,%f,", Displacement[6 * i + 3], Displacement[6 * i + 4], Displacement[6 * i + 5]);
-
-        // -----------RESULTS OF SECTIONS--------------------------------------
-        fprintf(fp, "\nNOS,");
-        for (int i = 0; i < NOS; i++)
-            fprintf(fp, "x%d(AXIAL),y%d(SHEAR),z%d(SHEAR),", i + NOS + 1, i + NOS + 1, i + NOS + 1);
-
-        fprintf(fp, "\nAXIAL&SHEAR FORCE,");
-        for (int i = 0; i < NOS; i++)
-            fprintf(fp, "%f,%f,%f,", sections[i].IFS[0], sections[i].IFS[1], sections[i].IFS[2]);
-
-        fprintf(fp, "\nTORQUE&BENDING MOMENT,");
-        for (int i = 0; i < NOS; i++)
-            fprintf(fp, "%f,%f,%f,", sections[i].IFS[3], sections[i].IFS[4], sections[i].IFS[5]);
-        fclose(fp);
+        fout.close();
     }
 
     return 0;
@@ -1557,7 +1468,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
         return 1;
     }
     else
-        printf("Calculating length, cosine and sine succeed!\n");
+        cout << "Calculating length, cosine and sine succeed!\n";
 
     if (sfAllocate())
     {
@@ -1565,7 +1476,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
         return 0;
     }
     else
-        printf("Allocating Variable Bandwith Matrix succeed!\n");
+        cout << "Allocating Variable Bandwith Matrix succeed!\n";
 
     if (sfBuildTotalStiff()) // build total stiffness matrix
     {
@@ -1573,7 +1484,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
         return 1;
     }
     else
-        printf("Building total stiffness matrix succeeded!\n");
+        cout << "Building total stiffness matrix succeeded!\n";
 
     if (sfBuildLoadVector(LoadVector)) // build load stiffness vector
     {
@@ -1581,7 +1492,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
         return 1;
     }
     else
-        printf("Building load vector succeeded!\n");
+        cout << "Building load vector succeeded!\n";
 
     if (Parallel)
     {
@@ -1591,7 +1502,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
             return 1;
         }
         else
-            printf("Solving equation succeeded!\n");
+            cout << "Solving equation succeeded!\n";
     }
     else
     {
@@ -1601,7 +1512,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
             return 1;
         }
         else
-            printf("Solving equation succeeded!\n");
+            cout << "Solving equation succeeded!\n";
     }
 
     for (int i = 0; i < NOS; i++)
@@ -1618,157 +1529,129 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
 
 bool SpaceFrame::sfCircularStructure(int m, int n, int l)
 {
-    FILE *fp = 0;
-    fp = fopen("source&result/sf_test.csv", "w");
+    ofstream fout("source&result/sf_test.csv", ios::out);
 
-    fprintf(fp, "Stress Test, degree of freedom is %d,\n", ((m + 1) * (n + 1) * (l + 1) - (m + 1) * (n + 1)) * 6);
-    fprintf(fp, "TNN,%d,\n", (m + 1) * (n + 1) * (l + 1));
-    fprintf(fp, "NFIN,%d,\n", (m + 1) * (n + 1));
+    fout << "Stress Test, degree of freedom is " << ((m + 1) * (n + 1) * (l + 1) - (m + 1) * (n + 1)) * 6 << ",\n";
+    fout << "TNN," << (m + 1) * (n + 1) * (l + 1) << ",\n";
+    fout << "NFIN," << (m + 1) * (n + 1) << ",\n";
     int nor = ((2 * m + 1) * (2 * n + 1) - m * n) * l;
-    fprintf(fp, "NOR,%d,\n", nor);
-    fprintf(fp, "NOL,%d,\n", (m + 1) * (n + 1));
-    fprintf(fp, "NOS,%d,\n", (m + 1) * (n + 1));
+    fout << "NOR," << nor << ",\n";
+    fout << "NOL," << (m + 1) * (n + 1) << ",\n";
+    fout << "NOS," << (m + 1) * (n + 1) << ",\n";
 
-    fprintf(fp, "XCN,");
+    fout << "XCN,";
     for (int i = 0; i < l + 1; i++)
         for (int j = 0; j < n + 1; j++)
             for (int k = 0; k < m + 1; k++)
-                fprintf(fp, "%d,", k);
-    fprintf(fp, "\n");
+                fout << k << ",";
+    fout << "\n";
 
-    fprintf(fp, "YCN,");
+    fout << "YCN,";
     for (int i = 0; i < l + 1; i++)
         for (int j = 0; j < n + 1; j++)
             for (int k = 0; k < m + 1; k++)
-                fprintf(fp, "%d,", j);
-    fprintf(fp, "\n");
+                fout << j << ",";
+    fout << "\n";
 
-    fprintf(fp, "ZCN,");
+    fout << "ZCN,";
     for (int i = 0; i < l + 1; i++)
         for (int j = 0; j < n + 1; j++)
             for (int k = 0; k < m + 1; k++)
-                fprintf(fp, "%d,", i);
-    fprintf(fp, "\n");
+                fout << i << ",";
+    fout << "\n";
 
-    fprintf(fp, "BNR,");
+    fout << "BNR,";
     for (int i = 0; i < l; i++)
     {
         for (int j = 0; j < (m + 1) * (n + 1); j++)
-            fprintf(fp, "%d,", j + 1 + i * (m + 1) * (n + 1));
+            fout << j + 1 + i * (m + 1) * (n + 1) << ",";
         for (int j = 0; j < (m + 1) * n; j++)
-            fprintf(fp, "%d,", j + 1 + (i + 1) * (m + 1) * (n + 1));
+            fout << j + 1 + (i + 1) * (m + 1) * (n + 1) << ",";
         for (int j = 0; j < n + 1; j++)
             for (int k = 0; k < m; k++)
-                fprintf(fp, "%d,", k + 1 + j * (m + 1) + (i + 1) * (m + 1) * (n + 1));
+                fout << k + 1 + j * (m + 1) + (i + 1) * (m + 1) * (n + 1) << ",";
     }
-    fprintf(fp, "\n");
+    fout << "\n";
 
-    fprintf(fp, "ENR,");
+    fout << "ENR,";
     for (int i = 0; i < l; i++)
     {
         for (int j = 0; j < (m + 1) * (n + 1); j++)
-            fprintf(fp, "%d,", j + 1 + (i + 1) * (m + 1) * (n + 1));
+            fout << j + 1 + (i + 1) * (m + 1) * (n + 1) << ",";
         for (int j = 0; j < (m + 1) * n; j++)
-            fprintf(fp, "%d,", j + 1 + m + 1 + (i + 1) * (m + 1) * (n + 1));
+            fout << j + 1 + m + 1 + (i + 1) * (m + 1) * (n + 1) << ",";
         for (int j = 0; j < n + 1; j++)
             for (int k = 0; k < m; k++)
-                fprintf(fp, "%d,", k + 2 + j * (m + 1) + (i + 1) * (m + 1) * (n + 1));
+                fout << k + 2 + j * (m + 1) + (i + 1) * (m + 1) * (n + 1) << ",";
     }
-    fprintf(fp, "\n");
+    fout << "\n";
 
-    fprintf(fp, "ELASTIC,");
+    fout << "ELASTIC,";
     for (int i = 0; i < nor; i++)
-    {
-        fprintf(fp, "%d,", 210000000 + 100000 * (rand() % 1000));
-    }
-    fprintf(fp, "\n");
+        fout << 210000000 + 100000 * (rand() % 1000) << ",";
+    fout << "\n";
 
-    fprintf(fp, "SHEAR,");
+    fout << "SHEAR,";
     for (int i = 0; i < nor; i++)
-    {
-        fprintf(fp, "%d,", 80769000);
-    }
-    fprintf(fp, "\n");
+        fout << 80769000 << ",";
+    fout << "\n";
 
-    fprintf(fp, "AREA,");
+    fout << "AREA,";
     for (int i = 0; i < nor; i++)
-    {
-        fprintf(fp, "%f,", 0.007854);
-    }
-    fprintf(fp, "\n");
+        fout << 0.007854 << ",";
+    fout << "\n";
 
-    fprintf(fp, "IMY,");
+    fout << "IMY,";
     for (int i = 0; i < nor; i++)
-    {
-        fprintf(fp, "%.10f,", 0.0000040001 + 0.0000000001 * (rand() % 10000));
-    }
-    fprintf(fp, "\n");
+        fout << 0.0000040001 + 0.0000000001 * (rand() % 10000) << ",";
+    fout << "\n";
 
-    fprintf(fp, "IMZ,");
+    fout << "IMZ,";
     for (int i = 0; i < nor; i++)
-    {
-        fprintf(fp, "%.10f,", 0.0000040001 + 0.0000000001 * (rand() % 10000));
-    }
-    fprintf(fp, "\n");
+        fout << 0.0000040001 + 0.0000000001 * (rand() % 10000) << ",";
+    fout << "\n";
 
-    fprintf(fp, "THETA,");
+    fout << "THETA,";
     for (int i = 0; i < nor; i++)
-    {
-        fprintf(fp, "%d,", 0);
-    }
-    fprintf(fp, "\n");
+        fout << 0 << ",";
+    fout << "\n";
 
-    fprintf(fp, "NRL,");
+    fout << "NRL,";
     for (int i = 0; i < (m + 1) * (n + 1); i++)
-    {
-        fprintf(fp, "%d,", i + 1 + ((2 * m + 1) * (2 * n + 1) - m * n) * (l - 1));
-    }
-    fprintf(fp, "\n");
+        fout << i + 1 + ((2 * m + 1) * (2 * n + 1) - m * n) * (l - 1) << ",";
+    fout << "\n";
 
-    fprintf(fp, "PLI,");
+    fout << "PLI,";
     for (int i = 0; i < (m + 1) * (n + 1); i++)
-    {
-        fprintf(fp, "%d,", 0);
-    }
-    fprintf(fp, "\n");
+        fout << 0 << ",";
+    fout << "\n";
 
-    fprintf(fp, "KOL,");
+    fout << "KOL,";
     for (int i = 0; i < (m + 1) * (n + 1); i++)
-    {
-        fprintf(fp, "%d,", 3);
-    }
-    fprintf(fp, "\n");
+        fout << 3 << ",";
+    fout << "\n";
 
-    fprintf(fp, "VOL,");
+    fout << "VOL,";
     for (int i = 0; i < (m + 1) * (n + 1); i++)
-    {
-        fprintf(fp, "%d,", 1000 + rand() % 1000);
-    }
-    fprintf(fp, "\n");
+        fout << 1000 + rand() % 1000 << ",";
+    fout << "\n";
 
-    fprintf(fp, "DLB,");
+    fout << "DLB,";
     for (int i = 0; i < (m + 1) * (n + 1); i++)
-    {
-        fprintf(fp, "%d,", 1);
-    }
-    fprintf(fp, "\n");
+        fout << 1 << ",";
+    fout << "\n";
 
-    fprintf(fp, "NRS,");
+    fout << "NRS,";
     for (int i = 0; i < (m + 1) * (n + 1); i++)
-    {
-        fprintf(fp, "%d,", i + 1);
-    }
-    fprintf(fp, "\n");
+        fout << i + 1 << ",";
+    fout << "\n";
 
-    fprintf(fp, "DSB,");
+    fout << "DSB,";
     for (int i = 0; i < (m + 1) * (n + 1); i++)
-    {
-        fprintf(fp, "%f,", 0.5);
-    }
-    fprintf(fp, "\nEND,");
+        fout << 0.5 << ",";
+    fout << "\nEND,";
 
-    fclose(fp);
-    fp = NULL;
+    fout.close();
 
     return 0;
 }

@@ -613,7 +613,7 @@ private:
 
             if (ProgressBar)
             {
-                percent_new = (int)((1 - log10(gamma_new_sqrt * 1e15) / 16) * 100);
+                percent_new = (int)((1 - log10(gamma_new_sqrt / EPS) / 16) * 100);
                 if (percent_new > percent)
                 {
                     percent = percent_new;
@@ -1125,7 +1125,7 @@ public:
     // read data from .csv
     bool sfInput();
     // calculate
-    bool sfCalculate(bool, bool);
+    bool sfCalculate(bool, bool, double);
     // output data
     bool sfOutput();
 
@@ -1547,9 +1547,9 @@ bool SpaceFrame::sfOutput()
     return 0;
 }
 
-bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true)
+bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, double eps = 1e-15)
 {
-    ProgressBar = progress_bar, Parallel = parallel;
+    ProgressBar = progress_bar, Parallel = parallel, EPS = eps;
 
     if (sfLCosSin()) // calculate the length, cosine and sine of all rods
     {

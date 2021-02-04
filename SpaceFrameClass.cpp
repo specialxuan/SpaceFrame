@@ -8,7 +8,7 @@ int main()
     start = GetTickCount();
 
     SpaceFrame Frame;
-    Frame.sfCircularStructure(5, 5, 5);
+    Frame.sfCircularStructure(2, 2, 1);
     Frame.sfInput();
     // Frame.sfCalculate();
     // Frame.sfOutput();
@@ -21,11 +21,11 @@ int main()
     // Frame2.sfCalculate();
     // Frame2.sfOutput();
     end1 = clock();
-    printf("time = %f\n", (double)(end1 - start1) / CLOCKS_PER_SEC);
+    cout << (double)(end1 - start1) / CLOCKS_PER_SEC << endl;
     end = GetTickCount();
-    printf("realtime=%f\n", (double)(end - start) / 1000);
+    cout << (double)(end - start) / 1000 << endl;
 
-    system("pause");
+    // system("pause");
 
     return 0;
 }

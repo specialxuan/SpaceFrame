@@ -2,12 +2,12 @@
 
 int main()
 {
-    FILE *fp = fopen("source&result/testresult.csv", "w");
+    ofstream fout("source&result/testresult.csv", ios::out);
     SpaceFrame Frame;
     DWORD start, end;
-    fprintf(fp, " DOF      , 1e-15    , 1e-10    , 1e-5     ,\n");
+    fout << " DOF      , 1e-15    , 1e-10    , 1e-5     ,\n";
 
-    for (int i = 3; i <= 15; i++)
+    for (int i = 3; i <= 4; i++)
     {
         // for (int j = 2; j < 5; j++)
         // {
@@ -32,31 +32,31 @@ int main()
         //     }
         // }
         Frame.sfCircularStructure(i, i, i);
-        fprintf(fp, "%9d ,", ((i + 1) * (i + 1) * (i + 1) - (i + 1) * (i + 1)) * 6);
+        fout << setw(10) << ((i + 1) * (i + 1) * (i + 1) - (i + 1) * (i + 1)) * 6 << ",";
 
         start = GetTickCount();
         Frame.sfInput();
         Frame.sfCalculate(true, false, 1e-15);
         Frame.sfOutput();
         end = GetTickCount();
-        fprintf(fp, "%9.2f ,", (double)(end - start) / 1000);
+        fout << setw(10) << (double)(end - start) / 1000 << ",";
 
         start = GetTickCount();
         Frame.sfInput();
         Frame.sfCalculate(true, false, 1e-10);
         Frame.sfOutput();
         end = GetTickCount();
-        fprintf(fp, "%9.2f ,", (double)(end - start) / 1000);
+        fout << setw(10) << (double)(end - start) / 1000 << ",";
 
         start = GetTickCount();
         Frame.sfInput();
         Frame.sfCalculate(true, false, 1e-5);
         Frame.sfOutput();
         end = GetTickCount();
-        fprintf(fp, "%9.2f ,\n", (double)(end - start) / 1000);
+        fout << setw(10) << (double)(end - start) / 1000 << ",\n";
     }
 
-    fclose(fp);
-    fp = NULL;
+    fout.close();
+
     return 0;
 }

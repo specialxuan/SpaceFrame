@@ -1235,156 +1235,292 @@ SpaceFrame::~SpaceFrame()
 
 bool SpaceFrame::sfInput()
 {
-    FILE *fp = NULL;                   // Define the file point
-    char *line = 0, *data = 0;         // Define the line string and separated string
-    char temporSpace[1000000];         // Apply for temporary storage space
-    int rowIndex = 0, columnIndex = 0; // Reset the number of rows to zero, reset the number of columns to zero
-    const char DIVIDE[] = ",";         // Set the separater as a ','
+    const int one = 1;
+    struct Row
+    {
+        char head[10];
+        const int &cnt;
+    };
+    Row rows[23] = {
+        {"TNN", one},
+        {"NFIN", one},
+        {"NOR", one},
+        {"NOL", one},
+        {"NOS", one},
+        {"XCN", TNN},
+        {"YCN", TNN},
+        {"ZCN", TNN},
+        {"BNR", NOR},
+        {"ENR", NOR},
+        {"ELASTIC", NOR},
+        {"SHEAR", NOR},
+        {"AREA", NOR},
+        {"IMY", NOR},
+        {"IMZ", NOR},
+        {"THETA", NOR},
+        {"NRL", NOL},
+        {"PLI", NOL},
+        {"KOL", NOL},
+        {"VOL", NOL},
+        {"DLB", NOL},
+        {"NRS", NOS},
+        {"DSB", NOS}};
 
-    if ((fp = fopen("source&result/sf_test.csv", "r")) == NULL) // Start the process when the file opens successfully
+    int rowIndex = 0;   // Reset the number of rows to zero, reset the number of columns to zero
+    char buf[10] = {0}; // buffer and data string
+
+    ifstream fin("source&result/sf_test.csv", ios::in);
+    if (!fin)
     {
         cout << "There is no such file!";
         return 0;
     }
 
-    fseek(fp, 0L, SEEK_SET);                                             // Locate file point to the first line
-    while ((line = fgets(temporSpace, sizeof(temporSpace), fp)) != NULL) // The loop continues when the end of the file is not read
+    rowIndex = 1;
+    fin.ignore(1000000, '\n'); // skip first line
+
+    rowIndex = 2;
+    fin.getline(buf, 10, ',');
+    if (strcmp(rows[rowIndex - 2].head, buf))
     {
-        data = strtok(line, DIVIDE); // Split strings with a ',' as a separator
-        while (data != NULL)         // Read the data of each row
+        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
+        return 1;
+    }
+    for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
+    {
+        if (!(fin >> TNN))
         {
-            if (strcmp(data, "END") == 0) // When the keyword 'END' is read, the reading process will be shut down
-            {
-                fclose(fp); // Close the file
-                fp = NULL;  // Reset the file point
-                cout << "Inputing data succeed!\n";
+            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+            return 1;
+        }
+        cout << TNN << "\n";
+    }
+    fin.ignore(1000000, '\n');
 
-                return 0;
-            }
+    rowIndex = 3;
+    fin.getline(buf, 10, ',');
+    if (strcmp(rows[rowIndex - 2].head, buf))
+    {
+        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
+        return 1;
+    }
+    for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
+    {
+        if (!(fin >> NFIN))
+        {
+            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+            return 1;
+        }
+        cout << NFIN << "\n";
+    }
+    fin.ignore(1000000, '\n');
 
-            if (columnIndex++ == 0) // Skip the saving of the first column
-            {
-                data = strtok(NULL, DIVIDE); // Reset data
-                continue;
-            }
+    rowIndex = 4;
+    fin.getline(buf, 10, ',');
+    if (strcmp(rows[rowIndex - 2].head, buf))
+    {
+        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
+        return 1;
+    }
+    for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
+    {
+        if (!(fin >> NOR))
+        {
+            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+            return 1;
+        }
+        cout << NOR << "\n";
+    }
+    fin.ignore(1000000, '\n');
 
-            switch (rowIndex) // Store variables of each column in different ways
+    rowIndex = 5;
+    fin.getline(buf, 10, ',');
+    if (strcmp(rows[rowIndex - 2].head, buf))
+    {
+        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
+        return 1;
+    }
+    for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
+    {
+        if (!(fin >> NOL))
+        {
+            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+            return 1;
+        }
+        cout << NOL << "\n";
+    }
+    fin.ignore(1000000, '\n');
+
+    rowIndex = 6;
+    fin.getline(buf, 10, ',');
+    if (strcmp(rows[rowIndex - 2].head, buf))
+    {
+        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
+        return 1;
+    }
+    for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
+    {
+        if (!(fin >> NOS))
+        {
+            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+            return 1;
+        }
+        cout << NOS << "\n";
+    }
+    fin.ignore(1000000, '\n');
+
+    NFRN = TNN - NFIN;
+    nodes = new Node[TNN]();
+    rods = new Rod[NOR]();
+    loads = new Load[NOL]();
+    sections = new Section[NOS]();
+
+    for (rowIndex = 7; rowIndex <= 24; rowIndex++)
+    {
+        fin.getline(buf, 10, ',');
+        if (strcmp(rows[rowIndex - 2].head, buf))
+        {
+            cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
+            return 1;
+        }
+        for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
+        {
+            switch (rowIndex)
             {
-            case 0:
-                break;
-            case 1:
-                if (columnIndex == 2)
-                    TNN = atoi(data);
-                break;
-            case 2:
-                if (columnIndex == 2)
-                    NFIN = atoi(data);
-                NFRN = TNN - NFIN;
-                break;
-            case 3:
-                if (columnIndex == 2)
-                    NOR = atoi(data);
-                break;
-            case 4:
-                if (columnIndex == 2)
-                    NOL = atoi(data);
-                break;
-            case 5:
-                if (columnIndex == 2)
+            case 7:
+                if (!(fin >> nodes[i].XCN))
                 {
-                    NOS = atoi(data);
-
-                    if (nodes != NULL)
-                        this->~SpaceFrame();
-
-                    nodes = new Node[TNN]();
-                    rods = new Rod[NOR]();
-                    loads = new Load[NOL]();
-                    sections = new Section[NOS]();
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
                 }
                 break;
-            case 6:
-                if (columnIndex - 2 < TNN)
-                    nodes[columnIndex - 2].XCN = atof(data);
-                break;
-            case 7:
-                if (columnIndex - 2 < TNN)
-                    nodes[columnIndex - 2].YCN = atof(data);
-                break;
             case 8:
-                if (columnIndex - 2 < TNN)
-                    nodes[columnIndex - 2].ZCN = atof(data);
+                if (!(fin >> nodes[i].YCN))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 9:
-                if (columnIndex - 2 < NOR)
-                    rods[columnIndex - 2].BNR = atoi(data);
+                if (!(fin >> nodes[i].ZCN))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 10:
-                if (columnIndex - 2 < NOR)
-                    rods[columnIndex - 2].ENR = atoi(data);
+                if (!(fin >> rods[i].BNR))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 11:
-                if (columnIndex - 2 < NOR)
-                    rods[columnIndex - 2].ELASTIC = atof(data);
+                if (!(fin >> rods[i].ENR))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 12:
-                if (columnIndex - 2 < NOR)
-                    rods[columnIndex - 2].SHEAR = atof(data);
+                if (!(fin >> rods[i].ELASTIC))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 13:
-                if (columnIndex - 2 < NOR)
-                    rods[columnIndex - 2].AREA = atof(data);
+                if (!(fin >> rods[i].SHEAR))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 14:
-                if (columnIndex - 2 < NOR)
-                    rods[columnIndex - 2].IMY = atof(data);
+                if (!(fin >> rods[i].AREA))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 15:
-                if (columnIndex - 2 < NOR)
-                    rods[columnIndex - 2].IMZ = atof(data);
+                if (!(fin >> rods[i].IMY))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 16:
-                if (columnIndex - 2 < NOR)
-                    rods[columnIndex - 2].THETA = atof(data);
+                if (!(fin >> rods[i].IMZ))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 17:
-                if (columnIndex - 2 < NOL)
-                    loads[columnIndex - 2].NRL = atoi(data);
+                if (!(fin >> rods[i].THETA))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 18:
-                if (columnIndex - 2 < NOL)
-                    loads[columnIndex - 2].PLI = atoi(data);
+                if (!(fin >> loads[i].NRL))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 19:
-                if (columnIndex - 2 < NOL)
-                    loads[columnIndex - 2].KOL = atoi(data);
+                if (!(fin >> loads[i].PLI))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 20:
-                if (columnIndex - 2 < NOL)
-                    loads[columnIndex - 2].VOL = atof(data);
+                if (!(fin >> loads[i].KOL))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 21:
-                if (columnIndex - 2 < NOL)
-                    loads[columnIndex - 2].DLB = atof(data);
+                if (!(fin >> loads[i].VOL))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 22:
-                if (columnIndex - 2 < NOS)
-                    sections[columnIndex - 2].NRS = atoi(data);
+                if (!(fin >> loads[i].DLB))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
             case 23:
-                if (columnIndex - 2 < NOS)
-                    sections[columnIndex - 2].DSB = atof(data);
+                if (!(fin >> sections[i].NRS))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
                 break;
-            } // input finished
+            case 24:
+                if (!(fin >> sections[i].DSB))
+                {
+                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
+                    return 1;
+                }
+                break;
+            }
 
-            data = strtok(NULL, DIVIDE); // Reset data
+            fin.get();
         }
-        rowIndex++;      // RowIndex steps forward once
-        columnIndex = 0; // Reset columnIndex
+        fin.ignore(1000000, '\n');
     }
-    fclose(fp); // Close the file
-    fp = NULL;  // Reset the file point
 
+    fin.close();
     return 0;
 }
 

@@ -11,7 +11,7 @@
 #include <time.h>
 using namespace std;
 
-class SpaceFrame
+class SpaceFrame // Calculator of SpaceFrame
 {
 private:
     double EPS;
@@ -30,8 +30,7 @@ private:
         double XCN; // X coordinate of nodes
         double YCN; // Y coordinate of nodes
         double ZCN; // Z coordinate of nodes
-    };
-    Node *nodes; // parameters of nodes
+    } *nodes; // parameters of nodes
 
     struct Rod // parameters of nodes
     {
@@ -45,8 +44,7 @@ private:
         double THETA;   // theta the deflection angle of main inertia axis
         double LCS[4];  // the length, sine and cosine of rods
         double RFE[6];  // the reaction force of the end node
-    };
-    Rod *rods; // parameters of nodes
+    } *rods; // parameters of nodes
 
     struct Load // parameters of loads
     {
@@ -55,16 +53,14 @@ private:
         int KOL;    // the kind of load
         double VOL; // the value of load
         double DLB; // the distance between load and the beginning node
-    };
-    Load *loads; // parameters of loads
+    } *loads; // parameters of loads
 
     struct Section // parameters of sections
     {
         int NRS;       // the number of rod with section
         double DSB;    // the distance between section and the beginning node
         double IFS[6]; // the internal force in the section
-    };
-    Section *sections; // parameters of sections
+    } *sections; // parameters of sections
 
     double *TotalStiffness; // total stiffness
     double *LoadVector;     // load vector
@@ -88,10 +84,7 @@ private:
             rods[k].LCS[3] = nodes[j].ZCN - nodes[i].ZCN;
             rods[k].LCS[0] = sqrt(rods[k].LCS[1] * rods[k].LCS[1] + rods[k].LCS[2] * rods[k].LCS[2] + rods[k].LCS[3] * rods[k].LCS[3]);
             if (rods[k].LCS[0] < EPS) // if the length of rod is too small, then return error
-            {
-                sfPrintError(8);
-                return 1;
-            }
+                return sfPrintError(8);
             rods[k].LCS[1] = rods[k].LCS[1] / rods[k].LCS[0];
             rods[k].LCS[2] = rods[k].LCS[2] / rods[k].LCS[0];
             rods[k].LCS[3] = rods[k].LCS[3] / rods[k].LCS[0];
@@ -102,9 +95,9 @@ private:
     // allocate total stiffness matrix, load vector and displacement vector
     bool sfAllocate()
     {
-        int it = 0, mm = 0, dof = 6 * NFRN;
-        int *peribdw = new int[TNN](); // bandwidth per line in total stiffness matrix
+        int it = 0, mm = 0, dof = 6 * NFRN, *peribdw = new int[TNN](); // bandwidth per line in total stiffness matrix
         IV = new int[dof]();
+
         for (int i = 0; i < NOR; i++) // for each rod
         {
             if (rods[i].BNR > NFIN)
@@ -153,10 +146,7 @@ private:
                 if (p[i] >= 0) // determine free node
                 {
                     if (sfBuildUnitStiff(k, i + 1, us)) // build unit stiffness matrix
-                    {
-                        sfPrintError(7);
-                        return 1;
-                    }
+                        return sfPrintError(7);
                     for (int m = 0; m < 6; m++)
                         for (int n = 0; n <= m; n++)
                             TotalStiffness[IV[(p[i] + m)] + (p[i] + n) - (p[i] + m) - 1] += us[m * 6 + n]; // superpose
@@ -165,10 +155,7 @@ private:
             if (p[0] >= 0 && p[1] >= 0)
             {
                 if (sfBuildUnitStiff(k, 3 + 1, us)) // build unit stiffness matrix
-                {
-                    sfPrintError(7);
-                    return 1;
-                }
+                    return sfPrintError(7);
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n < 6; n++)
                         TotalStiffness[IV[(p[1] + m)] + (p[0] + n) - (p[1] + m) - 1] += us[m * 6 + n]; // superpose
@@ -184,35 +171,16 @@ private:
     // build unit stiffness matrix
     bool sfBuildUnitStiff(int k, int flag, double *us) // k is the number of rods, flag is the index of matrix parts, us is the unit stiffness matrix
     {
-        if (k < 0)
-        {
-            sfPrintError(16);
-            return 0;
-        }
-        if (flag < 1 || flag > 4)
-        {
-            sfPrintError(16);
-            return 0;
-        }
-        if (us == NULL)
-        {
-            sfPrintError(16);
-            return 0;
-        }
+        if (k < 0 || flag < 1 || flag > 4 || us == NULL)
+            return sfPrintError(16);
 
         double rd[36] = {0}, t[36] = {0}, c[36] = {0}, tmp = 0; // rd is local stiffness matrix, t is transpose matrix, c is a temperary matrix
         memset(us, 0, 36 * sizeof(double));
 
         if (sfBuildLocalStiff(k, flag, rd)) // build local stiffness matrix
-        {
-            sfPrintError(9);
-            return 1;
-        }
+            return sfPrintError(9);
         if (sfBuildTrans(k, t)) // build transpose matrix
-        {
-            sfPrintError(10);
-            return 1;
-        }
+            return sfPrintError(10);
 
         for (int i = 0; i < 6; i++) // transpose matrix times local stiffness matrix, store the result in c
             for (int m = 0; m < 6; m++)
@@ -232,21 +200,8 @@ private:
     // build local stiffness matrix
     bool sfBuildLocalStiff(int k, int flag, double *rd) // k is the number of rods, flag is the number of matrix
     {
-        if (k < 0)
-        {
-            sfPrintError(17);
-            return 0;
-        }
-        if (flag < 0 || flag > 4)
-        {
-            sfPrintError(17);
-            return 0;
-        }
-        if (rd == NULL)
-        {
-            sfPrintError(17);
-            return 0;
-        }
+        if (k < 0 || flag < 0 || flag > 4 || rd == NULL)
+            return sfPrintError(17);
 
         double a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, l = rods[k].LCS[0];
 
@@ -315,16 +270,8 @@ private:
     // build transpose matrix
     bool sfBuildTrans(int k, double *t) // k is the number of rods, t is transpose matrix
     {
-        if (k < 0)
-        {
-            sfPrintError(18);
-            return 0;
-        }
-        if (t == NULL)
-        {
-            sfPrintError(18);
-            return 0;
-        }
+        if (k < 0 || t == NULL)
+            return sfPrintError(18);
 
         double coa = 0, cob = 0, coc = 0, sic = 0, sit = 0, cot = 0, m = 0, n = 0; // co means cosine, si means sine, m and n is temperary variable
 
@@ -370,14 +317,8 @@ private:
         return 0;
     }
     // build load vector
-    bool sfBuildLoadVector(double *lv) // lv is the load vector
+    bool sfBuildLoadVector() // lv is the load vector
     {
-        if (lv == 0)
-        {
-            sfPrintError(19);
-            return 0;
-        }
-
         int rod = 0, p[2] = {0};          // rod is the number of rods, dof is the degree of freedom
         double rf[12] = {0}, t[36] = {0}; // rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
 
@@ -387,17 +328,11 @@ private:
             memset(rf, 0, 12 * sizeof(double)); // zero clearing
 
             if (sfReactionForce(i, &rf[0 * 6], &rf[1 * 6])) // calculate reaction force
-            {
-                sfPrintError(11);
-                return 1;
-            }
+                return sfPrintError(11);
             for (int j = 0; j < 6; j++) // add reaction force to RFE
                 rods[rod].RFE[j] += rf[1 * 6 + j];
             if (sfBuildTrans(rod, t)) // build transpose matrix
-            {
-                sfPrintError(10);
-                return 1;
-            }
+                return sfPrintError(10);
 
             p[0] = 6 * (rods[rod].BNR - NFIN - 1); // match the displacement with nods
             p[1] = 6 * (rods[rod].ENR - NFIN - 1);
@@ -407,34 +342,21 @@ private:
                 if (p[j] >= 0) // determine free node
                     for (int m = 0; m < 6; m++)
                         for (int n = 0; n < 6; n++)
-                            lv[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
+                            LoadVector[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
             }
         }
 
         for (int i = 0; i < 6 * NFRN; i++)
-            if (fabs(lv[i]) > MAXLV)
-                MAXLV = lv[i];
+            if (fabs(LoadVector[i]) > MAXLV)
+                MAXLV = LoadVector[i];
 
         return 0;
     }
     // calculate reaction force
     bool sfReactionForce(int i, double *rfb, double *rfe) // i is the number of load, rfb and rfe is the reaction force at begining and end of rods
     {
-        if (i < 0)
-        {
-            sfPrintError(20);
-            return 0;
-        }
-        if (rfb == NULL)
-        {
-            sfPrintError(20);
-            return 0;
-        }
-        if (rfe == NULL)
-        {
-            sfPrintError(20);
-            return 0;
-        }
+        if (i < 0 || rfb == NULL || rfe == NULL)
+            return sfPrintError(20);
 
         double ra = 0, rb = 0, a = 0, b = 0, q = loads[i].VOL, xq = loads[i].DLB; // ra, rb, a and b are middle variable
         int rod = loads[i].NRL - 1, pm = loads[i].PLI, t = 0;                     // rod is the number of rods
@@ -507,26 +429,8 @@ private:
     // solve equation of matrix by conjugate gradient
     bool sfConjugateGradient(double *A, double *b, double *x, int N)
     {
-        if (A == NULL)
-        {
-            sfPrintError(12);
-            return 1;
-        }
-        else if (b == NULL)
-        {
-            sfPrintError(12);
-            return 1;
-        }
-        else if (x == NULL)
-        {
-            sfPrintError(12);
-            return 1;
-        }
-        else if (N == 0)
-        {
-            sfPrintError(12);
-            return 1;
-        }
+        if (A == NULL || b == NULL || x == NULL || N == 0)
+            return sfPrintError(12);
 
         double *r = NULL, *p = NULL, *z = NULL;
         double gamma = 0, gamma_new = 0, gamma_new_sqrt = 0, alpha = 0, beta = 0;
@@ -671,35 +575,15 @@ private:
     // solve equation of matrix by conjugate gradient parallel
     bool sfConjugateGradientPar(double *A, double *b, double *x, int N)
     {
-        if (A == NULL)
-        {
-            sfPrintError(12);
-            return 1;
-        }
-        else if (b == NULL)
-        {
-            sfPrintError(12);
-            return 1;
-        }
-        else if (x == NULL)
-        {
-            sfPrintError(12);
-            return 1;
-        }
-        else if (N == 0)
-        {
-            sfPrintError(12);
-            return 1;
-        }
+        if (A == NULL || b == NULL || x == NULL || N == 0)
+            return sfPrintError(12);
 
         double *r = NULL, *p = NULL, *z = NULL;
         double gamma = 0, gamma_new = 0, gamma_new_sqrt = 0, alpha = 0, beta = 0;
         int percent = 0, percent_new = 0;
 
         if (ProgressBar)
-        {
             cout << "\rSolving equation      [ 0%% ][                                                 ]";
-        }
 
         r = (double *)malloc(N * sizeof(double));
         memset(r, 0, sizeof(double));
@@ -834,9 +718,7 @@ private:
             x[i] = x[i] * MAXLV / MAXTS;
 
         if (ProgressBar)
-        {
             cout << "\rSolving equation done [ 100%% ][=================================================]\n";
-        }
 
         free(r);
         free(p);
@@ -847,16 +729,8 @@ private:
     // calculate internal force of rods
     bool sfInternalForce(int mm, int k, double xp) // m is the number of sections, k is the actual number of rods, xp is the distance between the section and the begining of rods
     {
-        if (mm < 0)
-        {
-            sfPrintError(21);
-            return 0;
-        }
-        if (k < 0)
-        {
-            sfPrintError(21);
-            return 0;
-        }
+        if (mm < 0 || k < 0)
+            return sfPrintError(21);
 
         double tf[6] = {0}; // tf is temperary variable
 
@@ -872,19 +746,13 @@ private:
             {
                 memset(tf, 0, 6 * sizeof(double)); // zero clear tf
                 if (sfCtlInternalForce(i, xp, tf)) //  calculate internal force of cantilever beam
-                {
-                    sfPrintError(13);
-                    return 1;
-                }
+                    return sfPrintError(13);
                 for (int j = 0; j < 6; j++) // add internal force of cantilever into IFR
                     sections[mm].IFS[j] += tf[j];
             }
 
         if (sfDisplacementForce(k, tf)) // calculate end force
-        {
-            sfPrintError(14);
-            return 1;
-        }
+            return sfPrintError(14);
 
         sections[mm].IFS[0] -= tf[0]; // calculate section force cause by end force
         sections[mm].IFS[1] += tf[1];
@@ -898,16 +766,8 @@ private:
     // calculate internal force of cantilever beam
     bool sfCtlInternalForce(int i, double xp, double *tf) // i is the number of load, xp is the distance between the section and the begining of rod, tf is internal force
     {
-        if (i < 0)
-        {
-            sfPrintError(22);
-            return 0;
-        }
-        if (tf == NULL)
-        {
-            sfPrintError(22);
-            return 0;
-        }
+        if (i < 0 || tf == NULL)
+            return sfPrintError(22);
 
         double xq = loads[i].DLB, t = xq - xp, r = xp / xq, q = loads[i].VOL; // t and r are temperary variables
         int e = loads[i].PLI;
@@ -960,16 +820,8 @@ private:
     // calculate internal force of displacement
     bool sfDisplacementForce(int k, double *tref) // k is the actual number of rods, tref is the end force of rods
     {
-        if (k < 1)
-        {
-            sfPrintError(23);
-            return 0;
-        }
-        if (tref == NULL)
-        {
-            sfPrintError(23);
-            return 0;
-        }
+        if (k < 1 || tref == NULL)
+            return sfPrintError(23);
 
         int p[2] = {0};                                  // p is a temperary vector for i0j0
         double rd[36] = {0}, rdb[36] = {0}, t[36] = {0}; // rd
@@ -977,10 +829,7 @@ private:
         memset(tref, 0, 6 * sizeof(double));
 
         if (sfBuildTrans(k - 1, t)) // calculate transpose matrix
-        {
-            sfPrintError(10);
-            return 1;
-        }
+            return sfPrintError(10);
 
         p[0] = 6 * (rods[k - 1].BNR - NFIN - 1); // match the displacement with nods
         p[1] = 6 * (rods[k - 1].ENR - NFIN - 1);
@@ -990,10 +839,7 @@ private:
             if (p[i] >= 0) // determine free node
             {
                 if (sfBuildLocalStiff(k - 1, 2 * i + 1, rd)) // build unit stiffness matrix
-                {
-                    sfPrintError(9);
-                    return 1;
-                }
+                    return sfPrintError(9);
 
                 memset(rdb, 0, 36 * sizeof(double)); // zero clean rdb
 
@@ -1100,7 +946,7 @@ private:
             cout << "There is something wrong in calculating internal force of displacement!\n";
             break;
         case 24:
-            cout << "!\n";
+            cout << "There is no such file!\n";
             break;
         case 25:
             cout << "!\n";
@@ -1109,9 +955,18 @@ private:
         default:
             break;
         }
-        cout << "There is at least one error in your file, please check it and try it one more time.\n";
 
-        return 0;
+        return 1;
+    }
+    // print input error
+    bool sfPrintError(int row, int column)
+    {
+        if (column == 1)
+            cout << "Error! row: " << row << " column: 1 : head is mismathced!\n";
+        else
+            cout << "Error! row: " << row << " column: " << column << " : data input failed!\n";
+        
+        return 1;
     }
 
 public:
@@ -1233,7 +1088,7 @@ SpaceFrame::~SpaceFrame()
     IV = NULL;
 }
 
-bool SpaceFrame::sfInput()
+bool SpaceFrame::sfInput() // TODO: error
 {
     const int one = 1;
     struct Row
@@ -1266,15 +1121,12 @@ bool SpaceFrame::sfInput()
         {"NRS", NOS},
         {"DSB", NOS}};
 
-    int rowIndex = 0;   // Reset the number of rows to zero, reset the number of columns to zero
+    int rowIndex = 0;   // Reset the number of rows to zero
     char buf[10] = {0}; // buffer and data string
 
     ifstream fin("source&result/sf_test.csv", ios::in);
     if (!fin)
-    {
-        cout << "There is no such file!";
-        return 0;
-    }
+        return sfPrintError(24);
 
     rowIndex = 1;
     fin.ignore(1000000, '\n'); // skip first line
@@ -1282,94 +1134,51 @@ bool SpaceFrame::sfInput()
     rowIndex = 2;
     fin.getline(buf, 10, ',');
     if (strcmp(rows[rowIndex - 2].head, buf))
-    {
-        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
-        return 1;
-    }
+        return sfPrintError(rowIndex, 1);
     for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
-    {
         if (!(fin >> TNN))
-        {
-            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-            return 1;
-        }
-        cout << TNN << "\n";
-    }
+            return sfPrintError(rowIndex, i + 1);
     fin.ignore(1000000, '\n');
 
     rowIndex = 3;
     fin.getline(buf, 10, ',');
     if (strcmp(rows[rowIndex - 2].head, buf))
-    {
-        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
-        return 1;
-    }
+        return sfPrintError(rowIndex, 1);
     for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
-    {
         if (!(fin >> NFIN))
-        {
-            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-            return 1;
-        }
-        cout << NFIN << "\n";
-    }
+            return sfPrintError(rowIndex, i + 1);
     fin.ignore(1000000, '\n');
 
     rowIndex = 4;
     fin.getline(buf, 10, ',');
     if (strcmp(rows[rowIndex - 2].head, buf))
-    {
-        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
-        return 1;
-    }
+        return sfPrintError(rowIndex, 1);
     for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
-    {
         if (!(fin >> NOR))
-        {
-            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-            return 1;
-        }
-        cout << NOR << "\n";
-    }
+            return sfPrintError(rowIndex, i + 1);
     fin.ignore(1000000, '\n');
 
     rowIndex = 5;
     fin.getline(buf, 10, ',');
     if (strcmp(rows[rowIndex - 2].head, buf))
-    {
-        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
-        return 1;
-    }
+        return sfPrintError(rowIndex, 1);
     for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
-    {
         if (!(fin >> NOL))
-        {
-            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-            return 1;
-        }
-        cout << NOL << "\n";
-    }
+            return sfPrintError(rowIndex, i + 1);
     fin.ignore(1000000, '\n');
 
     rowIndex = 6;
     fin.getline(buf, 10, ',');
     if (strcmp(rows[rowIndex - 2].head, buf))
-    {
-        cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
-        return 1;
-    }
+        return sfPrintError(rowIndex, 1);
     for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
-    {
         if (!(fin >> NOS))
-        {
-            cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-            return 1;
-        }
-        cout << NOS << "\n";
-    }
+            return sfPrintError(rowIndex, i + 1);
     fin.ignore(1000000, '\n');
 
     NFRN = TNN - NFIN;
+    if (nodes != NULL)
+        this->~SpaceFrame();
     nodes = new Node[TNN]();
     rods = new Rod[NOR]();
     loads = new Load[NOL]();
@@ -1379,142 +1188,84 @@ bool SpaceFrame::sfInput()
     {
         fin.getline(buf, 10, ',');
         if (strcmp(rows[rowIndex - 2].head, buf))
-        {
-            cout << "Error! row: " << rowIndex << " column: 1 : head is mismathced!\n";
-            return 1;
-        }
+            return sfPrintError(rowIndex, 1);
         for (int i = 0; i < rows[rowIndex - 2].cnt; i++)
         {
             switch (rowIndex)
             {
             case 7:
                 if (!(fin >> nodes[i].XCN))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 8:
                 if (!(fin >> nodes[i].YCN))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 9:
                 if (!(fin >> nodes[i].ZCN))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 10:
                 if (!(fin >> rods[i].BNR))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 11:
                 if (!(fin >> rods[i].ENR))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 12:
                 if (!(fin >> rods[i].ELASTIC))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 13:
                 if (!(fin >> rods[i].SHEAR))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 14:
                 if (!(fin >> rods[i].AREA))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 15:
                 if (!(fin >> rods[i].IMY))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 16:
                 if (!(fin >> rods[i].IMZ))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 17:
                 if (!(fin >> rods[i].THETA))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 18:
                 if (!(fin >> loads[i].NRL))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 19:
                 if (!(fin >> loads[i].PLI))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 20:
                 if (!(fin >> loads[i].KOL))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 21:
                 if (!(fin >> loads[i].VOL))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 22:
                 if (!(fin >> loads[i].DLB))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 23:
                 if (!(fin >> sections[i].NRS))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             case 24:
                 if (!(fin >> sections[i].DSB))
-                {
-                    cout << "Error! row: " << rowIndex << " column: " << i + 1 << " : data input failed\n";
-                    return 1;
-                }
+                    return sfPrintError(rowIndex, i + 1);
                 break;
             }
-
             fin.get();
         }
         fin.ignore(1000000, '\n');
@@ -1524,7 +1275,7 @@ bool SpaceFrame::sfInput()
     return 0;
 }
 
-bool SpaceFrame::sfOutput()
+bool SpaceFrame::sfOutput() // TODO: terminal on/off
 {
     if (true) // console
     {
@@ -1599,64 +1350,43 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
     ProgressBar = progress_bar, Parallel = parallel, EPS = eps;
 
     if (sfLCosSin()) // calculate the length, cosine and sine of all rods
-    {
-        sfPrintError(6);
-        return 1;
-    }
+        return sfPrintError(6);
     else
         cout << "Calculating length, cosine and sine succeed!\n";
 
     if (sfAllocate())
-    {
-        sfPrintError(15);
-        return 0;
-    }
+        return sfPrintError(15);
     else
         cout << "Allocating Variable Bandwith Matrix succeed!\n";
 
     if (sfBuildTotalStiff()) // build total stiffness matrix
-    {
-        sfPrintError(2);
-        return 1;
-    }
+        return sfPrintError(2);
     else
         cout << "Building total stiffness matrix succeeded!\n";
 
-    if (sfBuildLoadVector(LoadVector)) // build load stiffness vector
-    {
-        sfPrintError(3);
-        return 1;
-    }
+    if (sfBuildLoadVector()) // build load stiffness vector
+        return sfPrintError(3);
     else
         cout << "Building load vector succeeded!\n";
 
     if (Parallel)
     {
         if (sfConjugateGradientPar(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation
-        {
-            sfPrintError(4);
-            return 1;
-        }
+            return sfPrintError(4);
         else
             cout << "Solving equation succeeded!\n";
     }
     else
     {
         if (sfConjugateGradient(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation
-        {
-            sfPrintError(4);
-            return 1;
-        }
+            return sfPrintError(4);
         else
             cout << "Solving equation succeeded!\n";
     }
 
     for (int i = 0; i < NOS; i++)
         if (sfInternalForce(i, sections[i].NRS, sections[i].DSB)) // calculate the internal force of each rods
-        {
-            sfPrintError(5);
-            return 1;
-        }
+            return sfPrintError(5);
 
     cout << "Outputing data succeed!\n";
 

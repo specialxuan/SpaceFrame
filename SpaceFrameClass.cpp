@@ -8,7 +8,7 @@ int main()
     start = GetTickCount();
 
     SpaceFrame Frame;
-    Frame.sfCircularStructure(2, 2, 1);
+    // Frame.sfCircularStructure(2, 2, 1);
     Frame.sfInput();
     // Frame.sfCalculate();
     // Frame.sfOutput();

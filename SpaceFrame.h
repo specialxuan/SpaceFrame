@@ -30,7 +30,7 @@ private:
         double XCN; // X coordinate of nodes
         double YCN; // Y coordinate of nodes
         double ZCN; // Z coordinate of nodes
-    } *nodes; // parameters of nodes
+    } * nodes;      // parameters of nodes
 
     struct Rod // parameters of nodes
     {
@@ -44,7 +44,7 @@ private:
         double THETA;   // theta the deflection angle of main inertia axis
         double LCS[4];  // the length, sine and cosine of rods
         double RFE[6];  // the reaction force of the end node
-    } *rods; // parameters of nodes
+    } * rods;           // parameters of nodes
 
     struct Load // parameters of loads
     {
@@ -53,14 +53,14 @@ private:
         int KOL;    // the kind of load
         double VOL; // the value of load
         double DLB; // the distance between load and the beginning node
-    } *loads; // parameters of loads
+    } * loads;      // parameters of loads
 
     struct Section // parameters of sections
     {
         int NRS;       // the number of rod with section
         double DSB;    // the distance between section and the beginning node
         double IFS[6]; // the internal force in the section
-    } *sections; // parameters of sections
+    } * sections;      // parameters of sections
 
     double *TotalStiffness; // total stiffness
     double *LoadVector;     // load vector
@@ -72,6 +72,8 @@ private:
 
     bool ProgressBar; // open progress bar
     bool Parallel;    // open parallel
+
+    int status;
 
     // calculate the length sine and cosine of rods
     bool sfLCosSin()
@@ -955,6 +957,7 @@ private:
         default:
             break;
         }
+        status = 4; //error
 
         return 1;
     }
@@ -965,7 +968,8 @@ private:
             cout << "Error! row: " << row << " column: 1 : head is mismathced!\n";
         else
             cout << "Error! row: " << row << " column: " << column << " : data input failed!\n";
-        
+        status = 4; // error
+
         return 1;
     }
 
@@ -1013,63 +1017,127 @@ SpaceFrame::SpaceFrame()
 
     ProgressBar = 1; // open progress bar
     Parallel = 1;    // open parallel
+    
+    status = 0; // initialization is completed
 }
 
 SpaceFrame::SpaceFrame(SpaceFrame &Frame)
 {
-    EPS = Frame.EPS;
-    MAXTS = Frame.MAXTS;
-    MAXLV = Frame.MAXLV;
+    if (Frame.status == 0 || Frame.status == 4)
+    {
+        status = 0; // initialization is completed
 
-    TNN = Frame.TNN;
-    NFIN = Frame.NFIN;
-    NFRN = Frame.NFRN;
-    NOR = Frame.NOR;
-    NOL = Frame.NOL;
-    NOS = Frame.NOS;
+        EPS = Frame.EPS;
+        MAXTS = 0;
+        MAXLV = 0;
 
-    nodes = new Node[TNN]();
-    if (Frame.nodes != NULL)
-        memcpy(nodes, Frame.nodes, TNN * sizeof(Node));
+        TNN = 0;  // total number of nodes
+        NFIN = 0; // number of fixed nodes
+        NFRN = 0; // number of free nodes
+        NOR = 0;  // number of rods
+        NOL = 0;  // number of loads
+        NOS = 0;  // number of sections
 
-    rods = new Rod[NOR]();
-    if (Frame.rods != NULL)
-        memcpy(rods, Frame.rods, NOR * sizeof(Rod));
+        nodes = NULL;    // parameters of nodes
+        rods = NULL;     // parameters of rods
+        loads = NULL;    // parameters of loads
+        sections = NULL; // parameters of sections
 
-    loads = new Load[NOL]();
-    if (Frame.loads != NULL)
-        memcpy(loads, Frame.loads, NOL * sizeof(Load));
+        TotalStiffness = NULL; // total stiffness
+        LoadVector = NULL;     // load vector
+        Displacement = NULL;   // the displacement of nodes
 
-    sections = new Section[NOS]();
-    if (Frame.sections != NULL)
-        memcpy(sections, Frame.sections, NOS * sizeof(Section));
+        IV = NULL;   // the location of diagonal element
+        NSI = 0;     // upper limit
+        MAXIBDW = 0; // half bandwidth
 
-    int dof = 6 * NFRN;
-    IV = new int[dof]();
-    if (Frame.IV != NULL)
-        memcpy(IV, Frame.IV, dof * sizeof(int));
+        ProgressBar = Frame.ProgressBar;
+        Parallel = Frame.Parallel;
+    }
+    else
+    {
+        status = Frame.status;
+        EPS = Frame.EPS;
+        MAXTS = Frame.MAXTS;
+        MAXLV = Frame.MAXLV;
 
-    NSI = Frame.NSI;
-    MAXIBDW = Frame.MAXIBDW;
+        TNN = Frame.TNN;
+        NFIN = Frame.NFIN;
+        NFRN = Frame.NFRN;
+        NOR = Frame.NOR;
+        NOL = Frame.NOL;
+        NOS = Frame.NOS;
 
-    TotalStiffness = new double[NSI]();
-    if (Frame.TotalStiffness != NULL)
-        memcpy(TotalStiffness, Frame.TotalStiffness, NSI * sizeof(double));
+        if (Frame.nodes != NULL)
+        {
+            nodes = new Node[TNN]();
+            memcpy(nodes, Frame.nodes, TNN * sizeof(Node));
+        }
 
-    LoadVector = new double[dof]();
-    if (Frame.LoadVector != NULL)
-        memcpy(LoadVector, Frame.LoadVector, dof * sizeof(double));
+        if (Frame.rods != NULL)
+        {
+            rods = new Rod[NOR]();
+            memcpy(rods, Frame.rods, NOR * sizeof(Rod));
+        }
 
-    Displacement = new double[dof]();
-    if (Frame.Displacement != NULL)
-        memcpy(Displacement, Frame.Displacement, dof * sizeof(double));
+        if (Frame.loads != NULL)
+        {
+            loads = new Load[NOL]();
+            memcpy(loads, Frame.loads, NOL * sizeof(Load));
+        }
 
-    ProgressBar = Frame.ProgressBar;
-    Parallel = Frame.Parallel;
+        if (Frame.sections != NULL)
+        {
+            sections = new Section[NOS]();
+            memcpy(sections, Frame.sections, NOS * sizeof(Section));
+        }
+
+        int dof = 6 * NFRN;
+        if (Frame.IV != NULL)
+        {
+            IV = new int[dof]();
+            memcpy(IV, Frame.IV, dof * sizeof(int));
+        }
+
+        NSI = Frame.NSI;
+        MAXIBDW = Frame.MAXIBDW;
+
+        if (Frame.TotalStiffness != NULL)
+        {
+            TotalStiffness = new double[NSI]();
+            memcpy(TotalStiffness, Frame.TotalStiffness, NSI * sizeof(double));
+        }
+
+        if (Frame.LoadVector != NULL)
+        {
+            LoadVector = new double[dof]();
+            memcpy(LoadVector, Frame.LoadVector, dof * sizeof(double));
+        }
+
+        if (Frame.Displacement != NULL)
+        {
+            Displacement = new double[dof]();
+            memcpy(Displacement, Frame.Displacement, dof * sizeof(double));
+        }
+
+        ProgressBar = Frame.ProgressBar;
+        Parallel = Frame.Parallel;
+    }
 }
 
 SpaceFrame::~SpaceFrame()
 {
+    MAXTS = 0;
+    MAXLV = 0;
+    TNN = 0;
+    NFIN = 0;
+    NFRN = 0;
+    NOR = 0;
+    NOL = 0;
+    NOS = 0;
+    NSI = 0;
+    MAXIBDW = 0;
+
     delete[] nodes;
     nodes = NULL;
     delete[] rods;
@@ -1086,10 +1154,15 @@ SpaceFrame::~SpaceFrame()
     Displacement = NULL;
     delete[] IV;
     IV = NULL;
+
+    status = 0; // initialization is completed
 }
 
-bool SpaceFrame::sfInput() // TODO: error
+bool SpaceFrame::sfInput()
 {
+    if (status)
+        this->~SpaceFrame();
+    
     const int one = 1;
     struct Row
     {
@@ -1177,8 +1250,6 @@ bool SpaceFrame::sfInput() // TODO: error
     fin.ignore(1000000, '\n');
 
     NFRN = TNN - NFIN;
-    if (nodes != NULL)
-        this->~SpaceFrame();
     nodes = new Node[TNN]();
     rods = new Rod[NOR]();
     loads = new Load[NOL]();
@@ -1270,14 +1341,15 @@ bool SpaceFrame::sfInput() // TODO: error
         }
         fin.ignore(1000000, '\n');
     }
-
     fin.close();
+    status = 1; // input procedure is completed
+
     return 0;
 }
 
 bool SpaceFrame::sfOutput() // TODO: terminal on/off
-{
-    if (true) // console
+{   
+    if (status == 2) // console
     {
         sfPrintLine();
         cout << setw(80) << "Calculation Of Space Rigid Frame\n";
@@ -1312,7 +1384,7 @@ bool SpaceFrame::sfOutput() // TODO: terminal on/off
         sfPrintLine();
     }
 
-    if (true) // file
+    if (status == 2) // file
     {
         ofstream fout("source&result/sfResultClass.csv", ios::out);
         fout << setw(80) << "Calculation Of Space Rigid Frame,\n";
@@ -1341,13 +1413,23 @@ bool SpaceFrame::sfOutput() // TODO: terminal on/off
 
         fout.close();
     }
+    else
+        cout << "Calculation is not completed!\n";
 
     return 0;
 }
 
-bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, double eps = 1e-15)
+bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, double eps = -1)
 {
-    ProgressBar = progress_bar, Parallel = parallel, EPS = eps;
+    if (status == 0 || status == 4)
+    {
+        cout << "There is something wrong in Data input!\n";
+        return 0;
+    }
+    
+    ProgressBar = progress_bar, Parallel = parallel;
+    if (eps >= 0 && eps <= 1)
+        EPS = eps;
 
     if (sfLCosSin()) // calculate the length, cosine and sine of all rods
         return sfPrintError(6);
@@ -1389,6 +1471,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
             return sfPrintError(5);
 
     cout << "Outputing data succeed!\n";
+    status = 2; // calculation is completed
 
     return 0;
 }

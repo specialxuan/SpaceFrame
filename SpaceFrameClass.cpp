@@ -15,7 +15,7 @@ int main()
     // Frame.~SpaceFrame();
     // Frame.sfInput();
     Frame.sfCalculate(true, true, 1e-15);
-    Frame.sfOutput();
+    Frame.sfOutput(true);
     // SpaceFrame Frame2(Frame);
     // Frame2.sfInput();
     // Frame2.sfCalculate();

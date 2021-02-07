@@ -340,12 +340,10 @@ private:
             p[1] = 6 * (rods[rod].ENR - NFIN - 1);
 
             for (int j = 0; j < 2; j++) // add reaction force to load vector
-            {
-                if (p[j] >= 0) // determine free node
+                if (p[j] >= 0)          // determine free node
                     for (int m = 0; m < 6; m++)
                         for (int n = 0; n < 6; n++)
                             LoadVector[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
-            }
         }
 
         for (int i = 0; i < 6 * NFRN; i++)
@@ -983,7 +981,7 @@ public:
     // calculate
     bool sfCalculate(bool, bool, double);
     // output data
-    bool sfOutput();
+    bool sfOutput(bool);
 
     // create circular structure
     bool sfCircularStructure(int, int, int);
@@ -1017,7 +1015,7 @@ SpaceFrame::SpaceFrame()
 
     ProgressBar = 1; // open progress bar
     Parallel = 1;    // open parallel
-    
+
     status = 0; // initialization is completed
 }
 
@@ -1162,14 +1160,13 @@ bool SpaceFrame::sfInput()
 {
     if (status)
         this->~SpaceFrame();
-    
+
     const int one = 1;
     struct Row
     {
         char head[10];
         const int &cnt;
-    };
-    Row rows[23] = {
+    } rows[23] = {
         {"TNN", one},
         {"NFIN", one},
         {"NOR", one},
@@ -1347,9 +1344,9 @@ bool SpaceFrame::sfInput()
     return 0;
 }
 
-bool SpaceFrame::sfOutput() // TODO: terminal on/off
-{   
-    if (status == 2) // console
+bool SpaceFrame::sfOutput(bool terminal = false) // terminal on/off
+{
+    if (status == 2 && terminal) // terminal
     {
         sfPrintLine();
         cout << setw(80) << "Calculation Of Space Rigid Frame\n";
@@ -1426,7 +1423,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
         cout << "There is something wrong in Data input!\n";
         return 0;
     }
-    
+
     ProgressBar = progress_bar, Parallel = parallel;
     if (eps >= 0 && eps <= 1)
         EPS = eps;

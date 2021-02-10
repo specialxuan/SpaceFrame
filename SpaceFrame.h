@@ -21,6 +21,7 @@ private:
     int TNN;  // total number of nodes
     int NFIN; // number of fixed nodes
     int NFRN; // number of free nodes
+    int DOF;  // degree of freedom
     int NOR;  // number of rods
     int NOL;  // number of loads
     int NOS;  // number of sections
@@ -97,8 +98,8 @@ private:
     // allocate total stiffness matrix, load vector and displacement vector
     bool sfAllocate()
     {
-        int it = 0, mm = 0, dof = 6 * NFRN, *peribdw = new int[TNN](); // bandwidth per line in total stiffness matrix
-        IV = new int[dof]();
+        int it = 0, mm = 0, *peribdw = new int[TNN](); // bandwidth per line in total stiffness matrix
+        IV = new int[DOF]();
 
         for (int i = 0; i < NOR; i++) // for each rod
         {
@@ -123,12 +124,12 @@ private:
             }
         }
         MAXIBDW = 6 * MAXIBDW + 5;
-        NSI = IV[dof - 1];
+        NSI = IV[DOF - 1];
         delete[] peribdw;
 
         TotalStiffness = new double[NSI](); // allocate memory for total stiffness matrix
-        LoadVector = new double[dof]();     // allocate memory for load vector
-        Displacement = new double[dof]();   // allocate memory for displacement vector
+        LoadVector = new double[DOF]();     // allocate memory for load vector
+        Displacement = new double[DOF]();   // allocate memory for displacement vector
 
         return 0;
     }
@@ -136,7 +137,7 @@ private:
     bool sfBuildTotalStiff() // ts is total stiffness matrix
     {
         double us[36] = {0}; // unit stiffness matrix
-        int p[2] = {0};      // p is a temperary vector for i0j0, dof is the degree of freedom of nods
+        int p[2] = {0};      // p is a temperary vector for i0j0
 
         for (int k = 0; k < NOR; k++)
         {
@@ -321,7 +322,7 @@ private:
     // build load vector
     bool sfBuildLoadVector() // lv is the load vector
     {
-        int rod = 0, p[2] = {0};          // rod is the number of rods, dof is the degree of freedom
+        int rod = 0, p[2] = {0};          // rod is the number of rods
         double rf[12] = {0}, t[36] = {0}; // rf is the reaction force matrix, t is the transpose matrix, p is a temperary vector for i0j0
 
         for (int i = 0; i < NOL; i++)
@@ -346,7 +347,7 @@ private:
                             LoadVector[p[j] + m] -= t[m * 6 + n] * rf[j * 6 + n];
         }
 
-        for (int i = 0; i < 6 * NFRN; i++)
+        for (int i = 0; i < DOF; i++)
             if (fabs(LoadVector[i]) > MAXLV)
                 MAXLV = LoadVector[i];
 
@@ -864,12 +865,6 @@ private:
         cout << "-------------------------------------------------------------------------------------------------------------------------------\n";
         return 0;
     }
-    // print"****************************************"
-    bool sfPrintLine2()
-    {
-        cout << "**************************************************************************\n";
-        return 0;
-    }
     // print error
     bool sfPrintError(int error)
     {
@@ -949,13 +944,13 @@ private:
             cout << "There is no such file!\n";
             break;
         case 25:
-            cout << "!\n";
+            cout << "There is something wrong in Data input!\n";
             break;
 
         default:
             break;
         }
-        status = 4; //error
+        status = 3; //error
 
         return 1;
     }
@@ -963,10 +958,10 @@ private:
     bool sfPrintError(int row, int column)
     {
         if (column == 1)
-            cout << "Error! row: " << row << " column: 1 : head is mismathced!\n";
+            cout << "ERROR:\tRow: " << row << " Column: 1 : head is mismathced!\n";
         else
-            cout << "Error! row: " << row << " column: " << column << " : data input failed!\n";
-        status = 4; // error
+            cout << "ERROR:\tRow: " << row << " Column: " << column << " : data input failed!\n";
+        status = 3; // error
 
         return 1;
     }
@@ -983,6 +978,9 @@ public:
     // output data
     bool sfOutput(bool);
 
+    // show status
+    int sfStatus();
+
     // create circular structure
     bool sfCircularStructure(int, int, int);
 };
@@ -996,6 +994,7 @@ SpaceFrame::SpaceFrame()
     TNN = 0;  // total number of nodes
     NFIN = 0; // number of fixed nodes
     NFRN = 0; // number of free nodes
+    DOF = 0;  // degree of freedom
     NOR = 0;  // number of rods
     NOL = 0;  // number of loads
     NOS = 0;  // number of sections
@@ -1021,7 +1020,7 @@ SpaceFrame::SpaceFrame()
 
 SpaceFrame::SpaceFrame(SpaceFrame &Frame)
 {
-    if (Frame.status == 0 || Frame.status == 4)
+    if (Frame.status == 0 || Frame.status == 3)
     {
         status = 0; // initialization is completed
 
@@ -1032,6 +1031,7 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
         TNN = 0;  // total number of nodes
         NFIN = 0; // number of fixed nodes
         NFRN = 0; // number of free nodes
+        DOF = 0;  // degree of freedom
         NOR = 0;  // number of rods
         NOL = 0;  // number of loads
         NOS = 0;  // number of sections
@@ -1062,6 +1062,7 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
         TNN = Frame.TNN;
         NFIN = Frame.NFIN;
         NFRN = Frame.NFRN;
+        DOF = Frame.DOF;
         NOR = Frame.NOR;
         NOL = Frame.NOL;
         NOS = Frame.NOS;
@@ -1090,11 +1091,10 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
             memcpy(sections, Frame.sections, NOS * sizeof(Section));
         }
 
-        int dof = 6 * NFRN;
         if (Frame.IV != NULL)
         {
-            IV = new int[dof]();
-            memcpy(IV, Frame.IV, dof * sizeof(int));
+            IV = new int[DOF]();
+            memcpy(IV, Frame.IV, DOF * sizeof(int));
         }
 
         NSI = Frame.NSI;
@@ -1108,14 +1108,14 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
 
         if (Frame.LoadVector != NULL)
         {
-            LoadVector = new double[dof]();
-            memcpy(LoadVector, Frame.LoadVector, dof * sizeof(double));
+            LoadVector = new double[DOF]();
+            memcpy(LoadVector, Frame.LoadVector, DOF * sizeof(double));
         }
 
         if (Frame.Displacement != NULL)
         {
-            Displacement = new double[dof]();
-            memcpy(Displacement, Frame.Displacement, dof * sizeof(double));
+            Displacement = new double[DOF]();
+            memcpy(Displacement, Frame.Displacement, DOF * sizeof(double));
         }
 
         ProgressBar = Frame.ProgressBar;
@@ -1130,6 +1130,7 @@ SpaceFrame::~SpaceFrame()
     TNN = 0;
     NFIN = 0;
     NFRN = 0;
+    DOF = 0;
     NOR = 0;
     NOL = 0;
     NOS = 0;
@@ -1247,6 +1248,7 @@ bool SpaceFrame::sfInput()
     fin.ignore(1000000, '\n');
 
     NFRN = TNN - NFIN;
+    DOF = 6 * NFRN;
     nodes = new Node[TNN]();
     rods = new Rod[NOR]();
     loads = new Load[NOL]();
@@ -1411,18 +1413,15 @@ bool SpaceFrame::sfOutput(bool terminal = false) // terminal on/off
         fout.close();
     }
     else
-        cout << "Calculation is not completed!\n";
+        cout << "ERROR:\tCalculation is not completed!\n";
 
     return 0;
 }
 
 bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, double eps = -1)
 {
-    if (status == 0 || status == 4)
-    {
-        cout << "There is something wrong in Data input!\n";
-        return 0;
-    }
+    if (status == 0 || status == 3)
+        return sfPrintError(25);
 
     ProgressBar = progress_bar, Parallel = parallel;
     if (eps >= 0 && eps <= 1)
@@ -1450,14 +1449,14 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
 
     if (Parallel)
     {
-        if (sfConjugateGradientPar(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation
+        if (sfConjugateGradientPar(TotalStiffness, LoadVector, Displacement, DOF)) // solve matrix equation
             return sfPrintError(4);
         else
             cout << "Solving equation succeeded!\n";
     }
     else
     {
-        if (sfConjugateGradient(TotalStiffness, LoadVector, Displacement, 6 * NFRN)) // solve matrix equation
+        if (sfConjugateGradient(TotalStiffness, LoadVector, Displacement, DOF)) // solve matrix equation
             return sfPrintError(4);
         else
             cout << "Solving equation succeeded!\n";
@@ -1471,6 +1470,27 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
     status = 2; // calculation is completed
 
     return 0;
+}
+
+int SpaceFrame::sfStatus()
+{
+    switch (status)
+    {
+    case 0:
+        cout << "Initialized\n";
+        break;
+    case 1:
+        cout << "Inputted\n";
+        break;
+    case 2:
+        cout << "Calculated\n";
+        break;
+    case 3:
+        cout << "ERROR\n";
+        break;
+    }
+
+    return status;
 }
 
 bool SpaceFrame::sfCircularStructure(int m, int n, int l)

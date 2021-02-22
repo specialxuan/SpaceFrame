@@ -972,11 +972,11 @@ public:
     ~SpaceFrame();
 
     // read data from .csv
-    bool sfInput();
+    bool sfInput(const char *);
     // calculate
     bool sfCalculate(bool, bool, double);
     // output data
-    bool sfOutput(bool);
+    bool sfOutput(bool, const char *);
 
     // show status
     int sfStatus();
@@ -1157,7 +1157,7 @@ SpaceFrame::~SpaceFrame()
     status = 0; // initialization is completed
 }
 
-bool SpaceFrame::sfInput()
+bool SpaceFrame::sfInput(const char *inputFile = "source&result/sf_test.csv")
 {
     if (status)
         this->~SpaceFrame();
@@ -1195,7 +1195,7 @@ bool SpaceFrame::sfInput()
     int rowIndex = 0;   // Reset the number of rows to zero
     char buf[10] = {0}; // buffer and data string
 
-    ifstream fin("source&result/sf_test.csv", ios::in);
+    ifstream fin(inputFile, ios::in);
     if (!fin)
         return sfPrintError(24);
 
@@ -1346,7 +1346,7 @@ bool SpaceFrame::sfInput()
     return 0;
 }
 
-bool SpaceFrame::sfOutput(bool terminal = false) // terminal on/off
+bool SpaceFrame::sfOutput(bool terminal = false, const char *outputFile = "source&result/sfResultClass.csv") // terminal on/off
 {
     if (status == 2 && terminal) // terminal
     {
@@ -1385,7 +1385,7 @@ bool SpaceFrame::sfOutput(bool terminal = false) // terminal on/off
 
     if (status == 2) // file
     {
-        ofstream fout("source&result/sfResultClass.csv", ios::out);
+        ofstream fout(outputFile, ios::out);
         fout << setw(80) << "Calculation Of Space Rigid Frame,\n";
 
         fout << "TNN = " << setw(9) << TNN << " , NFIN = " << setw(8) << NFIN << " , NFRN = " << setw(8) << NFRN << " , NOR = " << setw(9) << NOR << " , NOL = " << setw(9) << NOL << " , NOS = " << setw(9) << NOS << " ,                 ,\n";

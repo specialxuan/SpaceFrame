@@ -1351,6 +1351,8 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
 {
     if (status == 0 || status == 3)
         return sfPrintError(25);
+    if (status == 2)
+        return 0;
 
     ProgressBar = progress_bar, Parallel = parallel;
     if (eps >= 0 && eps <= 1)

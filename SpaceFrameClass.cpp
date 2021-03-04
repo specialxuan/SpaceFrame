@@ -10,16 +10,13 @@ int main()
     SpaceFrame Frame;
     // Frame.sfCircularStructure(2, 2, 1);
     Frame.sfInput();
-    // Frame.sfCalculate();
-    // Frame.sfOutput();
-    // Frame.~SpaceFrame();
-    // Frame.sfInput();
     Frame.sfCalculate(true, true, 1e-15);
     Frame.sfOutput(true);
-    // SpaceFrame Frame2(Frame);
+
+    SpaceFrame Frame2(Frame);
     // Frame2.sfInput();
-    // Frame2.sfCalculate();
-    // Frame2.sfOutput();
+    // Frame2.sfCalculate(true, true, 1e-15); // TODO
+    // Frame2.sfOutput(true);
     end1 = clock();
     cout << (double)(end1 - start1) / CLOCKS_PER_SEC << endl;
     end = GetTickCount();

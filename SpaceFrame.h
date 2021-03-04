@@ -1,3 +1,4 @@
+#include "VarBandMatrix.h"
 #include <Windows.h>
 #include <ctype.h>
 #include <fstream>
@@ -63,13 +64,9 @@ private:
         double ifs[6]; // the internal force in the section
     } * sections;      // parameters of sections
 
-    double *TotalStiffness; // total stiffness
-    double *LoadVector;     // load vector
-    double *Displacement;   // displacement of nodes
-
-    int *IV;     // the location of diagonal element
-    int NSI;     // upper limit
-    int MAXIBDW; // half bandwidth
+    VarBandMatrix TotalStiffness;
+    double *LoadVector;   // load vector
+    double *Displacement; // displacement of nodes
 
     bool ProgressBar; // open progress bar
     bool Parallel;    // open parallel
@@ -98,6 +95,7 @@ private:
     // allocate total stiffness matrix, load vector and displacement vector
     bool sfAllocate()
     {
+        int *IV;                                       // the location of diagonal element
         int it = 0, mm = 0, *peribdw = new int[TNN](); // bandwidth per line in total stiffness matrix
         IV = new int[DOF]();
 
@@ -112,8 +110,6 @@ private:
         }
         for (int i = NFIN; i < TNN; i++) // for each line in total stiffness matrix
         {
-            if (peribdw[i] > MAXIBDW) // find maxim
-                MAXIBDW = peribdw[i];
             for (int j = 1; j <= 6; j++)
             {
                 it = it + 1;
@@ -123,11 +119,9 @@ private:
                     IV[it - 1] = IV[it - 2] + 6 * peribdw[i] + j;
             }
         }
-        MAXIBDW = 6 * MAXIBDW + 5;
-        NSI = IV[DOF - 1];
         delete[] peribdw;
 
-        TotalStiffness = new double[NSI](); // allocate memory for total stiffness matrix
+        TotalStiffness.initialize(IV, DOF); // allocate memory for total stiffness matrix
         LoadVector = new double[DOF]();     // allocate memory for load vector
         Displacement = new double[DOF]();   // allocate memory for displacement vector
 
@@ -152,7 +146,7 @@ private:
                         return sfPrintError(7);
                     for (int m = 0; m < 6; m++)
                         for (int n = 0; n <= m; n++)
-                            TotalStiffness[IV[(p[i] + m)] + (p[i] + n) - (p[i] + m) - 1] += us[m * 6 + n]; // superpose
+                            TotalStiffness(p[i] + m, p[i] + n) += us[m * 6 + n]; // superpose
                 }
             }
             if (p[0] >= 0 && p[1] >= 0)
@@ -161,13 +155,11 @@ private:
                     return sfPrintError(7);
                 for (int m = 0; m < 6; m++)
                     for (int n = 0; n < 6; n++)
-                        TotalStiffness[IV[(p[1] + m)] + (p[0] + n) - (p[1] + m) - 1] += us[m * 6 + n]; // superpose
+                        TotalStiffness(p[1] + m, p[0] + n) += us[m * 6 + n]; // superpose
             }
         }
 
-        for (int i = 0; i < NSI; i++)
-            if (fabs(TotalStiffness[i]) > MaxTS)
-                MaxTS = TotalStiffness[i];
+        MaxTS = TotalStiffness.maximum();
 
         return 0;
     }
@@ -428,9 +420,9 @@ private:
         return 0;
     }
     // solve equation of matrix by conjugate gradient
-    bool sfConjugateGradient(double *A, double *b, double *x, int N)
+    bool sfConjugateGradient(VarBandMatrix &A, double *b, double *x, int N)
     {
-        if (A == NULL || b == NULL || x == NULL || N == 0)
+        if (b == NULL || x == NULL || N == 0)
             return sfPrintError(12);
 
         double *r = NULL, *p = NULL, *z = NULL;
@@ -447,10 +439,11 @@ private:
         z = (double *)malloc(N * sizeof(double));
         memset(z, 0, sizeof(double));
 
-        for (int i = 0; i < NSI; i++)
-            A[i] = A[i] / MaxTS;
-        for (int i = 0; i < N; i++)
-            b[i] = b[i] / MaxLV;
+        // TODO: Max
+        // for (int i = 0; i < NSI; i++)
+        //     A[i] = A[i] / MaxTS;
+        // for (int i = 0; i < N; i++)
+        //     b[i] = b[i] / MaxLV;
 
         // x = [0 ... 0]
         // r = b - A * x
@@ -472,26 +465,7 @@ private:
             {
                 z[i] = 0.0;
                 for (int j = 0; j < N; j++)
-                {
-                    if (i == j)
-                    {
-                        z[i] += A[IV[i] - 1] * p[j];
-                    }
-                    else if (j > i)
-                    {
-                        if ((IV[j] - j + i) > IV[j - 1])
-                            z[i] += A[IV[j] - j + i - 1] * p[j];
-                        else
-                            z[i] += 0;
-                    }
-                    else if (i > j)
-                    {
-                        if ((IV[i] - i + j) > IV[i - 1])
-                            z[i] += A[IV[i] - i + j - 1] * p[j];
-                        else
-                            z[i] += 0;
-                    }
-                }
+                    z[i] += A(i, j) * p[j];
             }
 
             // alpha = gamma / (p' * z)
@@ -557,12 +531,13 @@ private:
             gamma = gamma_new;
         }
 
-        for (int i = 0; i < NSI; i++)
-            A[i] = A[i] * MaxTS;
-        for (int i = 0; i < N; i++)
-            b[i] = b[i] * MaxLV;
-        for (int i = 0; i < N; i++)
-            x[i] = x[i] * MaxLV / MaxTS;
+        // TODO: Max
+        // for (int i = 0; i < NSI; i++)
+        //     A[i] = A[i] * MaxTS;
+        // for (int i = 0; i < N; i++)
+        //     b[i] = b[i] * MaxLV;
+        // for (int i = 0; i < N; i++)
+        //     x[i] = x[i] * MaxLV / MaxTS;
 
         if (ProgressBar)
             cout << "\rSolving equation done [ 100%% ][=================================================]\n";
@@ -574,9 +549,9 @@ private:
         return 0;
     }
     // solve equation of matrix by conjugate gradient parallel
-    bool sfConjugateGradientPar(double *A, double *b, double *x, int N)
+    bool sfConjugateGradientPar(VarBandMatrix &A, double *b, double *x, int N)
     {
-        if (A == NULL || b == NULL || x == NULL || N == 0)
+        if (b == NULL || x == NULL || N == 0)
             return sfPrintError(12);
 
         double *r = NULL, *p = NULL, *z = NULL;
@@ -593,10 +568,11 @@ private:
         z = (double *)malloc(N * sizeof(double));
         memset(z, 0, sizeof(double));
 
-        for (int i = 0; i < NSI; i++)
-            A[i] = A[i] / MaxTS;
-        for (int i = 0; i < N; i++)
-            b[i] = b[i] / MaxLV;
+        // TODO: Max
+        // for (int i = 0; i < NSI; i++)
+        //     A[i] = A[i] / MaxTS;
+        // for (int i = 0; i < N; i++)
+        //     b[i] = b[i] / MaxLV;
 
         //  x = [0 ... 0]
         //  r = b - A * x
@@ -621,26 +597,7 @@ private:
             {
                 z[i] = 0.0;
                 for (int j = 0; j < N; j++)
-                {
-                    if (i == j)
-                    {
-                        z[i] += A[IV[i] - 1] * p[j];
-                    }
-                    else if (j > i)
-                    {
-                        if ((IV[j] - j + i) > IV[j - 1])
-                            z[i] += A[IV[j] - j + i - 1] * p[j];
-                        else
-                            z[i] += 0;
-                    }
-                    else if (i > j)
-                    {
-                        if ((IV[i] - i + j) > IV[i - 1])
-                            z[i] += A[IV[i] - i + j - 1] * p[j];
-                        else
-                            z[i] += 0;
-                    }
-                }
+                    z[i] += A(i, j) * p[j];
             }
 
             //  alpha = gamma / (p' * z)
@@ -711,12 +668,13 @@ private:
             gamma = gamma_new;
         }
 
-        for (int i = 0; i < NSI; i++)
-            A[i] = A[i] * MaxTS;
-        for (int i = 0; i < N; i++)
-            b[i] = b[i] * MaxLV;
-        for (int i = 0; i < N; i++)
-            x[i] = x[i] * MaxLV / MaxTS;
+        // TODO: Max
+        // for (int i = 0; i < NSI; i++)
+        //     A[i] = A[i] * MaxTS;
+        // for (int i = 0; i < N; i++)
+        //     b[i] = b[i] * MaxLV;
+        // for (int i = 0; i < N; i++)
+        //     x[i] = x[i] * MaxLV / MaxTS;
 
         if (ProgressBar)
             cout << "\rSolving equation done [ 100%% ][=================================================]\n";
@@ -1004,13 +962,8 @@ SpaceFrame::SpaceFrame()
     loads = NULL;    // parameters of loads
     sections = NULL; // parameters of sections
 
-    TotalStiffness = NULL; // total stiffness
     LoadVector = NULL;     // load vector
     Displacement = NULL;   // the displacement of nodes
-
-    IV = NULL;   // the location of diagonal element
-    NSI = 0;     // upper limit
-    MAXIBDW = 0; // half bandwidth
 
     ProgressBar = 1; // open progress bar
     Parallel = 1;    // open parallel
@@ -1041,13 +994,8 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
         loads = NULL;    // parameters of loads
         sections = NULL; // parameters of sections
 
-        TotalStiffness = NULL; // total stiffness
         LoadVector = NULL;     // load vector
         Displacement = NULL;   // the displacement of nodes
-
-        IV = NULL;   // the location of diagonal element
-        NSI = 0;     // upper limit
-        MAXIBDW = 0; // half bandwidth
 
         ProgressBar = Frame.ProgressBar;
         Parallel = Frame.Parallel;
@@ -1091,20 +1039,7 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
             memcpy(sections, Frame.sections, NOS * sizeof(Section));
         }
 
-        if (Frame.IV != NULL)
-        {
-            IV = new int[DOF]();
-            memcpy(IV, Frame.IV, DOF * sizeof(int));
-        }
-
-        NSI = Frame.NSI;
-        MAXIBDW = Frame.MAXIBDW;
-
-        if (Frame.TotalStiffness != NULL)
-        {
-            TotalStiffness = new double[NSI]();
-            memcpy(TotalStiffness, Frame.TotalStiffness, NSI * sizeof(double));
-        }
+        TotalStiffness.initialize(Frame.TotalStiffness);
 
         if (Frame.LoadVector != NULL)
         {
@@ -1134,8 +1069,6 @@ SpaceFrame::~SpaceFrame()
     NOR = 0;
     NOL = 0;
     NOS = 0;
-    NSI = 0;
-    MAXIBDW = 0;
 
     delete[] nodes;
     nodes = NULL;
@@ -1145,14 +1078,10 @@ SpaceFrame::~SpaceFrame()
     loads = NULL;
     delete[] sections;
     sections = NULL;
-    delete[] TotalStiffness;
-    TotalStiffness = NULL;
     delete[] LoadVector;
     LoadVector = NULL;
     delete[] Displacement;
     Displacement = NULL;
-    delete[] IV;
-    IV = NULL;
 
     status = 0; // initialization is completed
 }

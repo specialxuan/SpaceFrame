@@ -1,15 +1,9 @@
 #include "VarBandMatrix.h"
 #include <Windows.h>
-#include <ctype.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <math.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 using namespace std;
 
 class SpaceFrame // Calculator of SpaceFrame

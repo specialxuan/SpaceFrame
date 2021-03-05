@@ -1,14 +1,5 @@
-#include <Windows.h>
-#include <ctype.h>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <math.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 using namespace std;
 
 class VarBandMatrix
@@ -110,7 +101,7 @@ double &VarBandMatrix::operator()(int i, int j)
         cout << "ERROR: The last assignment was out of bandwith!\n";
         zero = 0;
     }
-    
+
     if (i == j)
     {
         return matrix[IV[i] - 1];
@@ -129,4 +120,4 @@ double &VarBandMatrix::operator()(int i, int j)
         else
             return zero;
     }
-}
+} // TODO

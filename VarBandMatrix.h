@@ -21,6 +21,8 @@ public:
     double maximum();
     // VarBandMatrix &operator/(); TODO
     double &operator()(int, int);
+
+    friend class SpaceFrame;
 };
 
 VarBandMatrix::VarBandMatrix()

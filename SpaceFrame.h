@@ -591,7 +591,26 @@ private:
             {
                 z[i] = 0.0;
                 for (int j = 0; j < N; j++)
-                    z[i] += A(i, j) * p[j];
+                {
+                    if (i == j)
+                    {
+                        z[i] += A.matrix[A.IV[i] - 1] * p[j];
+                    }
+                    else if (j > i)
+                    {
+                        if ((A.IV[j] - j + i) > A.IV[j - 1])
+                            z[i] += A.matrix[A.IV[j] - j + i - 1] * p[j];
+                        else
+                            z[i] += 0;
+                    }
+                    else if (i > j)
+                    {
+                        if ((A.IV[i] - i + j) > A.IV[i - 1])
+                            z[i] += A.matrix[A.IV[i] - i + j - 1] * p[j];
+                        else
+                            z[i] += 0;
+                    }
+                }
             }
 
             //  alpha = gamma / (p' * z)

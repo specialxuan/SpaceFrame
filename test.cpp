@@ -1,13 +1,15 @@
+#include "SpaceFrame v4.4.1.h"
 #include "SpaceFrame.h"
 
 int main()
 {
     ofstream fout("source&result/testresult.csv", ios::out);
     SpaceFrame Frame;
-    DWORD start, end;
+    SpaceFrame_v4 Frame_v4;
+    DWORD start, end, start1, end1, start2, end2;
     fout << " DOF      , 1e-15    , 1e-10    , 1e-5     ,\n";
 
-    for (int i = 3; i <= 4; i++)
+    for (int i = 3; i <= 6; i++)
     {
         // for (int j = 2; j < 5; j++)
         // {
@@ -34,26 +36,28 @@ int main()
         Frame.sfCircularStructure(i, i, i);
         fout << setw(10) << ((i + 1) * (i + 1) * (i + 1) - (i + 1) * (i + 1)) * 6 << ",";
 
-        start = GetTickCount();
+        start1 = GetTickCount();
         Frame.sfInput();
         Frame.sfCalculate(true, false, 1e-15);
         Frame.sfOutput();
-        end = GetTickCount();
-        fout << setw(10) << (double)(end - start) / 1000 << ",";
+        end1 = GetTickCount();
+        fout << setw(10) << (double)(end1 - start1) / 1000 << ",";
+        cout << setw(10) << (double)(end1 - start1) / 1000 << ",";
 
-        start = GetTickCount();
-        Frame.sfInput();
-        Frame.sfCalculate(true, false, 1e-10);
-        Frame.sfOutput();
-        end = GetTickCount();
-        fout << setw(10) << (double)(end - start) / 1000 << ",";
+        start2 = GetTickCount();
+        Frame_v4.sfInput();
+        Frame_v4.sfCalculate(true, false, 1e-15);
+        Frame_v4.sfOutput();
+        end2 = GetTickCount();
+        fout << setw(10) << (double)(end2 - start2) / 1000 << ",";
+        cout << setw(10) << (double)(end2 - start2) / 1000 << ",";
 
-        start = GetTickCount();
-        Frame.sfInput();
-        Frame.sfCalculate(true, false, 1e-5);
-        Frame.sfOutput();
-        end = GetTickCount();
-        fout << setw(10) << (double)(end - start) / 1000 << ",\n";
+        // start = GetTickCount();
+        // Frame.sfInput();
+        // Frame.sfCalculate(true, false, 1e-15);
+        // Frame.sfOutput();
+        // end = GetTickCount();
+        fout << setw(10) << (double)((end1 - start1) - (end2 - start2)) / 1000 << ",\n";
     }
 
     fout.close();

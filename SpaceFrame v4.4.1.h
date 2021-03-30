@@ -11,7 +11,7 @@
 #include <time.h>
 using namespace std;
 
-class SpaceFrame // Calculator of SpaceFrame
+class SpaceFrame_v4 // Calculator of SpaceFrame
 {
 private:
     double EPS;
@@ -967,9 +967,9 @@ private:
     }
 
 public:
-    SpaceFrame();
-    SpaceFrame(SpaceFrame &);
-    ~SpaceFrame();
+    SpaceFrame_v4();
+    SpaceFrame_v4(SpaceFrame_v4 &);
+    ~SpaceFrame_v4();
 
     // read data from .csv
     bool sfInput(const char *);
@@ -985,7 +985,7 @@ public:
     bool sfCircularStructure(int, int, int);
 };
 
-SpaceFrame::SpaceFrame()
+SpaceFrame_v4::SpaceFrame_v4()
 {
     EPS = 1e-15;
     MaxTS = 0;
@@ -1018,7 +1018,7 @@ SpaceFrame::SpaceFrame()
     status = 0; // initialization is completed
 }
 
-SpaceFrame::SpaceFrame(SpaceFrame &Frame)
+SpaceFrame_v4::SpaceFrame_v4(SpaceFrame_v4 &Frame)
 {
     if (Frame.status == 0 || Frame.status == 3)
     {
@@ -1123,7 +1123,7 @@ SpaceFrame::SpaceFrame(SpaceFrame &Frame)
     }
 }
 
-SpaceFrame::~SpaceFrame()
+SpaceFrame_v4::~SpaceFrame_v4()
 {
     MaxTS = 0;
     MaxLV = 0;
@@ -1157,10 +1157,10 @@ SpaceFrame::~SpaceFrame()
     status = 0; // initialization is completed
 }
 
-bool SpaceFrame::sfInput(const char *inputFile = "source&result/sf_test.csv")
+bool SpaceFrame_v4::sfInput(const char *inputFile = "source&result/sf_test.csv")
 {
     if (status)
-        this->~SpaceFrame();
+        this->~SpaceFrame_v4();
 
     const int one = 1;
     struct Row
@@ -1346,7 +1346,7 @@ bool SpaceFrame::sfInput(const char *inputFile = "source&result/sf_test.csv")
     return 0;
 }
 
-bool SpaceFrame::sfOutput(bool terminal = false, const char *outputFile = "source&result/sfResultClass.csv") // terminal on/off
+bool SpaceFrame_v4::sfOutput(bool terminal = false, const char *outputFile = "source&result/sfResultClass.csv") // terminal on/off
 {
     if (status == 2 && terminal) // terminal
     {
@@ -1418,7 +1418,7 @@ bool SpaceFrame::sfOutput(bool terminal = false, const char *outputFile = "sourc
     return 0;
 }
 
-bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, double eps = -1)
+bool SpaceFrame_v4::sfCalculate(bool parallel = true, bool progress_bar = true, double eps = -1)
 {
     if (status == 0 || status == 3)
         return sfPrintError(25);
@@ -1472,7 +1472,7 @@ bool SpaceFrame::sfCalculate(bool parallel = true, bool progress_bar = true, dou
     return 0;
 }
 
-int SpaceFrame::sfStatus()
+int SpaceFrame_v4::sfStatus()
 {
     switch (status)
     {
@@ -1493,7 +1493,7 @@ int SpaceFrame::sfStatus()
     return status;
 }
 
-bool SpaceFrame::sfCircularStructure(int m, int n, int l)
+bool SpaceFrame_v4::sfCircularStructure(int m, int n, int l)
 {
     ofstream fout("source&result/sf_test.csv", ios::out);
 
